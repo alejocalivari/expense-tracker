@@ -17,10 +17,13 @@ const INSIGHT_FLAG_TONES = {
   blue: "insight__flag--blue",
   rose: "insight__flag--rose",
 };
+const DEFAULT_GOAL_LABEL = "Meta mensual de acciones";
 
 const body = document.body;
 const topbar = document.querySelector(".topbar");
 const openIncomeButtons = document.querySelectorAll("[data-open-income]");
+const openGoalButtons = document.querySelectorAll("[data-open-goal]");
+const openInvestmentButtons = document.querySelectorAll("[data-open-investment]");
 const modalRestoreButtons = document.querySelectorAll("[data-modal-restore-sample]");
 const menuToggle = document.querySelector("[data-menu-toggle]");
 const backdrop = document.querySelector("[data-backdrop]");
@@ -41,13 +44,19 @@ const modalTitle = document.querySelector("[data-modal-title]");
 const modalCopy = document.querySelector("[data-modal-copy]");
 const expenseForm = document.querySelector("[data-expense-form]");
 const incomeForm = document.querySelector("[data-income-form]");
+const goalForm = document.querySelector("[data-goal-form]");
 const formFeedback = document.querySelector("[data-form-feedback]");
 const incomeFeedback = document.querySelector("[data-income-feedback]");
+const goalFeedback = document.querySelector("[data-goal-feedback]");
 const formSubmit = document.querySelector("[data-form-submit]");
 const incomeBaseInput = document.querySelector("[data-income-base-input]");
 const incomeExtraInput = document.querySelector("[data-income-extra-input]");
 const incomeTotalPreview = document.querySelector("[data-income-total-preview]");
 const incomeMonthLabel = document.querySelector("[data-income-month-label]");
+const goalAmountInput = document.querySelector("[data-goal-amount-input]");
+const goalLabelInput = document.querySelector("[data-goal-label-input]");
+const goalAmountPreview = document.querySelector("[data-goal-amount-preview]");
+const goalLabelPreview = document.querySelector("[data-goal-label-preview]");
 const confirmDeleteButton = document.querySelector("[data-confirm-delete]");
 const confirmTitle = document.querySelector("[data-confirm-title]");
 const confirmDate = document.querySelector("[data-confirm-date]");
@@ -91,7 +100,7 @@ const kpiElements = {
   remainingBalance: document.querySelector('[data-kpi="remainingBalance"]'),
   savingsAmount: document.querySelector('[data-kpi="savingsAmount"]'),
   dailyAverage: document.querySelector('[data-kpi="dailyAverage"]'),
-  savingsRate: document.querySelector('[data-kpi="savingsRate"]'),
+  goalProgress: document.querySelector('[data-kpi="goalProgress"]'),
 };
 
 const kpiDeltaElements = {
@@ -100,7 +109,7 @@ const kpiDeltaElements = {
   remainingBalance: document.querySelector('[data-kpi-delta="remainingBalance"]'),
   savingsAmount: document.querySelector('[data-kpi-delta="savingsAmount"]'),
   dailyAverage: document.querySelector('[data-kpi-delta="dailyAverage"]'),
-  savingsRate: document.querySelector('[data-kpi-delta="savingsRate"]'),
+  goalProgress: document.querySelector('[data-kpi-delta="goalProgress"]'),
 };
 
 const kpiCaptionElements = {
@@ -109,19 +118,21 @@ const kpiCaptionElements = {
   remainingBalance: document.querySelector('[data-kpi-caption="remainingBalance"]'),
   savingsAmount: document.querySelector('[data-kpi-caption="savingsAmount"]'),
   dailyAverage: document.querySelector('[data-kpi-caption="dailyAverage"]'),
-  savingsRate: document.querySelector('[data-kpi-caption="savingsRate"]'),
+  goalProgress: document.querySelector('[data-kpi-caption="goalProgress"]'),
 };
 
 const summaryElements = {
   sidebarFreeCash: document.querySelector('[data-summary="sidebar-free-cash"]'),
   sidebarSavings: document.querySelector('[data-summary="sidebar-savings"]'),
   heroRemaining: document.querySelector('[data-summary="hero-remaining"]'),
+  heroGoalSavings: document.querySelector('[data-summary="hero-goal-savings"]'),
   miniDailyAverage: document.querySelector('[data-summary="mini-daily-average"]'),
   miniSecondaryValue: document.querySelector('[data-summary="mini-secondary-value"]'),
   chartTotalSpent: document.querySelector('[data-summary="chart-total-spent"]'),
-  fixedSpend: document.querySelector('[data-summary="fixed-spend"]'),
-  variableSpend: document.querySelector('[data-summary="variable-spend"]'),
-  monthSavings: document.querySelector('[data-summary="month-savings"]'),
+  goalAmount: document.querySelector('[data-summary="goal-amount"]'),
+  goalSaved: document.querySelector('[data-summary="goal-saved"]'),
+  goalGapValue: document.querySelector('[data-summary="goal-gap-value"]'),
+  goalExceeded: document.querySelector('[data-summary="goal-exceeded"]'),
   incomeTotal: document.querySelector('[data-summary="income-total"]'),
   incomeBase: document.querySelector('[data-summary="income-base"]'),
   incomeExtra: document.querySelector('[data-summary="income-extra"]'),
@@ -134,7 +145,6 @@ const textElements = {
   periodPill: document.querySelector("[data-period-pill]"),
   sidebarSpendRatio: document.querySelector('[data-summary-text="sidebar-spend-ratio"]'),
   heroCaption: document.querySelector('[data-summary-text="hero-caption"]'),
-  heroStat1Value: document.querySelector('[data-summary-text="hero-stat-1-value"]'),
   heroStat2Value: document.querySelector('[data-summary-text="hero-stat-2-value"]'),
   heroRunway: document.querySelector('[data-summary-text="hero-runway"]'),
   miniDailyNote: document.querySelector('[data-summary-text="mini-daily-note"]'),
@@ -142,7 +152,9 @@ const textElements = {
   miniTertiaryValue: document.querySelector('[data-summary-text="mini-tertiary-value"]'),
   miniTertiaryNote: document.querySelector('[data-summary-text="mini-tertiary-note"]'),
   categoryCountPill: document.querySelector('[data-summary-text="category-count-pill"]'),
-  splitNote: document.querySelector('[data-summary-text="split-note"]'),
+  goalHeading: document.querySelector('[data-summary-text="goal-heading"]'),
+  goalNote: document.querySelector('[data-summary-text="goal-note"]'),
+  goalProgressText: document.querySelector('[data-summary-text="goal-progress-text"]'),
   comparisonNote: document.querySelector('[data-summary-text="comparison-note"]'),
   incomeCaption: document.querySelector('[data-summary-text="income-caption"]'),
   incomeSavingsAmount: document.querySelector('[data-summary-text="income-savings-amount"]'),
@@ -154,8 +166,8 @@ const comparisonElements = {
   totalSpentValue: document.querySelector('[data-comparison="totalSpent-value"]'),
   remainingBalanceCopy: document.querySelector('[data-comparison="remainingBalance-copy"]'),
   remainingBalanceValue: document.querySelector('[data-comparison="remainingBalance-value"]'),
-  savingsCopy: document.querySelector('[data-comparison="savings-copy"]'),
-  savingsValue: document.querySelector('[data-comparison="savings-value"]'),
+  investedCopy: document.querySelector('[data-comparison="invested-copy"]'),
+  investedValue: document.querySelector('[data-comparison="invested-value"]'),
   categoryShiftCopy: document.querySelector('[data-comparison="categoryShift-copy"]'),
   categoryShiftValue: document.querySelector('[data-comparison="categoryShift-value"]'),
 };
@@ -165,19 +177,19 @@ const labelElements = {
   heroStat2: document.querySelector('[data-summary-label="hero-stat-2-label"]'),
   miniSecondary: document.querySelector('[data-summary-label="mini-secondary-label"]'),
   miniTertiary: document.querySelector('[data-summary-label="mini-tertiary-label"]'),
+  goalGap: document.querySelector('[data-summary-label="goal-gap-label"]'),
 };
 
 const barElements = {
   sidebarSpendRatio: document.querySelector('[data-summary-bar="sidebar-spend-ratio"]'),
   heroRunway: document.querySelector('[data-summary-bar="hero-runway"]'),
-  fixedSpend: document.querySelector('[data-summary-bar="fixed-spend"]'),
-  variableSpend: document.querySelector('[data-summary-bar="variable-spend"]'),
-  monthSavings: document.querySelector('[data-summary-bar="month-savings"]'),
+  goalProgress: document.querySelector('[data-summary-bar="goal-progress"]'),
 };
 
 const statusElements = {
   sidebar: document.querySelector('[data-summary-status="sidebar"]'),
   hero: document.querySelector('[data-summary-status="hero"]'),
+  goal: document.querySelector('[data-summary-status="goal"]'),
   line: document.querySelector('[data-summary-status="line"]'),
 };
 
@@ -299,6 +311,9 @@ const summarizeMonth = (expenses, incomeTotal, monthKey) => {
   const totalSpent = roundCurrency(expenses.reduce((sum, expense) => sum + Number(expense.amount || 0), 0));
   const fixedSpend = roundCurrency(expenses.filter((expense) => expense.isFixed).reduce((sum, expense) => sum + Number(expense.amount || 0), 0));
   const variableSpend = roundCurrency(Math.max(totalSpent - fixedSpend, 0));
+  const investmentTransactions = expenses.filter((expense) => expense.category === "Inversion");
+  const investedThisMonth = roundCurrency(investmentTransactions.reduce((sum, expense) => sum + Number(expense.amount || 0), 0));
+  const investmentTransactionsCount = investmentTransactions.length;
   const remainingBalance = roundCurrency(incomeTotal - totalSpent);
   const savingsAmount = roundCurrency(Math.max(remainingBalance, 0));
   const daysInMonth = getDaysInMonth(monthKey);
@@ -327,6 +342,8 @@ const summarizeMonth = (expenses, incomeTotal, monthKey) => {
     variableSpend,
     fixedShare: totalSpent > 0 ? (fixedSpend / totalSpent) * 100 : 0,
     variableShare: totalSpent > 0 ? (variableSpend / totalSpent) * 100 : 0,
+    investedThisMonth,
+    investmentTransactionsCount,
     remainingBalance,
     savingsAmount,
     dailyAverage,
@@ -339,6 +356,7 @@ const summarizeMonth = (expenses, incomeTotal, monthKey) => {
     daysInMonth,
     elapsedDays,
     projectedMonthlySpend: totalSpent > 0 ? roundCurrency((totalSpent / Math.max(elapsedDays, 1)) * daysInMonth) : 0,
+    projectedInvestmentAmount: investedThisMonth > 0 ? roundCurrency((investedThisMonth / Math.max(elapsedDays, 1)) * daysInMonth) : 0,
   };
 };
 
@@ -387,9 +405,15 @@ const computeMetrics = (state) => {
   const activeMonthKey = getActiveMonthKey(state);
   const previousMonthKey = shiftMonthKey(activeMonthKey, -1);
   const totalIncome = getTotalIncome(state);
+  const goalAmount = roundCurrency(Number(state.savingsGoalAmount || 0));
+  const goalLabel = String(state.savingsGoalLabel || "").trim() || DEFAULT_GOAL_LABEL;
   const currentMonth = summarizeMonth(getExpensesForMonth(state.expenses, activeMonthKey), totalIncome, activeMonthKey);
   const previousMonth = summarizeMonth(getExpensesForMonth(state.expenses, previousMonthKey), totalIncome, previousMonthKey);
   const hasPreviousData = previousMonth.transactionCount > 0;
+  const goalProgressPercent = goalAmount > 0 ? roundCurrency(Math.max((currentMonth.investedThisMonth / goalAmount) * 100, 0)) : 0;
+  const goalRemainingAmount = goalAmount > 0 && currentMonth.investedThisMonth < goalAmount ? roundCurrency(goalAmount - currentMonth.investedThisMonth) : 0;
+  const goalExceededAmount = goalAmount > 0 && currentMonth.investedThisMonth >= goalAmount ? roundCurrency(currentMonth.investedThisMonth - goalAmount) : 0;
+  const isGoalMet = goalAmount > 0 && currentMonth.investedThisMonth >= goalAmount;
 
   return {
     ...currentMonth,
@@ -401,17 +425,19 @@ const computeMetrics = (state) => {
     incomeBase: Number(state.incomeBase || 0),
     incomeExtra: Number(state.incomeExtra || 0),
     totalIncome,
+    goalAmount,
+    goalLabel,
+    goalProgressPercent,
+    goalProgressBarPercent: clamp(goalProgressPercent, 0, 100),
+    goalRemainingAmount,
+    goalExceededAmount,
+    isGoalMet,
     comparisons: {
       totalSpent: compareMetric(currentMonth.totalSpent, previousMonth.totalSpent, hasPreviousData),
       remainingBalance: compareMetric(currentMonth.remainingBalance, previousMonth.remainingBalance, hasPreviousData),
+      investedThisMonth: compareMetric(currentMonth.investedThisMonth, previousMonth.investedThisMonth, hasPreviousData),
       savingsAmount: compareMetric(currentMonth.savingsAmount, previousMonth.savingsAmount, hasPreviousData),
       dailyAverage: compareMetric(currentMonth.dailyAverage, previousMonth.dailyAverage, hasPreviousData),
-      savingsRate: {
-        current: currentMonth.savingsRate,
-        previous: previousMonth.savingsRate,
-        difference: roundCurrency(currentMonth.savingsRate - previousMonth.savingsRate),
-        percent: null,
-      },
     },
     topCategoryShift: hasPreviousData ? getTopCategoryShift(currentMonth.categoryBreakdown, previousMonth.categoryBreakdown) : null,
   };
@@ -561,6 +587,10 @@ const animateValue = (element, value, options = {}) => {
 };
 
 const getCategoryTone = (category) => {
+  if (category === "Inversion") {
+    return "badge--investment";
+  }
+
   if (["Supermercado", "Salud"].includes(category)) {
     return "badge--blue";
   }
@@ -569,7 +599,7 @@ const getCategoryTone = (category) => {
     return "badge--amber";
   }
 
-  if (["Casa/Servicios", "Suscripciones", "Inversion"].includes(category)) {
+  if (["Casa/Servicios", "Suscripciones"].includes(category)) {
     return "badge--mint";
   }
 
@@ -595,6 +625,7 @@ const renderPeriod = (metrics) => {
   setTextValue(textElements.periodTitle, `${metrics.monthLabelLong} - resumen de gastos`);
   setTextValue(textElements.periodPill, metrics.monthLabelShortYear);
   setTextValue(incomeMonthLabel, `Se usa como base para ${metrics.monthLabelLong}.`);
+  setTextValue(goalLabelPreview, metrics.goalLabel);
 };
 
 const renderSidebar = (metrics, animate) => {
@@ -608,47 +639,74 @@ const renderSidebar = (metrics, animate) => {
     return;
   }
 
-  if (!metrics.hasPreviousData) {
-    applyStatusPill(statusElements.sidebar, "Sin mes anterior", "neutral");
+  if (!metrics.goalAmount) {
+    applyStatusPill(statusElements.sidebar, "Sin meta", "neutral");
     return;
   }
 
-  applyStatusPill(
-    statusElements.sidebar,
-    `${formatSignedPercent(metrics.comparisons.totalSpent.percent)} vs ${metrics.previousMonthLabel}`,
-    getTrendTone(metrics.comparisons.totalSpent.difference, { lowerIsBetter: true })
-  );
+  if (metrics.isGoalMet) {
+    applyStatusPill(statusElements.sidebar, "Meta cumplida", "positive");
+    return;
+  }
+
+  if (metrics.investmentTransactionsCount && metrics.projectedInvestmentAmount >= metrics.goalAmount) {
+    applyStatusPill(statusElements.sidebar, "En ritmo", "positive");
+    return;
+  }
+
+  if (!metrics.investmentTransactionsCount) {
+    applyStatusPill(statusElements.sidebar, "Sin aportes", "neutral");
+    return;
+  }
+
+  applyStatusPill(statusElements.sidebar, `${formatPercent(metrics.goalProgressPercent, 1)} invertido`, "neutral");
 };
 
 const renderHero = (metrics, animate) => {
+  const hasGoalExceeded = metrics.goalExceededAmount > 0;
+  const goalGapLabel = metrics.isGoalMet ? (hasGoalExceeded ? "Excedente" : "Meta cumplida") : "Te falta invertir";
+  const goalGapValue = metrics.isGoalMet ? metrics.goalExceededAmount : metrics.goalRemainingAmount;
+
   animateValue(summaryElements.heroRemaining, metrics.remainingBalance, { animate });
+  animateValue(summaryElements.heroGoalSavings, metrics.investedThisMonth, { animate });
   setTextValue(
     textElements.heroCaption,
-    metrics.transactionCount
-      ? `${formatPercent(metrics.spentRatio, 1)} del ingreso ya fue consumido en ${metrics.monthLabelLong}.`
-      : "Carga tu primer gasto del mes para ver un balance real y comparaciones utiles."
+    !metrics.goalAmount
+      ? "Define una meta mensual para medir si el balance disponible realmente alcanza el objetivo que te propusiste."
+      : metrics.isGoalMet
+      ? hasGoalExceeded
+        ? `Ya registraste ${formatMoney(metrics.investedThisMonth)} en Inversion para "${metrics.goalLabel}" y superaste la meta por ${formatMoney(metrics.goalExceededAmount)}.`
+        : `Ya registraste ${formatMoney(metrics.investedThisMonth)} en Inversion y alcanzaste exactamente la meta "${metrics.goalLabel}".`
+      : metrics.investmentTransactionsCount
+        ? `Balance disponible: ${formatMoney(metrics.remainingBalance)}. Llevas ${formatMoney(metrics.investedThisMonth)} invertidos para "${metrics.goalLabel}" y te falta invertir ${formatMoney(metrics.goalRemainingAmount)}.`
+        : metrics.transactionCount
+          ? `Balance disponible: ${formatMoney(metrics.remainingBalance)}. Todavia no registraste aportes en la categoria Inversion para avanzar sobre "${metrics.goalLabel}".`
+          : "Carga tus movimientos del mes y usa \"Registrar inversion\" cuando hagas un aporte real en la categoria Inversion."
   );
-  setTextValue(labelElements.heroStat1, "Movimientos");
-  setTextValue(textElements.heroStat1Value, `${metrics.transactionCount} en ${metrics.monthLabelShort}`);
-  setTextValue(labelElements.heroStat2, "Gasto fijo");
-  setTextValue(textElements.heroStat2Value, metrics.transactionCount ? `${formatPercent(metrics.fixedShare, 1)} del total` : "Todavia sin base");
+  setTextValue(labelElements.heroStat1, "Invertido este mes");
+  setTextValue(labelElements.heroStat2, "Progreso de inversion");
+  setTextValue(textElements.heroStat2Value, metrics.goalAmount > 0 ? formatPercent(metrics.goalProgressPercent, 1) : "Sin meta");
   setTextValue(textElements.heroRunway, formatPercent(metrics.spentRatio, 1));
   setBarWidth(barElements.heroRunway, metrics.spentRatio);
   animateValue(summaryElements.miniDailyAverage, metrics.dailyAverage, { animate });
-  animateValue(summaryElements.miniSecondaryValue, metrics.largestExpense?.amount || 0, { animate });
+  animateValue(summaryElements.miniSecondaryValue, goalGapValue, { animate });
   setTextValue(textElements.miniDailyNote, metrics.transactionCount ? `${metrics.elapsedDays} dia(s) tomados para el promedio.` : "Sin gastos en el mes activo");
-  setTextValue(labelElements.miniSecondary, "Gasto mas alto");
+  setTextValue(labelElements.miniSecondary, goalGapLabel);
   setTextValue(
     textElements.miniSecondaryNote,
-    metrics.largestExpense
-      ? `${metrics.largestExpense.title} el ${formatDate(metrics.largestExpense.date, { month: "short", day: "numeric", year: undefined }).replace(".", "")}.`
-      : "Todavia no hay gastos cargados."
+    metrics.isGoalMet
+      ? hasGoalExceeded
+        ? "Capital invertido por encima de tu objetivo mensual."
+        : "Tu objetivo mensual ya quedo cubierto."
+      : "Monto pendiente para completar la meta."
   );
-  setTextValue(labelElements.miniTertiary, "Categoria principal");
-  setTextValue(textElements.miniTertiaryValue, metrics.topCategory?.category || "Sin categoria");
+  setTextValue(labelElements.miniTertiary, "Estado de meta");
+  setTextValue(textElements.miniTertiaryValue, metrics.isGoalMet ? "Meta cumplida" : metrics.investmentTransactionsCount ? `${formatPercent(metrics.goalProgressPercent, 1)} invertido` : "Sin aportes");
   setTextValue(
     textElements.miniTertiaryNote,
-    metrics.topCategory ? `${formatPercent(metrics.topCategory.share, 1)} del total de gastos.` : "Todavia no hay mezcla de gastos."
+    metrics.investmentTransactionsCount
+      ? `${formatNumber(metrics.investmentTransactionsCount)} aporte(s) en Inversion.`
+      : "La meta solo avanza con movimientos en Inversion."
   );
 
   if (!metrics.totalIncome) {
@@ -656,52 +714,87 @@ const renderHero = (metrics, animate) => {
     return;
   }
 
-  if (!metrics.hasPreviousData) {
-    applyStatusPill(statusElements.hero, metrics.remainingBalance >= 0 ? "Al dia" : "Ajustado", metrics.remainingBalance >= 0 ? "positive" : "negative");
+  if (!metrics.goalAmount) {
+    applyStatusPill(statusElements.hero, "Sin meta", "neutral");
     return;
   }
 
-  applyStatusPill(
-    statusElements.hero,
-    `${formatSignedPercent(metrics.comparisons.remainingBalance.percent)} vs ${metrics.previousMonthLabel}`,
-    getTrendTone(metrics.comparisons.remainingBalance.difference)
-  );
+  if (metrics.isGoalMet) {
+    applyStatusPill(statusElements.hero, "Meta cumplida", "positive");
+    return;
+  }
+
+  if (metrics.investmentTransactionsCount && metrics.projectedInvestmentAmount >= metrics.goalAmount) {
+    applyStatusPill(statusElements.hero, "En ritmo", "positive");
+    return;
+  }
+
+  if (!metrics.investmentTransactionsCount) {
+    applyStatusPill(statusElements.hero, "Sin aportes", "neutral");
+    return;
+  }
+
+  applyStatusPill(statusElements.hero, `Falta invertir ${formatMoney(metrics.goalRemainingAmount)}`, "negative");
 };
 
 const renderSplitCard = (metrics, animate) => {
-  animateValue(summaryElements.fixedSpend, metrics.fixedSpend, { animate });
-  animateValue(summaryElements.variableSpend, metrics.variableSpend, { animate });
-  animateValue(summaryElements.monthSavings, metrics.savingsAmount, { animate });
-  setBarWidth(barElements.fixedSpend, metrics.fixedShare);
-  setBarWidth(barElements.variableSpend, metrics.variableShare);
-  setBarWidth(barElements.monthSavings, metrics.totalIncome > 0 ? metrics.savingsRate : 0);
+  animateValue(summaryElements.goalAmount, metrics.goalAmount, { animate });
+  animateValue(summaryElements.goalSaved, metrics.investedThisMonth, { animate });
+  animateValue(summaryElements.goalGapValue, metrics.goalRemainingAmount, { animate });
+  animateValue(summaryElements.goalExceeded, metrics.goalExceededAmount, { animate });
+  setBarWidth(barElements.goalProgress, metrics.goalProgressBarPercent);
+  setTextValue(textElements.goalHeading, metrics.goalLabel);
+  setTextValue(textElements.goalProgressText, metrics.goalAmount > 0 ? formatPercent(metrics.goalProgressPercent, 1) : "Sin meta");
+  setTextValue(labelElements.goalGap, metrics.isGoalMet ? "Meta cumplida" : "Te falta invertir");
   setTextValue(
-    textElements.splitNote,
-    metrics.transactionCount
-      ? `${formatPercent(metrics.fixedShare, 1)} fijos y ${formatPercent(metrics.variableShare, 1)} variables dentro del mes activo.`
-      : "Cuando cargues gastos fijos y variables vas a ver rapidamente cuanto margen real te queda."
+    textElements.goalNote,
+    metrics.investmentTransactionsCount
+      ? `${formatNumber(metrics.investmentTransactionsCount)} aporte(s) registrados en Inversion por ${formatMoney(metrics.investedThisMonth)}. Tu balance disponible sigue aparte en ${formatMoney(metrics.remainingBalance)}.`
+      : metrics.transactionCount
+        ? `Todavia no registraste aportes en la categoria Inversion. Tienes ${formatMoney(metrics.remainingBalance)} disponibles, pero la meta no sube hasta cargar un aporte.`
+        : "La meta solo suma movimientos en la categoria Inversion. Usa \"Registrar inversion\" cuando hagas un aporte real."
   );
 
+  if (!metrics.goalAmount) {
+    applyStatusPill(statusElements.goal, "Sin meta", "neutral");
+  } else if (metrics.isGoalMet) {
+    applyStatusPill(statusElements.goal, "Meta cumplida", "positive");
+  } else if (metrics.investmentTransactionsCount && metrics.projectedInvestmentAmount >= metrics.goalAmount) {
+    applyStatusPill(statusElements.goal, "En ritmo", "positive");
+  } else if (!metrics.investmentTransactionsCount) {
+    applyStatusPill(statusElements.goal, "Sin aportes", "neutral");
+  } else {
+    applyStatusPill(statusElements.goal, `${formatPercent(metrics.goalProgressPercent, 1)} invertido`, "negative");
+  }
+
+  if (goalAmountPreview && uiState.modalMode !== "goal") {
+    animateValue(goalAmountPreview, metrics.goalAmount, { animate: false });
+  }
+
+  if (goalLabelPreview && uiState.modalMode !== "goal") {
+    setTextValue(goalLabelPreview, metrics.goalLabel);
+  }
+
   if (!metrics.hasPreviousData) {
-    setTextValue(textElements.comparisonNote, `No hay movimientos en ${getMonthLabel(metrics.previousMonthKey)} para comparar.`);
+    setTextValue(textElements.comparisonNote, `No hay movimientos en ${getMonthLabel(metrics.previousMonthKey)} para comparar balance e inversion registrada.`);
     setTextValue(comparisonElements.totalSpentCopy, "Sin base para comparar");
     setTextValue(comparisonElements.totalSpentValue, formatMoney(metrics.totalSpent));
     setTextValue(comparisonElements.remainingBalanceCopy, "Sin base para comparar");
     setTextValue(comparisonElements.remainingBalanceValue, formatMoney(metrics.remainingBalance));
-    setTextValue(comparisonElements.savingsCopy, "Sin base para comparar");
-    setTextValue(comparisonElements.savingsValue, formatMoney(metrics.savingsAmount));
+    setTextValue(comparisonElements.investedCopy, "Sin base para comparar");
+    setTextValue(comparisonElements.investedValue, formatMoney(metrics.investedThisMonth));
     setTextValue(comparisonElements.categoryShiftCopy, "Sin categoria para comparar");
     setTextValue(comparisonElements.categoryShiftValue, "Sin datos");
     return;
   }
 
-  setTextValue(textElements.comparisonNote, `Comparacion directa contra ${metrics.previousMonth.monthLabelLong} usando el ingreso mensual actual como referencia.`);
+  setTextValue(textElements.comparisonNote, `Comparacion directa contra ${metrics.previousMonth.monthLabelLong} con foco en gasto, balance e inversion ejecutada.`);
   setTextValue(comparisonElements.totalSpentCopy, `${formatSignedCurrency(metrics.comparisons.totalSpent.difference)} vs ${metrics.previousMonthLabel}`);
   setTextValue(comparisonElements.totalSpentValue, formatMoney(metrics.totalSpent));
   setTextValue(comparisonElements.remainingBalanceCopy, `${formatSignedCurrency(metrics.comparisons.remainingBalance.difference)} vs ${metrics.previousMonthLabel}`);
   setTextValue(comparisonElements.remainingBalanceValue, formatMoney(metrics.remainingBalance));
-  setTextValue(comparisonElements.savingsCopy, `${formatSignedCurrency(metrics.comparisons.savingsAmount.difference)} vs ${metrics.previousMonthLabel}`);
-  setTextValue(comparisonElements.savingsValue, formatMoney(metrics.savingsAmount));
+  setTextValue(comparisonElements.investedCopy, `${formatSignedCurrency(metrics.comparisons.investedThisMonth.difference)} vs ${metrics.previousMonthLabel}`);
+  setTextValue(comparisonElements.investedValue, formatMoney(metrics.investedThisMonth));
 
   if (!metrics.topCategoryShift || Math.abs(metrics.topCategoryShift.difference) < 1) {
     setTextValue(comparisonElements.categoryShiftCopy, "Sin cambio fuerte entre categorias");
@@ -720,7 +813,7 @@ const renderKpis = (metrics, animate) => {
   animateValue(kpiElements.remainingBalance, metrics.remainingBalance, { animate });
   animateValue(kpiElements.savingsAmount, metrics.savingsAmount, { animate });
   animateValue(kpiElements.dailyAverage, metrics.dailyAverage, { animate });
-  animateValue(kpiElements.savingsRate, metrics.savingsRate, { animate, decimals: 1, suffix: "%" });
+  animateValue(kpiElements.goalProgress, metrics.goalProgressPercent, { animate, decimals: 1, suffix: "%" });
 
   setTextValue(kpiDeltaElements.incomeTotal, metrics.totalIncome ? `${formatMoney(metrics.incomeBase)} base + ${formatMoney(metrics.incomeExtra)} extra` : "Editable");
   setTextValue(kpiCaptionElements.incomeTotal, metrics.totalIncome ? "La suma del ingreso base y el ingreso extra del mes." : "Carga el ingreso del mes para activar el tablero completo.");
@@ -730,20 +823,31 @@ const renderKpis = (metrics, animate) => {
     setTextValue(kpiDeltaElements.remainingBalance, formatSignedPercent(metrics.comparisons.remainingBalance.percent));
     setTextValue(kpiDeltaElements.savingsAmount, formatSignedPercent(metrics.comparisons.savingsAmount.percent));
     setTextValue(kpiDeltaElements.dailyAverage, formatSignedPercent(metrics.comparisons.dailyAverage.percent));
-    setTextValue(kpiDeltaElements.savingsRate, `${metrics.comparisons.savingsRate.difference > 0 ? "+" : ""}${formatNumber(metrics.comparisons.savingsRate.difference, 1)} pts`);
   } else {
     setTextValue(kpiDeltaElements.totalSpent, "Sin base");
     setTextValue(kpiDeltaElements.remainingBalance, "Sin base");
     setTextValue(kpiDeltaElements.savingsAmount, "Sin base");
     setTextValue(kpiDeltaElements.dailyAverage, "Promedio actual");
-    setTextValue(kpiDeltaElements.savingsRate, formatPercent(metrics.savingsRate, 1));
   }
+
+  setTextValue(
+    kpiDeltaElements.goalProgress,
+    metrics.goalAmount > 0
+      ? metrics.isGoalMet
+        ? metrics.goalExceededAmount > 0
+          ? `+ ${formatMoney(metrics.goalExceededAmount)} extra`
+          : "Meta cumplida"
+        : !metrics.investmentTransactionsCount
+          ? "Sin aportes"
+        : `Falta invertir ${formatMoney(metrics.goalRemainingAmount)}`
+      : "Sin meta"
+  );
 
   setTextValue(kpiCaptionElements.totalSpent, "Suma de todos los gastos cargados en el mes activo.");
   setTextValue(kpiCaptionElements.remainingBalance, "Ingreso total menos gastos del mes activo.");
-  setTextValue(kpiCaptionElements.savingsAmount, "Lo que todavia queda libre si hoy cerrara el mes.");
+  setTextValue(kpiCaptionElements.savingsAmount, "Saldo libre despues de gastos que aun no registraste como inversion.");
   setTextValue(kpiCaptionElements.dailyAverage, "Promedio diario usando los dias cargados o transcurridos.");
-  setTextValue(kpiCaptionElements.savingsRate, "Porcentaje del ingreso que sigue libre despues de tus gastos.");
+  setTextValue(kpiCaptionElements.goalProgress, "Porcentaje de tu meta mensual cubierto con movimientos en Inversion.");
 };
 
 const renderIncomeCard = (metrics, animate) => {
@@ -755,11 +859,16 @@ const renderIncomeCard = (metrics, animate) => {
   setTextValue(
     textElements.incomeCaption,
     metrics.totalIncome
-      ? "Editar ingreso base o extra actualiza balance, ahorro, comparativas y porcentaje gastado al instante."
-      : "Define un ingreso base y otro extra para convertir el tablero en un seguimiento mensual real."
+      ? "Editar ingreso base o extra cambia al instante el balance disponible. La meta solo avanza con movimientos en Inversion."
+      : "Define un ingreso base y otro extra para saber que margen real tienes antes de invertir."
   );
   setTextValue(textElements.incomeSavingsAmount, formatMoney(metrics.savingsAmount));
-  setTextValue(textElements.incomeUsageLabel, metrics.totalIncome ? `${formatPercent(metrics.spentRatio, 1)} del ingreso ya gastado` : "Todavia no hay ingreso cargado");
+  setTextValue(
+    textElements.incomeUsageLabel,
+    metrics.totalIncome
+      ? `${formatPercent(metrics.spentRatio, 1)} del ingreso ya gastado - ${metrics.goalAmount > 0 ? `${formatPercent(metrics.goalProgressPercent, 1)} de meta invertida` : "sin meta de inversion"}`
+      : "Todavia no hay ingreso cargado"
+  );
 
   if (stackedSegments.length >= 2) {
     stackedSegments[0].style.width = `${clamp(metrics.spentRatio, 0, 100)}%`;
@@ -870,17 +979,37 @@ const createInsight = (flag, tone, title, body, meta) => ({ flag, tone, title, b
 const generateInsights = (metrics) => {
   if (!metrics.transactionCount) {
     return [
-      createInsight("Setup", "mint", "Carga tu primer gasto", "Con un ingreso y al menos un gasto vas a ver categorias, comparativas y balance real.", metrics.totalIncome ? `Ingreso actual: ${formatMoney(metrics.totalIncome)}.` : "Todavia no hay ingreso mensual cargado."),
-      createInsight("Filtro", "blue", "Usa filtros practicos", "Filtra por categoria, medio de pago, tipo de gasto y orden para revisar mejor cada mes.", `Mes activo: ${metrics.monthLabelLong}.`),
+      createInsight("Meta", "blue", "Meta de inversion", `Tu objetivo actual es ${formatMoney(metrics.goalAmount)} para "${metrics.goalLabel}".`, "La meta solo avanza con movimientos guardados en la categoria Inversion."),
+      createInsight("Aporte", "mint", "Primer aporte pendiente", "Usa Registrar inversion cuando hagas un aporte real para empezar a medir el progreso mensual.", metrics.totalIncome ? `Ingreso actual: ${formatMoney(metrics.totalIncome)}.` : "Todavia no hay ingreso mensual cargado."),
+    ];
+  }
+
+  if (!metrics.investmentTransactionsCount) {
+    return [
+      createInsight("Meta", "blue", "Sin aportes registrados", `Todavia no registraste movimientos en Inversion para "${metrics.goalLabel}".`, `Objetivo: ${formatMoney(metrics.goalAmount)}. Balance disponible actual: ${formatMoney(metrics.remainingBalance)}.`),
+      createInsight("Accion", "mint", "Lo que falta para empezar", "La meta no sube con el saldo restante: solo cuenta cuando cargas un aporte en la categoria Inversion.", "Usa Registrar inversion para guardar el proximo aporte."),
+      createInsight("Gap", "rose", "Monto pendiente", `Te falta invertir ${formatMoney(metrics.goalRemainingAmount)} para llegar a tu objetivo.`, `Invertido este mes: ${formatMoney(metrics.investedThisMonth)}.`),
+      createInsight("Balance", "blue", "Disponible separado", `Despues de todos tus gastos te quedan ${formatMoney(metrics.remainingBalance)} disponibles.`, "Ese saldo sigue aparte y no cuenta para la meta hasta registrarlo como Inversion."),
+      createInsight(metrics.topCategory?.category || "Categoria", "blue", "Categoria con mayor gasto", metrics.topCategory ? `${metrics.topCategory.category} concentra ${formatPercent(metrics.topCategory.share, 1)} del gasto del mes.` : "Sin categoria dominante.", metrics.topCategory ? `Total: ${formatMoney(metrics.topCategory.total)}.` : "Sin datos."),
     ];
   }
 
   return [
+    createInsight("Meta", metrics.isGoalMet ? "mint" : "blue", "Progreso de inversion", `Ya registraste ${formatMoney(metrics.investedThisMonth)} en Inversion y cubriste el ${formatPercent(metrics.goalProgressPercent, 1)} de tu meta mensual.`, `${formatNumber(metrics.investmentTransactionsCount)} aporte(s) en Inversion.`),
+    createInsight(
+      metrics.isGoalMet ? "Cumplida" : "Faltante",
+      metrics.isGoalMet ? "mint" : "rose",
+      metrics.isGoalMet ? "Meta mensual cumplida" : "Monto pendiente",
+      metrics.isGoalMet
+        ? metrics.goalExceededAmount > 0
+          ? `Ya superaste tu objetivo por ${formatMoney(metrics.goalExceededAmount)}.`
+          : "Ya alcanzaste exactamente tu objetivo mensual."
+        : `Te falta invertir ${formatMoney(metrics.goalRemainingAmount)} para llegar a tu objetivo.`,
+      metrics.goalLabel
+    ),
+    createInsight("Ritmo", metrics.projectedInvestmentAmount >= metrics.goalAmount ? "mint" : "rose", "Ritmo de aportes", metrics.projectedInvestmentAmount >= metrics.goalAmount ? "Si mantienes este ritmo de aportes, alcanzarias tu meta." : "Con el ritmo actual de aportes, cerrarias el mes por debajo de tu meta.", `Proyeccion de inversion al cierre: ${formatMoney(metrics.projectedInvestmentAmount)}.`),
+    createInsight("Balance", "blue", "Balance disponible", `Despues de todos tus gastos te quedan ${formatMoney(metrics.remainingBalance)} disponibles.`, "Ese saldo no cuenta para la meta hasta registrarlo como Inversion."),
     createInsight(metrics.topCategory?.category || "Categoria", "blue", "Categoria con mayor gasto", metrics.topCategory ? `${metrics.topCategory.category} concentra ${formatPercent(metrics.topCategory.share, 1)} del gasto del mes.` : "Sin categoria dominante.", metrics.topCategory ? `Total: ${formatMoney(metrics.topCategory.total)}.` : "Sin datos."),
-    createInsight("Mayor gasto", "rose", "Gasto mas alto", metrics.largestExpense ? `${metrics.largestExpense.title} fue el gasto mas grande del mes.` : "Todavia no hay un gasto dominante.", metrics.largestExpense ? `${formatMoney(metrics.largestExpense.amount)} el ${formatDate(metrics.largestExpense.date, { month: "short", day: "numeric", year: undefined }).replace(".", "")}.` : "Sin datos."),
-    createInsight("Promedio", "mint", "Promedio diario", `${formatMoney(metrics.dailyAverage)} por dia durante ${metrics.elapsedDays} dia(s) considerados.`, `Proyeccion mensual: ${formatMoney(metrics.projectedMonthlySpend)}.`),
-    createInsight("Split", "blue", "Fijos vs variables", `${formatPercent(metrics.fixedShare, 1)} fijos y ${formatPercent(metrics.variableShare, 1)} variables dentro de tus gastos.`, `Fijos: ${formatMoney(metrics.fixedSpend)}. Variables: ${formatMoney(metrics.variableSpend)}.`),
-    createInsight("Ingreso", metrics.spentRatio > 85 ? "rose" : "mint", "Porcentaje del ingreso gastado", `${formatPercent(metrics.spentRatio, 1)} de tu ingreso total ya fue consumido en el mes activo.`, metrics.totalIncome ? `Te quedan ${formatMoney(metrics.remainingBalance)} sobre ${formatMoney(metrics.totalIncome)}.` : "Carga un ingreso para completar este dato."),
   ];
 };
 
@@ -896,7 +1025,7 @@ const renderInsights = (metrics) => {
 
 const getEmptyStateMarkup = (state, metrics, context) => {
   if (!context.monthExpenses.length) {
-    return `<div class="expense-list__empty"><strong>No hay gastos en ${escapeHtml(metrics.monthLabelLong)}</strong><p>Empieza cargando un gasto real para ver la actividad del mes, los insights y la comparacion contra meses anteriores.</p><div class="expense-list__actions"><button class="button button--accent button--small" type="button" data-list-action="open-add">Agregar gasto</button>${!state.expenses.length ? '<button class="button button--ghost button--small" type="button" data-list-action="restore-sample">Cargar muestra</button>' : ""}</div></div>`;
+    return `<div class="expense-list__empty"><strong>No hay gastos en ${escapeHtml(metrics.monthLabelLong)}</strong><p>Empieza cargando un gasto real o registra una inversion para medir por separado tu balance disponible y el avance real de la meta.</p><div class="expense-list__actions"><button class="button button--accent button--small" type="button" data-list-action="open-investment">Registrar inversion</button><button class="button button--ghost button--small" type="button" data-list-action="open-add">Agregar gasto</button>${!state.expenses.length ? '<button class="button button--ghost button--small" type="button" data-list-action="restore-sample">Cargar muestra</button>' : ""}</div></div>`;
   }
 
   return `<div class="expense-list__empty"><strong>No hay movimientos con estos filtros</strong><p>Prueba limpiar categoria, medio de pago, tipo de gasto o la busqueda para volver a ver resultados.</p><div class="expense-list__actions"><button class="button button--ghost button--small" type="button" data-list-action="clear-filters">Limpiar filtros</button><button class="button button--ghost button--small" type="button" data-list-action="open-filters">Ajustar filtros</button></div></div>`;
@@ -916,10 +1045,13 @@ const renderExpenseList = (state, metrics, context) => {
 
   expenseList.innerHTML = context.visibleExpenses
     .map((expense) => {
+      const isInvestmentExpense = expense.category === "Inversion";
       const notePreview = expense.note ? `<p class="expense-row__note">${escapeHtml(expense.note)}</p>` : "";
       const fixedBadge = expense.isFixed ? '<span class="badge badge--fixed">Fijo</span>' : '<span class="badge badge--variable">Variable</span>';
+      const investmentBadge = isInvestmentExpense ? '<span class="badge badge--investment">Aporte</span>' : "";
+      const amountClass = isInvestmentExpense ? "expense-row__amount expense-row__amount--investment" : "expense-row__amount";
 
-      return `<article class="expense-row"><div class="expense-row__merchant"><strong>${escapeHtml(expense.title)}</strong>${notePreview || `<span>${escapeHtml(expense.category)} - ${escapeHtml(expense.paymentMethod)}</span>`}</div><div class="expense-row__meta"><span class="badge ${getCategoryTone(expense.category)}">${escapeHtml(expense.category)}</span><span class="badge badge--method">${escapeHtml(expense.paymentMethod)}</span>${fixedBadge}<span class="expense-row__method">${escapeHtml(formatDate(expense.date, { month: "short", day: "numeric", year: "numeric" }).replace(".", ""))}</span></div><div class="expense-row__side"><strong class="expense-row__amount">- ${escapeHtml(formatMoney(expense.amount))}</strong><div class="expense-row__actions"><button class="icon-button icon-button--soft" type="button" aria-label="Editar gasto" data-expense-action="edit" data-expense-id="${expense.id}"><svg viewBox="0 0 24 24" fill="none"><path d="M4 20h4.5L19 9.5 14.5 5 4 15.5V20Z"></path><path d="m12.5 7 4.5 4.5"></path></svg></button><button class="icon-button icon-button--soft" type="button" aria-label="Duplicar gasto" data-expense-action="duplicate" data-expense-id="${expense.id}"><svg viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M6 15H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v1"></path></svg></button><button class="icon-button icon-button--soft" type="button" aria-label="Eliminar gasto" data-expense-action="delete" data-expense-id="${expense.id}"><svg viewBox="0 0 24 24" fill="none"><path d="M4 7.5h16"></path><path d="M9.5 10.5v6"></path><path d="M14.5 10.5v6"></path><path d="M6.5 7.5 7.4 19a2 2 0 0 0 2 1.8h5.2a2 2 0 0 0 2-1.8l.9-11.5"></path><path d="M9 7.5V5.8A1.8 1.8 0 0 1 10.8 4h2.4A1.8 1.8 0 0 1 15 5.8v1.7"></path></svg></button></div></div></article>`;
+      return `<article class="expense-row${isInvestmentExpense ? " expense-row--investment" : ""}"><div class="expense-row__merchant"><strong>${escapeHtml(expense.title)}</strong>${notePreview || `<span>${escapeHtml(expense.category)} - ${escapeHtml(expense.paymentMethod)}</span>`}</div><div class="expense-row__meta"><span class="badge ${getCategoryTone(expense.category)}">${escapeHtml(expense.category)}</span>${investmentBadge}<span class="badge badge--method">${escapeHtml(expense.paymentMethod)}</span>${fixedBadge}<span class="expense-row__method">${escapeHtml(formatDate(expense.date, { month: "short", day: "numeric", year: "numeric" }).replace(".", ""))}</span></div><div class="expense-row__side"><strong class="${amountClass}">- ${escapeHtml(formatMoney(expense.amount))}</strong><div class="expense-row__actions"><button class="icon-button icon-button--soft" type="button" aria-label="Editar gasto" data-expense-action="edit" data-expense-id="${expense.id}"><svg viewBox="0 0 24 24" fill="none"><path d="M4 20h4.5L19 9.5 14.5 5 4 15.5V20Z"></path><path d="m12.5 7 4.5 4.5"></path></svg></button><button class="icon-button icon-button--soft" type="button" aria-label="Duplicar gasto" data-expense-action="duplicate" data-expense-id="${expense.id}"><svg viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M6 15H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v1"></path></svg></button><button class="icon-button icon-button--soft" type="button" aria-label="Eliminar gasto" data-expense-action="delete" data-expense-id="${expense.id}"><svg viewBox="0 0 24 24" fill="none"><path d="M4 7.5h16"></path><path d="M9.5 10.5v6"></path><path d="M14.5 10.5v6"></path><path d="M6.5 7.5 7.4 19a2 2 0 0 0 2 1.8h5.2a2 2 0 0 0 2-1.8l.9-11.5"></path><path d="M9 7.5V5.8A1.8 1.8 0 0 1 10.8 4h2.4A1.8 1.8 0 0 1 15 5.8v1.7"></path></svg></button></div></div></article>`;
     })
     .join("");
 };
@@ -1040,6 +1172,12 @@ const clearIncomeFeedback = () => {
   }
 };
 
+const clearGoalFeedback = () => {
+  if (goalFeedback) {
+    goalFeedback.textContent = "";
+  }
+};
+
 const setModalPanel = (panelName) => {
   modalPanels.forEach((panel) => {
     panel.hidden = panel.dataset.modalPanel !== panelName;
@@ -1075,8 +1213,10 @@ const closeModal = () => {
   uiState.activeExpenseId = null;
   clearFormFeedback();
   clearIncomeFeedback();
+  clearGoalFeedback();
   expenseForm?.reset();
   incomeForm?.reset();
+  goalForm?.reset();
 
   if (uiState.lastFocusedElement instanceof HTMLElement) {
     window.requestAnimationFrame(() => uiState.lastFocusedElement.focus());
@@ -1139,9 +1279,23 @@ const validateIncomePayload = (incomeBase, incomeExtra) => {
   return "";
 };
 
+const validateGoalPayload = (goalAmount) => {
+  if (!Number.isFinite(goalAmount) || goalAmount <= 0) {
+    return "Ingresa un objetivo mensual mayor a cero.";
+  }
+
+  return "";
+};
+
 const updateIncomePreview = () => {
   const total = roundCurrency(Number(incomeBaseInput?.value || 0) + Number(incomeExtraInput?.value || 0));
   animateValue(incomeTotalPreview, total, { animate: false });
+};
+
+const updateGoalPreview = () => {
+  const goalAmount = roundCurrency(Number(goalAmountInput?.value || 0));
+  animateValue(goalAmountPreview, goalAmount, { animate: false });
+  setTextValue(goalLabelPreview, String(goalLabelInput?.value || "").trim() || DEFAULT_GOAL_LABEL);
 };
 
 const buildExpensePayload = () => {
@@ -1166,11 +1320,14 @@ const buildExpensePayload = () => {
   };
 };
 
-const openExpenseModal = (mode, expense = null) => {
+const openExpenseModal = (mode, expense = null, options = {}) => {
   if (!expenseForm || !modalTitle || !modalEyebrow || !modalCopy || !formSubmit) {
     return;
   }
 
+  const presetCategory = options.presetCategory || "";
+  const isInvestmentMode = mode === "investment";
+  const isInvestmentEntry = (expense?.category || presetCategory) === "Inversion";
   uiState.modalMode = mode;
   uiState.activeExpenseId = mode === "edit" ? expense?.id || null : null;
   setModalPanel("form");
@@ -1179,16 +1336,16 @@ const openExpenseModal = (mode, expense = null) => {
   getFormField("id").value = expense?.id || "";
   getFormField("title").value = expense?.title || "";
   getFormField("amount").value = expense?.amount ? String(expense.amount) : "";
-  getFormField("category").value = expense?.category || "";
+  getFormField("category").value = expense?.category || presetCategory || "";
   getFormField("date").value = expense?.date ? expense.date.slice(0, 10) : new Date().toISOString().slice(0, 10);
   getFormField("paymentMethod").value = expense?.paymentMethod || "";
   getFormField("note").value = expense?.note || "";
   getFormField("isFixed").checked = Boolean(expense?.isFixed);
 
-  modalEyebrow.textContent = mode === "edit" ? "Editar movimiento" : "Agregar movimiento";
-  modalTitle.textContent = mode === "edit" ? "Editar gasto" : "Agregar gasto";
-  modalCopy.textContent = mode === "edit" ? "Actualiza los datos y el resumen del mes se recalcula al instante." : "Carga un gasto real del mes sin salir del dashboard.";
-  formSubmit.textContent = mode === "edit" ? "Guardar cambios" : "Guardar gasto";
+  modalEyebrow.textContent = mode === "edit" ? (isInvestmentEntry ? "Editar inversion" : "Editar movimiento") : isInvestmentMode ? "Registrar inversion" : "Agregar movimiento";
+  modalTitle.textContent = mode === "edit" ? (isInvestmentEntry ? "Editar aporte" : "Editar gasto") : isInvestmentMode ? "Registrar inversion" : "Agregar gasto";
+  modalCopy.textContent = mode === "edit" ? (isInvestmentEntry ? "Actualiza el aporte y el progreso de la meta se recalcula al instante." : "Actualiza los datos y el resumen del mes se recalcula al instante.") : isInvestmentMode ? "La categoria Inversion ya queda seleccionada para registrar un aporte real del mes." : "Carga un gasto real del mes sin salir del dashboard.";
+  formSubmit.textContent = mode === "edit" ? (isInvestmentEntry ? "Guardar aporte" : "Guardar cambios") : isInvestmentMode ? "Guardar aporte" : "Guardar gasto";
   openModal(getFormField("title"));
 };
 
@@ -1206,6 +1363,26 @@ const openIncomeModal = () => {
   incomeExtraInput.value = String(roundCurrency(state.incomeExtra || 0));
   updateIncomePreview();
   openModal(incomeBaseInput);
+};
+
+const openInvestmentModal = () => {
+  openExpenseModal("investment", null, { presetCategory: "Inversion" });
+};
+
+const openGoalModal = () => {
+  if (!goalForm || !goalAmountInput || !goalLabelInput) {
+    return;
+  }
+
+  const state = getState();
+  uiState.modalMode = "goal";
+  setModalPanel("goal");
+  clearGoalFeedback();
+  goalForm.reset();
+  goalAmountInput.value = String(roundCurrency(state.savingsGoalAmount || 0));
+  goalLabelInput.value = String(state.savingsGoalLabel || "").trim();
+  updateGoalPreview();
+  openModal(goalAmountInput);
 };
 
 const openFiltersModal = () => {
@@ -1238,7 +1415,7 @@ const openDeleteModal = (expense) => {
   setModalPanel("confirm");
   setTextValue(confirmTitle, expense.title);
   setTextValue(confirmDate, formatDate(expense.date, { month: "short", day: "numeric", year: "numeric" }).replace(".", ""));
-  setTextValue(confirmCopy, expense.note || "Vas a eliminar este gasto del registro mensual.");
+  setTextValue(confirmCopy, expense.note || (expense.category === "Inversion" ? "Vas a eliminar este aporte del registro mensual." : "Vas a eliminar este gasto del registro mensual."));
   setTextValue(confirmAmount, `- ${formatMoney(expense.amount)}`);
   openModal(confirmDeleteButton);
 };
@@ -1273,6 +1450,7 @@ const handleExpenseSubmit = (event) => {
 
   const expenseMonth = getMonthKey(payload.date);
   const isEditing = uiState.modalMode === "edit";
+  const isInvestmentEntry = payload.category === "Inversion";
 
   updateState((state) => ({
     expenses: isEditing && uiState.activeExpenseId
@@ -1286,7 +1464,7 @@ const handleExpenseSubmit = (event) => {
 
   closeModal();
   renderDashboard(true);
-  showToast(isEditing ? "Gasto actualizado." : "Gasto agregado.");
+  showToast(isEditing ? (isInvestmentEntry ? "Aporte actualizado." : "Gasto actualizado.") : (isInvestmentEntry ? "Aporte registrado." : "Gasto agregado."));
 };
 
 const handleDeleteExpense = () => {
@@ -1294,12 +1472,13 @@ const handleDeleteExpense = () => {
     return;
   }
 
+  const deletedExpense = getExpenseById(uiState.activeExpenseId);
   updateState((state) => ({
     expenses: state.expenses.filter((expense) => expense.id !== uiState.activeExpenseId),
   }));
   closeModal();
   renderDashboard(true);
-  showToast("Gasto eliminado.");
+  showToast(deletedExpense?.category === "Inversion" ? "Aporte eliminado." : "Gasto eliminado.");
 };
 
 const duplicateExpense = (expense) => {
@@ -1321,7 +1500,7 @@ const duplicateExpense = (expense) => {
     },
   }));
   renderDashboard(true);
-  showToast("Gasto duplicado.");
+  showToast(expense.category === "Inversion" ? "Aporte duplicado." : "Gasto duplicado.");
 };
 
 const handleIncomeSubmit = (event) => {
@@ -1344,6 +1523,28 @@ const handleIncomeSubmit = (event) => {
   closeModal();
   renderDashboard(true);
   showToast("Ingreso mensual actualizado.");
+};
+
+const handleGoalSubmit = (event) => {
+  event.preventDefault();
+
+  const goalAmount = roundCurrency(Number(goalAmountInput?.value || 0));
+  const goalLabel = String(goalLabelInput?.value || "").trim();
+  const validation = validateGoalPayload(goalAmount);
+
+  if (validation) {
+    setTextValue(goalFeedback, validation);
+    return;
+  }
+
+  updateState({
+    savingsGoalAmount: goalAmount,
+    savingsGoalLabel: goalLabel,
+  });
+
+  closeModal();
+  renderDashboard(true);
+  showToast("Meta mensual actualizada.");
 };
 
 const handleSearchUpdate = (value) => {
@@ -1403,6 +1604,8 @@ const initializeInteractions = () => {
   }
 
   openIncomeButtons.forEach((button) => button.addEventListener("click", openIncomeModal));
+  openGoalButtons.forEach((button) => button.addEventListener("click", openGoalModal));
+  openInvestmentButtons.forEach((button) => button.addEventListener("click", openInvestmentModal));
   openFilterButtons.forEach((button) => button.addEventListener("click", openFiltersModal));
   openExportButtons.forEach((button) => button.addEventListener("click", openExportModal));
   modalRestoreButtons.forEach((button) => button.addEventListener("click", openRestoreModal));
@@ -1419,6 +1622,15 @@ const initializeInteractions = () => {
   incomeForm?.addEventListener("change", () => {
     clearIncomeFeedback();
     updateIncomePreview();
+  });
+  goalForm?.addEventListener("submit", handleGoalSubmit);
+  goalForm?.addEventListener("input", () => {
+    clearGoalFeedback();
+    updateGoalPreview();
+  });
+  goalForm?.addEventListener("change", () => {
+    clearGoalFeedback();
+    updateGoalPreview();
   });
 
   confirmDeleteButton?.addEventListener("click", handleDeleteExpense);
@@ -1443,6 +1655,10 @@ const initializeInteractions = () => {
     if (listAction) {
       if (listAction.dataset.listAction === "open-add") {
         openExpenseModal("add");
+      }
+
+      if (listAction.dataset.listAction === "open-investment") {
+        openInvestmentModal();
       }
 
       if (listAction.dataset.listAction === "restore-sample") {

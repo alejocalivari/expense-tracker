@@ -3,7 +3,7 @@
 
   const STORAGE_KEY = "aleclv-expense-tracker-state";
   const COMPAT_STORAGE_KEYS = ["aleclv-finance-state"];
-  const SCHEMA_VERSION = 4;
+  const SCHEMA_VERSION = 5;
   const MONTH_FILTER_PATTERN = /^\d{4}-\d{2}$/;
   const DEFAULT_FILTERS = {
     month: "2026-03",
@@ -19,9 +19,13 @@
     "incomeBase",
     "incomeExtra",
     "income",
+    "savingsGoalAmount",
+    "savingsGoalLabel",
     "expenses",
     "filters",
   ];
+  const DEFAULT_GOAL_AMOUNT = 740000;
+  const DEFAULT_GOAL_LABEL = "Meta mensual de acciones";
   const CATEGORY_ALIASES = {
     Food: "Supermercado",
     Transport: "Transporte",
@@ -86,6 +90,16 @@
   const normalizeAmount = (value, scaleFactor = 1) => {
     const amountValue = Number(value);
     return Number.isFinite(amountValue) ? roundCurrency(amountValue * scaleFactor) : 0;
+  };
+
+  const normalizeGoalAmount = (value, scaleFactor = 1) => {
+    const normalizedAmount = normalizeAmount(value, scaleFactor);
+    return normalizedAmount > 0 ? normalizedAmount : DEFAULT_GOAL_AMOUNT;
+  };
+
+  const normalizeGoalLabel = (value) => {
+    const label = String(value || "").trim();
+    return label === "Meta mensual de inversion" ? DEFAULT_GOAL_LABEL : label;
   };
 
   const normalizeMonthFilter = (value) => {
@@ -247,6 +261,8 @@
     schemaVersion: SCHEMA_VERSION,
     incomeBase: 2100000,
     incomeExtra: 250000,
+    savingsGoalAmount: DEFAULT_GOAL_AMOUNT,
+    savingsGoalLabel: DEFAULT_GOAL_LABEL,
     expenses: [
       normalizeExpense({
         title: "Supermercado",
@@ -424,11 +440,15 @@
     const fallbackIncome = Number.isFinite(Number(state.income)) ? Number(state.income) : 0;
     const incomeBase = state.incomeBase ?? fallbackIncome;
     const incomeExtra = (state.incomeExtra ?? 0) + migratedIncome.incomeExtra;
+    const savingsGoalAmount = state.savingsGoalAmount ?? DEFAULT_GOAL_AMOUNT;
+    const savingsGoalLabel = normalizeGoalLabel(state.savingsGoalLabel);
 
     return {
       schemaVersion: SCHEMA_VERSION,
       incomeBase: normalizeAmount(incomeBase, migrationMode ? migrationScaleFactor : 1),
       incomeExtra: normalizeAmount(incomeExtra, migrationMode ? migrationScaleFactor : 1),
+      savingsGoalAmount: normalizeGoalAmount(savingsGoalAmount, migrationMode ? migrationScaleFactor : 1),
+      savingsGoalLabel,
       expenses: sanitizedExpenses.map((expense) =>
         normalizeExpense(expense, {
           migrationMode,

@@ -36,11 +36,11 @@
             <p class="eyebrow">Mes activo</p>
             <h2><span class="countup" data-summary="sidebar-free-cash" data-countup="0" data-prefix="$">$0</span> disponibles</h2>
           </div>
-          <span class="status-pill status-pill--neutral" data-summary-status="sidebar">Sin comparacion</span>
+          <span class="status-pill status-pill--neutral" data-summary-status="sidebar">Sin meta</span>
         </div>
         <div class="rail-metric"><span>Gastado del ingreso</span><strong data-summary-text="sidebar-spend-ratio">0%</strong></div>
         <div class="progress"><span data-summary-bar="sidebar-spend-ratio" style="width: 0%;"></span></div>
-        <div class="rail-metric"><span>Ahorro del mes</span><strong class="countup" data-summary="sidebar-savings" data-countup="0" data-prefix="$">$0</strong></div>
+        <div class="rail-metric"><span>Disponible sin invertir</span><strong class="countup" data-summary="sidebar-savings" data-countup="0" data-prefix="$">$0</strong></div>
       </section>
 
       <section class="sidebar__footer panel panel--soft">
@@ -73,35 +73,41 @@
         <section class="dashboard-state dashboard-state--content">
           <section class="hero-grid">
             <article class="panel hero-card">
-              <div class="panel__header"><div><p class="eyebrow">Balance del mes</p><h3>Lo que te queda despues de tus gastos</h3></div><span class="status-pill status-pill--neutral" data-summary-status="hero">Sin comparacion</span></div>
+              <div class="panel__header"><div><p class="eyebrow">Balance disponible</p><h3>Lo que te queda despues de tus gastos</h3></div><span class="status-pill status-pill--neutral" data-summary-status="hero">Sin meta</span></div>
               <div class="hero-card__headline">
                 <div><p class="hero-card__amount countup" data-summary="hero-remaining" data-countup="0" data-prefix="$">$0</p><p class="hero-card__caption" data-summary-text="hero-caption">Carga tu ingreso y tus movimientos para ver un cierre real del mes.</p></div>
                 <div class="hero-stat-cluster">
-                  <div class="hero-stat"><span data-summary-label="hero-stat-1-label">Movimientos</span><strong data-summary-text="hero-stat-1-value">0 este mes</strong></div>
-                  <div class="hero-stat"><span data-summary-label="hero-stat-2-label">Gasto fijo</span><strong data-summary-text="hero-stat-2-value">0% del total</strong></div>
+                  <div class="hero-stat"><span data-summary-label="hero-stat-1-label">Invertido este mes</span><strong class="countup" data-summary="hero-goal-savings" data-countup="0" data-prefix="$">$0</strong></div>
+                  <div class="hero-stat"><span data-summary-label="hero-stat-2-label">Progreso de inversion</span><strong data-summary-text="hero-stat-2-value">0%</strong></div>
                 </div>
               </div>
               <div class="runway"><div class="runway__labels"><span>Gastado del ingreso</span><span data-summary-text="hero-runway">0%</span></div><div class="runway__bar"><span data-summary-bar="hero-runway" style="width: 0%;"></span></div></div>
               <div class="hero-card__footer">
                 <div class="mini-card"><span>Promedio diario</span><strong class="countup" data-summary="mini-daily-average" data-countup="0" data-prefix="$">$0</strong><small data-summary-text="mini-daily-note">Sin gastos en el mes activo</small></div>
-                <div class="mini-card"><span data-summary-label="mini-secondary-label">Gasto mas alto</span><strong class="countup" data-summary="mini-secondary-value" data-countup="0" data-prefix="$">$0</strong><small data-summary-text="mini-secondary-note">Todavia no hay gastos cargados</small></div>
-                <div class="mini-card"><span data-summary-label="mini-tertiary-label">Categoria principal</span><strong data-summary-text="mini-tertiary-value">Sin categoria</strong><small data-summary-text="mini-tertiary-note">Todavia no hay mezcla de gastos</small></div>
+                <div class="mini-card"><span data-summary-label="mini-secondary-label">Te falta invertir</span><strong class="countup" data-summary="mini-secondary-value" data-countup="0" data-prefix="$">$0</strong><small data-summary-text="mini-secondary-note">Para completar tu meta mensual de acciones</small></div>
+                <div class="mini-card"><span data-summary-label="mini-tertiary-label">Estado de meta</span><strong data-summary-text="mini-tertiary-value">Sin meta</strong><small data-summary-text="mini-tertiary-note">La meta solo avanza con aportes en Inversion.</small></div>
               </div>
             </article>
 
             <article class="panel split-card">
-              <div class="panel__header panel__header--stack"><div><p class="eyebrow">Fijos vs variables</p><h3>Como se repartieron tus gastos</h3></div><p class="panel-note" data-summary-text="split-note">Separar gastos fijos del resto te ayuda a entender cuanto margen real te queda para el resto del mes.</p></div>
+              <div class="panel__header"><div><p class="eyebrow">Meta mensual</p><h3 data-summary-text="goal-heading">Meta mensual de acciones</h3></div><span class="status-pill status-pill--neutral" data-summary-status="goal">Sin meta</span></div>
               <div class="split-card__section">
-                <div class="allocation-row"><div class="allocation-row__title"><span>Gastos fijos</span><strong class="countup" data-summary="fixed-spend" data-countup="0" data-prefix="$">$0</strong></div><div class="progress progress--tight"><span data-summary-bar="fixed-spend" style="width: 0%;"></span></div></div>
-                <div class="allocation-row"><div class="allocation-row__title"><span>Gastos variables</span><strong class="countup" data-summary="variable-spend" data-countup="0" data-prefix="$">$0</strong></div><div class="progress progress--tight"><span data-summary-bar="variable-spend" style="width: 0%;"></span></div></div>
-                <div class="allocation-row"><div class="allocation-row__title"><span>Ahorro del mes</span><strong class="countup" data-summary="month-savings" data-countup="0" data-prefix="$">$0</strong></div><div class="progress progress--tight progress--accent"><span data-summary-bar="month-savings" style="width: 0%;"></span></div></div>
+                <p class="panel-note" data-summary-text="goal-note">La meta solo suma los movimientos cargados en la categoria Inversion.</p>
+                <div class="allocation-row"><div class="allocation-row__title"><span>Objetivo</span><strong class="countup" data-summary="goal-amount" data-countup="0" data-prefix="$">$0</strong></div></div>
+                <div class="allocation-row"><div class="allocation-row__title"><span>Invertido este mes</span><strong class="countup" data-summary="goal-saved" data-countup="0" data-prefix="$">$0</strong></div></div>
+                <div class="goal-progress"><div class="goal-progress__labels"><span>Progreso de inversion</span><strong data-summary-text="goal-progress-text">0%</strong></div><div class="progress goal-progress__bar"><span data-summary-bar="goal-progress" style="width: 0%;"></span></div></div>
+                <div class="allocation-note__stats">
+                  <div class="allocation-stat"><span data-summary-label="goal-gap-label">Te falta invertir</span><strong class="countup" data-summary="goal-gap-value" data-countup="0" data-prefix="$">$0</strong></div>
+                  <div class="allocation-stat"><span>Excedente sobre la meta</span><strong class="countup" data-summary="goal-exceeded" data-countup="0" data-prefix="$">$0</strong></div>
+                </div>
+                <div class="panel-actions"><button class="button button--accent" type="button" data-open-investment>Registrar inversion</button><button class="button button--ghost" type="button" data-open-goal>Editar meta mensual</button></div>
               </div>
               <div class="split-card__section">
                 <p class="split-card__label">Comparacion con el mes anterior</p>
                 <p class="panel-note" data-summary-text="comparison-note">Todavia no hay datos del mes anterior para comparar.</p>
                 <div class="timeline-item"><div><strong>Gasto total</strong><span data-comparison="totalSpent-copy">Sin base para comparar</span></div><strong data-comparison="totalSpent-value">$0</strong></div>
                 <div class="timeline-item"><div><strong>Balance restante</strong><span data-comparison="remainingBalance-copy">Sin base para comparar</span></div><strong data-comparison="remainingBalance-value">$0</strong></div>
-                <div class="timeline-item"><div><strong>Ahorro</strong><span data-comparison="savings-copy">Sin base para comparar</span></div><strong data-comparison="savings-value">$0</strong></div>
+                <div class="timeline-item"><div><strong>Invertido</strong><span data-comparison="invested-copy">Sin base para comparar</span></div><strong data-comparison="invested-value">$0</strong></div>
                 <div class="timeline-item"><div><strong>Cambio de categoria</strong><span data-comparison="categoryShift-copy">Sin categoria para comparar</span></div><strong data-comparison="categoryShift-value">Sin datos</strong></div>
               </div>
             </article>
@@ -111,9 +117,9 @@
             <article class="panel kpi-card kpi-card--income"><div class="kpi-card__header"><span>Ingreso total</span><span class="kpi-card__delta" data-kpi-delta="incomeTotal">Editable</span></div><strong class="kpi-card__value countup" data-kpi="incomeTotal" data-countup="0" data-prefix="$">$0</strong><p class="kpi-card__caption" data-kpi-caption="incomeTotal">Ingreso base mas extra del mes activo.</p><div class="kpi-card__actions"><button class="button button--ghost button--small" type="button" data-open-income>Editar ingreso</button></div><div class="sparkline"><span style="height: 32%;"></span><span style="height: 46%;"></span><span style="height: 40%;"></span><span style="height: 58%;"></span><span style="height: 64%;"></span><span style="height: 88%;"></span></div></article>
             <article class="panel kpi-card kpi-card--spent"><div class="kpi-card__header"><span>Gastos totales</span><span class="kpi-card__delta" data-kpi-delta="totalSpent">Sin base</span></div><strong class="kpi-card__value countup" data-kpi="totalSpent" data-countup="0" data-prefix="$">$0</strong><p class="kpi-card__caption" data-kpi-caption="totalSpent">Todo lo cargado como gasto dentro del mes activo.</p><div class="sparkline"><span style="height: 38%;"></span><span style="height: 62%;"></span><span style="height: 76%;"></span><span style="height: 70%;"></span><span style="height: 54%;"></span><span style="height: 43%;"></span></div></article>
             <article class="panel kpi-card kpi-card--balance"><div class="kpi-card__header"><span>Balance restante</span><span class="kpi-card__delta" data-kpi-delta="remainingBalance">Sin base</span></div><strong class="kpi-card__value countup" data-kpi="remainingBalance" data-countup="0" data-prefix="$">$0</strong><p class="kpi-card__caption" data-kpi-caption="remainingBalance">Ingreso total menos gastos del mes.</p><div class="sparkline"><span style="height: 24%;"></span><span style="height: 35%;"></span><span style="height: 49%;"></span><span style="height: 58%;"></span><span style="height: 72%;"></span><span style="height: 86%;"></span></div></article>
-            <article class="panel kpi-card kpi-card--surplus"><div class="kpi-card__header"><span>Ahorro del mes</span><span class="kpi-card__delta" data-kpi-delta="savingsAmount">Disponible</span></div><strong class="kpi-card__value countup" data-kpi="savingsAmount" data-countup="0" data-prefix="$">$0</strong><p class="kpi-card__caption" data-kpi-caption="savingsAmount">Lo que todavia no consumiste del ingreso total.</p><div class="sparkline"><span style="height: 18%;"></span><span style="height: 36%;"></span><span style="height: 48%;"></span><span style="height: 66%;"></span><span style="height: 74%;"></span><span style="height: 84%;"></span></div></article>
+            <article class="panel kpi-card kpi-card--surplus"><div class="kpi-card__header"><span>Disponible sin invertir</span><span class="kpi-card__delta" data-kpi-delta="savingsAmount">Disponible</span></div><strong class="kpi-card__value countup" data-kpi="savingsAmount" data-countup="0" data-prefix="$">$0</strong><p class="kpi-card__caption" data-kpi-caption="savingsAmount">Saldo libre despues de gastos que aun no registraste como inversion.</p><div class="sparkline"><span style="height: 18%;"></span><span style="height: 36%;"></span><span style="height: 48%;"></span><span style="height: 66%;"></span><span style="height: 74%;"></span><span style="height: 84%;"></span></div></article>
             <article class="panel kpi-card kpi-card--daily"><div class="kpi-card__header"><span>Promedio diario</span><span class="kpi-card__delta" data-kpi-delta="dailyAverage">Promedio actual</span></div><strong class="kpi-card__value countup" data-kpi="dailyAverage" data-countup="0" data-prefix="$">$0</strong><p class="kpi-card__caption" data-kpi-caption="dailyAverage">Promedio real por dia con gasto dentro del mes.</p><div class="sparkline"><span style="height: 82%;"></span><span style="height: 72%;"></span><span style="height: 66%;"></span><span style="height: 58%;"></span><span style="height: 51%;"></span><span style="height: 47%;"></span></div></article>
-            <article class="panel kpi-card kpi-card--savings"><div class="kpi-card__header"><span>Tasa de ahorro</span><span class="kpi-card__delta" data-kpi-delta="savingsRate">0%</span></div><strong class="kpi-card__value countup" data-kpi="savingsRate" data-countup="0" data-suffix="%" data-decimals="1">0%</strong><p class="kpi-card__caption" data-kpi-caption="savingsRate">Que porcentaje del ingreso total sigue libre.</p><div class="sparkline"><span style="height: 26%;"></span><span style="height: 40%;"></span><span style="height: 44%;"></span><span style="height: 52%;"></span><span style="height: 70%;"></span><span style="height: 80%;"></span></div></article>
+            <article class="panel kpi-card kpi-card--savings"><div class="kpi-card__header"><span>Progreso de inversion</span><span class="kpi-card__delta" data-kpi-delta="goalProgress">0%</span></div><strong class="kpi-card__value countup" data-kpi="goalProgress" data-countup="0" data-suffix="%" data-decimals="1">0%</strong><p class="kpi-card__caption" data-kpi-caption="goalProgress">Que porcentaje de tu meta mensual ya cubriste con movimientos en Inversion.</p><div class="kpi-card__actions"><button class="button button--ghost button--small" type="button" data-open-investment>Cargar aporte</button></div><div class="sparkline"><span style="height: 26%;"></span><span style="height: 40%;"></span><span style="height: 44%;"></span><span style="height: 52%;"></span><span style="height: 70%;"></span><span style="height: 80%;"></span></div></article>
           </section>
 
           <section class="charts-grid">
@@ -132,9 +138,9 @@
               <article class="panel income-card">
                 <div class="panel__header"><div><p class="eyebrow">Ingreso mensual</p><h3>Base para todo el mes</h3></div></div>
                 <div class="income-card__amount"><span>Ingreso total calculado</span><strong class="countup" data-summary="income-total" data-countup="0" data-prefix="$">$0</strong></div>
-                <p class="income-card__caption" data-summary-text="income-caption">Editar ingreso base o extra actualiza balance, ahorro y comparativas al instante.</p>
+                <p class="income-card__caption" data-summary-text="income-caption">Editar ingreso base o extra actualiza balance y disponible sin invertir al instante.</p>
                 <div class="projection-grid projection-grid--triple"><div class="projection-tile"><span>Ingreso base</span><strong class="countup" data-summary="income-base" data-countup="0" data-prefix="$">$0</strong></div><div class="projection-tile"><span>Ingreso extra</span><strong class="countup" data-summary="income-extra" data-countup="0" data-prefix="$">$0</strong></div><div class="projection-tile projection-tile--feature"><span>Balance restante</span><strong class="countup" data-summary="income-balance" data-countup="0" data-prefix="$">$0</strong></div></div>
-                <div class="allocation-note"><div class="allocation-note__header"><span>Uso del ingreso</span><strong data-income-usage-label>0% del ingreso ya gastado</strong></div><div class="stacked-bar"><span class="stacked-bar__segment stacked-bar__segment--mint" style="width: 50%;"></span><span class="stacked-bar__segment stacked-bar__segment--slate" style="width: 50%;"></span></div><div class="allocation-note__stats"><div class="allocation-stat"><span>Tasa de ahorro</span><strong class="countup" data-summary="income-savings-rate" data-countup="0" data-suffix="%" data-decimals="1">0%</strong></div><div class="allocation-stat"><span>Ahorro del mes</span><strong data-summary-text="income-savings-amount">$0</strong></div></div></div>
+                <div class="allocation-note"><div class="allocation-note__header"><span>Uso del ingreso</span><strong data-income-usage-label>0% del ingreso ya gastado</strong></div><div class="stacked-bar"><span class="stacked-bar__segment stacked-bar__segment--mint" style="width: 50%;"></span><span class="stacked-bar__segment stacked-bar__segment--slate" style="width: 50%;"></span></div><div class="allocation-note__stats"><div class="allocation-stat"><span>Tasa de ahorro</span><strong class="countup" data-summary="income-savings-rate" data-countup="0" data-suffix="%" data-decimals="1">0%</strong></div><div class="allocation-stat"><span>Disponible sin invertir</span><strong data-summary-text="income-savings-amount">$0</strong></div></div></div>
                 <button class="button button--accent" type="button" data-open-income>Editar ingreso mensual</button>
               </article>
             </div>
@@ -183,6 +189,25 @@
             </div>
             <p class="form-feedback" data-income-feedback role="alert"></p>
             <div class="modal-actions"><button class="button button--ghost" type="button" data-modal-close>Cancelar</button><button class="button button--accent" type="submit">Guardar ingreso</button></div>
+          </form>
+        </section>
+        <section class="modal-section" data-modal-panel="goal" hidden>
+          <div class="panel__header panel__header--stack"><div><p class="eyebrow">Meta mensual</p><h3>Editar objetivo mensual de inversion</h3></div><p class="panel-note">Define cuanto quieres invertir este mes. La meta solo avanza con movimientos cargados en la categoria Inversion.</p></div>
+          <form class="expense-form" data-goal-form novalidate>
+            <div class="expense-form__grid">
+              <label class="field"><span class="field__label">Monto objetivo</span><input class="field__control" type="number" name="savingsGoalAmount" min="0" step="0.01" placeholder="740000" data-goal-amount-input required></label>
+              <label class="field"><span class="field__label">Etiqueta opcional</span><input class="field__control" type="text" name="savingsGoalLabel" maxlength="70" placeholder="Meta mensual de acciones" data-goal-label-input></label>
+              <div class="field field--full">
+                <span class="field__label">Resumen de meta</span>
+                <div class="confirm-card goal-summary">
+                  <strong class="countup" data-goal-amount-preview data-countup="0" data-prefix="$">$0</strong>
+                  <span data-goal-label-preview>Meta mensual de acciones</span>
+                  <p>Ejemplo realista para este tracker: $740.000 ARS, equivalente aproximado a 500 USD. Solo suma aportes en Inversion.</p>
+                </div>
+              </div>
+            </div>
+            <p class="form-feedback" data-goal-feedback role="alert"></p>
+            <div class="modal-actions"><button class="button button--ghost" type="button" data-modal-close>Cancelar</button><button class="button button--accent" type="submit">Guardar meta</button></div>
           </form>
         </section>
         <section class="modal-section" data-modal-panel="confirm" hidden><div class="panel__header panel__header--stack"><div><p class="eyebrow">Eliminar movimiento</p><h3>Quitar este gasto?</h3></div><p class="panel-note">El total del mes se actualiza al instante y esta accion no se puede deshacer.</p></div><div class="confirm-card"><strong data-confirm-title>Gasto</strong><span data-confirm-date>19 mar 2026</span><p data-confirm-copy>Vas a eliminar este gasto del registro mensual.</p><strong class="confirm-card__amount" data-confirm-amount>-$0,00</strong></div><div class="modal-actions"><button class="button button--ghost" type="button" data-modal-close>Cancelar</button><button class="button button--accent button--danger" type="button" data-confirm-delete>Eliminar gasto</button></div></section>
