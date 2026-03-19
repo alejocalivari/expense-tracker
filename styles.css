@@ -584,6 +584,7 @@ body.sidebar-open .mobile-backdrop {
 .hero-card,
 .split-card,
 .chart-card,
+.calendar-card,
 .expenses-card,
 .insights-card,
 .income-card,
@@ -796,6 +797,10 @@ body.sidebar-open .mobile-backdrop {
 
 .kpi-card--spent {
   --card-rgb: 232, 141, 158;
+}
+
+.kpi-card--assigned {
+  --card-rgb: 132, 166, 255;
 }
 
 .kpi-card--balance {
@@ -1065,6 +1070,158 @@ body.sidebar-open .mobile-backdrop {
   gap: 10px;
   color: var(--text-muted);
   font-size: 0.82rem;
+}
+
+.calendar-card {
+  display: grid;
+  gap: 20px;
+  background:
+    radial-gradient(circle at top right, rgba(132, 166, 255, 0.08), transparent 30%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.028), transparent 55%),
+    var(--surface-1);
+}
+
+.calendar-summary {
+  display: grid;
+  gap: 12px;
+}
+
+.calendar-summary__card {
+  display: grid;
+  gap: 8px;
+  padding: 16px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.calendar-summary__card span,
+.calendar-month small {
+  color: var(--text-muted);
+}
+
+.calendar-summary__card strong {
+  font-size: 1.28rem;
+  line-height: 1;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.calendar-month {
+  width: 100%;
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  text-align: left;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.025);
+  color: var(--text);
+  transition:
+    transform var(--transition),
+    border-color var(--transition),
+    background-color var(--transition),
+    box-shadow var(--transition),
+    opacity var(--transition);
+}
+
+.calendar-month:hover:not(:disabled),
+.calendar-month:focus-visible {
+  transform: translateY(-1px);
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.calendar-month:disabled {
+  cursor: default;
+}
+
+.calendar-month.is-active {
+  border-color: rgba(117, 229, 192, 0.22);
+  background:
+    linear-gradient(180deg, rgba(117, 229, 192, 0.09), rgba(255, 255, 255, 0.03)),
+    rgba(255, 255, 255, 0.03);
+  box-shadow: inset 0 0 0 1px rgba(117, 229, 192, 0.08);
+}
+
+.calendar-month.has-data .calendar-month__value {
+  color: #f4f7fb;
+}
+
+.calendar-month.is-goal-met {
+  border-color: rgba(117, 229, 192, 0.18);
+}
+
+.calendar-month.is-goal-met .calendar-month__status {
+  color: var(--accent);
+  background: rgba(117, 229, 192, 0.1);
+}
+
+.calendar-month.is-future {
+  opacity: 0.72;
+}
+
+.calendar-month__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.calendar-month__header > span:first-child {
+  color: var(--text-soft);
+  font-size: 0.84rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.calendar-month__status {
+  min-height: 28px;
+  padding: 0 10px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  color: var(--accent-blue);
+  background: rgba(132, 166, 255, 0.12);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.calendar-month.is-future .calendar-month__status {
+  color: var(--text-soft);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.calendar-month__value {
+  font-size: 1.2rem;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.calendar-month__meta {
+  display: grid;
+  gap: 4px;
+  color: var(--text-soft);
+  font-size: 0.84rem;
+}
+
+.calendar-month__progress {
+  height: 8px;
+}
+
+.calendar-month__progress span {
+  background: linear-gradient(90deg, var(--accent-amber), var(--accent));
+}
+
+.calendar-month small {
+  line-height: 1.55;
 }
 
 .expenses-card {
@@ -1867,6 +2024,7 @@ body.is-loading .dashboard-state--content {
   .hero-card,
   .split-card,
   .chart-card,
+  .calendar-card,
   .expenses-card,
   .insights-card,
   .income-card,
@@ -1880,6 +2038,14 @@ body.is-loading .dashboard-state--content {
 
   .projection-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .calendar-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .calendar-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .projection-tile--feature {
@@ -1920,6 +2086,14 @@ body.is-loading .dashboard-state--content {
   .chart-card__content--split {
     grid-template-columns: minmax(200px, 0.9fr) minmax(0, 1fr);
     align-items: center;
+  }
+
+  .calendar-summary {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .calendar-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
   .expense-row {

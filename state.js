@@ -1,8 +1,8 @@
 (function () {
   const { generateId } = window.aleclvExpenseTrackerUtils;
 
-  const STORAGE_KEY = "aleclv-expense-tracker-state";
-  const COMPAT_STORAGE_KEYS = ["aleclv-finance-state"];
+  const STORAGE_KEY = "aleclv-salary-planner-state";
+  const COMPAT_STORAGE_KEYS = ["aleclv-expense-tracker-state", "aleclv-finance-state"];
   const SCHEMA_VERSION = 5;
   const MONTH_FILTER_PATTERN = /^\d{4}-\d{2}$/;
   const DEFAULT_FILTERS = {
@@ -25,7 +25,7 @@
     "filters",
   ];
   const DEFAULT_GOAL_AMOUNT = 740000;
-  const DEFAULT_GOAL_LABEL = "Meta mensual de acciones";
+  const DEFAULT_GOAL_LABEL = "Meta mensual de inversion";
   const CATEGORY_ALIASES = {
     Food: "Supermercado",
     Transport: "Transporte",
@@ -99,7 +99,7 @@
 
   const normalizeGoalLabel = (value) => {
     const label = String(value || "").trim();
-    return label === "Meta mensual de inversion" ? DEFAULT_GOAL_LABEL : label;
+    return ["Meta mensual de acciones", "Meta mensual de inversion"].includes(label) ? DEFAULT_GOAL_LABEL : label;
   };
 
   const normalizeMonthFilter = (value) => {
@@ -191,7 +191,7 @@
       case "Auto/Moto":
         return "Auto";
       default:
-        return "Gasto";
+        return "Salida";
     }
   };
 
