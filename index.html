@@ -34,13 +34,13 @@
         <div class="panel__header panel__header--stack">
           <div>
             <p class="eyebrow">Mes activo</p>
-            <h2><span class="countup" data-summary="sidebar-free-cash" data-countup="0" data-prefix="$">$0</span> disponibles</h2>
+            <h2><span class="countup" data-summary="sidebar-free-cash" data-countup="0" data-prefix="$">$0</span> de saldo disponible</h2>
           </div>
-          <span class="status-pill status-pill--neutral" data-summary-status="sidebar">Sin meta</span>
+          <span class="status-pill status-pill--neutral" data-summary-status="sidebar">Sin ingreso</span>
         </div>
         <div class="rail-metric"><span>Capacidad de ahorro</span><strong data-summary-text="sidebar-savings-capacity">0%</strong></div>
         <div class="progress"><span data-summary-bar="sidebar-savings-capacity" style="width: 0%;"></span></div>
-        <div class="rail-metric"><span>Saldo libre</span><strong class="countup" data-summary="sidebar-savings" data-countup="0" data-prefix="$">$0</strong></div>
+        <div class="rail-metric"><span>Disponible para ahorrar</span><strong class="countup" data-summary="sidebar-available-to-save" data-countup="0" data-prefix="$">$0</strong></div>
       </section>
 
       <section class="sidebar__footer panel panel--soft">
@@ -73,12 +73,14 @@
         <section class="dashboard-state dashboard-state--content dashboard-views">
           <section class="dashboard-view view-resumen is-active" data-view="resumen">
           <section class="hero-grid">
-            <article class="panel hero-card">
-              <div class="panel__header"><div><p class="eyebrow">Saldo disponible</p><h3>Saldo disponible despues de gastos e inversion</h3></div><span class="status-pill status-pill--neutral" data-summary-status="hero">Sin meta</span></div>
+            <article class="panel hero-card hero-card--capacity" data-capacity-card="hero">
+              <div class="panel__header"><div><p class="eyebrow">Capacidad de ahorro</p><h3>Capacidad de ahorro del mes</h3></div><span class="status-pill status-pill--neutral" data-summary-status="hero">Sin ingreso</span></div>
               <div class="hero-card__headline">
                 <div class="hero-card__content">
-                  <p class="hero-card__amount countup" data-summary="hero-remaining" data-countup="0" data-prefix="$">$0</p>
-                  <p class="hero-card__caption" data-summary-text="hero-caption">Carga tu ingreso y tus movimientos para ver un cierre real del mes.</p>
+                  <p class="hero-card__amount countup" data-summary="hero-savings-capacity" data-countup="0" data-suffix="%">0%</p>
+                  <p class="hero-card__secondary" data-summary-text="hero-available-to-save">$0 disponibles para ahorrar</p>
+                  <p class="hero-card__balance" data-summary-text="hero-balance-note">Saldo disponible despues de gastos: $0</p>
+                  <p class="hero-card__caption" data-summary-text="hero-caption">Carga el ingreso del mes para calcular tu capacidad de ahorro.</p>
                   <div class="panel-actions hero-card__actions">
                     <button class="button button--accent" type="button" data-open-expense>Registrar gasto</button>
                   </div>
@@ -103,7 +105,7 @@
                 <p class="split-card__label">Comparacion con el mes anterior</p>
                 <p class="panel-note" data-summary-text="comparison-note">Todavia no hay datos del mes anterior para comparar.</p>
                 <div class="timeline-item"><div><strong>Salidas totales</strong><span data-comparison="totalSpent-copy">Sin base para comparar</span></div><strong data-comparison="totalSpent-value">$0</strong></div>
-                <div class="timeline-item"><div><strong>Saldo disponible</strong><span data-comparison="remainingBalance-copy">Sin base para comparar</span></div><strong data-comparison="remainingBalance-value">$0</strong></div>
+                <div class="timeline-item"><div><strong>Saldo disponible despues de gastos</strong><span data-comparison="remainingBalance-copy">Sin base para comparar</span></div><strong data-comparison="remainingBalance-value">$0</strong></div>
                 <div class="timeline-item"><div><strong>Invertido</strong><span data-comparison="invested-copy">Sin base para comparar</span></div><strong data-comparison="invested-value">$0</strong></div>
                 <div class="timeline-item"><div><strong>Cambio de categoria</strong><span data-comparison="categoryShift-copy">Sin categoria para comparar</span></div><strong data-comparison="categoryShift-value">Sin datos</strong></div>
               </div>
@@ -112,7 +114,8 @@
 
           <section class="kpi-grid">
             <article class="panel kpi-card kpi-card--income"><div class="kpi-card__header"><span>Ingreso total</span><span class="kpi-card__delta" data-kpi-delta="incomeTotal">Editable</span></div><strong class="kpi-card__value countup" data-kpi="incomeTotal" data-countup="0" data-prefix="$">$0</strong><p class="kpi-card__caption" data-kpi-caption="incomeTotal">Ingreso base mas extra del mes activo.</p><div class="sparkline"><span style="height: 32%;"></span><span style="height: 46%;"></span><span style="height: 40%;"></span><span style="height: 58%;"></span><span style="height: 64%;"></span><span style="height: 88%;"></span></div></article>
-            <article class="panel kpi-card kpi-card--spent"><div class="kpi-card__header"><span>Salidas totales</span><span class="kpi-card__delta" data-kpi-delta="totalSpent">Sin base</span></div><strong class="kpi-card__value countup" data-kpi="totalSpent" data-countup="0" data-prefix="$">$0</strong><p class="kpi-card__caption" data-kpi-caption="totalSpent">Las salidas incluyen gastos e inversiones registradas del mes activo.</p><div class="sparkline"><span style="height: 38%;"></span><span style="height: 62%;"></span><span style="height: 76%;"></span><span style="height: 70%;"></span><span style="height: 54%;"></span><span style="height: 43%;"></span></div></article>
+            <article class="panel kpi-card kpi-card--spent"><div class="kpi-card__header"><span>Salidas totales</span><span class="kpi-card__delta" data-kpi-delta="totalSpent">Sin base</span></div><strong class="kpi-card__value countup" data-kpi="totalSpent" data-countup="0" data-prefix="$">$0</strong><p class="kpi-card__caption" data-kpi-caption="totalSpent">Solo gastos reales del mes activo. La inversion se mide aparte.</p><div class="sparkline"><span style="height: 38%;"></span><span style="height: 62%;"></span><span style="height: 76%;"></span><span style="height: 70%;"></span><span style="height: 54%;"></span><span style="height: 43%;"></span></div></article>
+            <article class="panel kpi-card kpi-card--invested"><div class="kpi-card__header"><span>Invertido este mes</span><span class="kpi-card__delta" data-kpi-delta="investedThisMonth">Sin base</span></div><strong class="kpi-card__value countup" data-kpi="investedThisMonth" data-countup="0" data-prefix="$">$0</strong><p class="kpi-card__caption" data-kpi-caption="investedThisMonth">Suma de los movimientos cargados en la categoria Inversion.</p><div class="sparkline"><span style="height: 22%;"></span><span style="height: 30%;"></span><span style="height: 48%;"></span><span style="height: 55%;"></span><span style="height: 72%;"></span><span style="height: 88%;"></span></div></article>
             <article class="panel kpi-card kpi-card--capacity" data-kpi-card="savingsCapacity"><div class="kpi-card__header"><span>Capacidad de ahorro</span><span class="kpi-card__delta" data-kpi-delta="savingsCapacity">Sin ingreso</span></div><strong class="kpi-card__value countup" data-kpi="savingsCapacity" data-countup="0" data-suffix="%">0%</strong><p class="kpi-card__secondary" data-kpi-secondary="savingsCapacity">$0 disponibles para ahorrar</p><div class="kpi-card__progress-block"><div class="progress progress--tight kpi-card__progress"><span data-kpi-bar="savingsCapacity" style="width: 0%;"></span></div></div><p class="kpi-card__caption" data-kpi-caption="savingsCapacity">Carga el ingreso del mes para calcular tu capacidad de ahorro.</p></article>
           </section>
           </section>
@@ -138,22 +141,22 @@
               <article class="panel income-card">
                 <div class="panel__header"><div><p class="eyebrow">Plan del ingreso</p><h3>Centro de control del mes</h3></div></div>
                 <section class="income-block">
-                  <div class="panel__header panel__header--stack"><div><p class="eyebrow">Ingreso total</p><h3>Base + extra</h3></div><p class="panel-note income-card__caption" data-summary-text="income-caption">Editar ingreso base o extra actualiza salidas, inversion y saldo libre al instante.</p></div>
+                  <div class="panel__header panel__header--stack"><div><p class="eyebrow">Ingreso total</p><h3>Base + extra</h3></div><p class="panel-note income-card__caption" data-summary-text="income-caption">Editar ingreso base o extra actualiza salidas, inversion y saldo disponible al instante.</p></div>
                   <div class="income-card__amount"><span>Ingreso total calculado</span><strong class="countup" data-summary="income-total" data-countup="0" data-prefix="$">$0</strong></div>
                   <div class="projection-grid projection-grid--triple">
                     <div class="projection-tile"><span>Ingreso base</span><strong class="countup" data-summary="income-base" data-countup="0" data-prefix="$">$0</strong></div>
                     <div class="projection-tile"><span>Ingreso extra</span><strong class="countup" data-summary="income-extra" data-countup="0" data-prefix="$">$0</strong></div>
-                    <div class="projection-tile projection-tile--feature"><span>Saldo disponible</span><strong class="countup" data-summary="income-balance" data-countup="0" data-prefix="$">$0</strong></div>
+                    <div class="projection-tile projection-tile--feature"><span>Saldo disponible despues de gastos</span><strong class="countup" data-summary="income-balance" data-countup="0" data-prefix="$">$0</strong></div>
                   </div>
                 </section>
                 <section class="income-block">
                   <div class="panel__header panel__header--stack"><div><p class="eyebrow">Capacidad de ahorro</p><h3>Saldo disponible sobre ingreso</h3></div><p class="panel-note" data-summary-text="income-usage-copy">Capacidad de ahorro = saldo disponible / ingreso total.</p></div>
-                  <div class="allocation-note"><div class="allocation-note__header"><span>Capacidad del mes</span><strong data-income-usage-label>0% del ingreso sigue disponible</strong></div><div class="stacked-bar"><span class="stacked-bar__segment stacked-bar__segment--mint" style="width: 50%;"></span><span class="stacked-bar__segment stacked-bar__segment--slate" style="width: 50%;"></span></div><div class="allocation-note__stats"><div class="allocation-stat"><span>Monto equivalente</span><strong class="countup" data-summary="income-capacity-amount" data-countup="0" data-prefix="$">$0</strong></div><div class="allocation-stat"><span>Salidas totales</span><strong class="countup" data-summary="income-spent" data-countup="0" data-prefix="$">$0</strong></div></div></div>
+                  <div class="allocation-note"><div class="allocation-note__header"><span>Capacidad del mes</span><strong data-income-usage-label>0% del ingreso sigue disponible</strong></div><div class="stacked-bar"><span class="stacked-bar__segment stacked-bar__segment--mint" style="width: 50%;"></span><span class="stacked-bar__segment stacked-bar__segment--slate" style="width: 50%;"></span></div><div class="allocation-note__stats"><div class="allocation-stat"><span>Disponible para ahorrar</span><strong class="countup" data-summary="income-capacity-amount" data-countup="0" data-prefix="$">$0</strong></div><div class="allocation-stat"><span>Salidas totales</span><strong class="countup" data-summary="income-spent" data-countup="0" data-prefix="$">$0</strong></div></div></div>
                 </section>
                 <section class="income-block">
-                  <div class="panel__header panel__header--stack"><div><p class="eyebrow">Resultado</p><h3>Saldo libre + meta</h3></div><p class="panel-note" data-summary-text="income-result-copy">El saldo libre queda despues de asignar gastos e inversion; la meta solo sube con aportes en Inversion.</p></div>
+                  <div class="panel__header panel__header--stack"><div><p class="eyebrow">Resultado</p><h3>Disponible para ahorrar + meta</h3></div><p class="panel-note" data-summary-text="income-result-copy">El disponible para ahorrar toma solo el saldo positivo del mes; la meta solo sube con aportes en Inversion.</p></div>
                   <div class="projection-grid projection-grid--triple income-result-grid">
-                    <div class="projection-tile projection-tile--feature"><span>Saldo libre</span><strong class="countup" data-summary="income-savings" data-countup="0" data-prefix="$">$0</strong></div>
+                    <div class="projection-tile projection-tile--feature"><span>Disponible para ahorrar</span><strong class="countup" data-summary="income-available-to-save" data-countup="0" data-prefix="$">$0</strong></div>
                     <div class="projection-tile"><span data-summary-text="income-goal-label">Meta mensual de inversion</span><strong class="countup" data-summary="income-goal-amount" data-countup="0" data-prefix="$">$0</strong></div>
                     <div class="projection-tile"><span>Invertido este mes</span><strong class="countup" data-summary="income-goal-saved" data-countup="0" data-prefix="$">$0</strong></div>
                     <div class="projection-tile"><span data-summary-text="income-goal-gap-label">Te falta invertir</span><strong class="countup" data-summary="income-goal-gap" data-countup="0" data-prefix="$">$0</strong></div>
@@ -163,8 +166,8 @@
               <article class="panel income-actions-card">
                 <div class="panel__header"><div><p class="eyebrow">Acciones del mes</p><h3>Ajustes y aportes</h3></div></div>
                 <div class="income-helper-list">
-                  <div class="income-helper-item"><strong>Saldo disponible</strong><span>Se recalcula como ingreso total menos todas las salidas del mes.</span></div>
-                  <div class="income-helper-item"><strong>Capacidad de ahorro</strong><span>Se calcula con el saldo disponible actual sobre el ingreso total del mes.</span></div>
+                  <div class="income-helper-item"><strong>Saldo disponible</strong><span>Se recalcula como ingreso total menos los gastos reales del mes.</span></div>
+                  <div class="income-helper-item"><strong>Capacidad de ahorro</strong><span>Se calcula con el saldo disponible actual sobre el ingreso total del mes, sin mezclar inversiones.</span></div>
                   <div class="income-helper-item"><strong>Meta de inversion</strong><span>Solo sube cuando guardas un movimiento en la categoria Inversion.</span></div>
                 </div>
                 <section class="income-actions-panel">
@@ -200,7 +203,7 @@
               <article class="calendar-summary__card"><span>Ingreso anual de referencia</span><strong class="countup" data-year-summary="income" data-countup="0" data-prefix="$">$0</strong></article>
               <article class="calendar-summary__card"><span>Salidas del anio</span><strong class="countup" data-year-summary="spent" data-countup="0" data-prefix="$">$0</strong></article>
               <article class="calendar-summary__card"><span>Invertido del anio</span><strong class="countup" data-year-summary="invested" data-countup="0" data-prefix="$">$0</strong></article>
-              <article class="calendar-summary__card"><span>Promedio mensual libre</span><strong class="countup" data-year-summary="average" data-countup="0" data-prefix="$">$0</strong></article>
+              <article class="calendar-summary__card"><span>Promedio disponible para ahorrar</span><strong class="countup" data-year-summary="average" data-countup="0" data-prefix="$">$0</strong></article>
             </div>
             <p class="panel-note" data-calendar-summary-note>Referencia anual simple usando el ingreso mensual actual y los meses con movimientos cargados.</p>
             <div class="calendar-grid" data-calendar-grid></div>

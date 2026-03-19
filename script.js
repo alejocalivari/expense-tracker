@@ -50,6 +50,7 @@ const CATEGORY_SWATCHES = [
   { className: "slate", color: "var(--accent-slate)" },
 ];
 const STATUS_PILL_CLASSES = ["status-pill--positive", "status-pill--neutral", "status-pill--negative"];
+const KPI_FEEDBACK_CLASSES = ["kpi-card--positive", "kpi-card--neutral", "kpi-card--negative"];
 const SAVINGS_CAPACITY_STATES = {
   neutral: { label: "Sin ingreso" },
   excellent: { label: "Excelente" },
@@ -184,9 +185,8 @@ const persistActiveView = (viewName) => {
 const kpiElements = {
   incomeTotal: document.querySelector('[data-kpi="incomeTotal"]'),
   totalSpent: document.querySelector('[data-kpi="totalSpent"]'),
+  investedThisMonth: document.querySelector('[data-kpi="investedThisMonth"]'),
   savingsCapacity: document.querySelector('[data-kpi="savingsCapacity"]'),
-  remainingBalance: document.querySelector('[data-kpi="remainingBalance"]'),
-  savingsAmount: document.querySelector('[data-kpi="savingsAmount"]'),
   dailyAverage: document.querySelector('[data-kpi="dailyAverage"]'),
   goalProgress: document.querySelector('[data-kpi="goalProgress"]'),
 };
@@ -194,9 +194,8 @@ const kpiElements = {
 const kpiDeltaElements = {
   incomeTotal: document.querySelector('[data-kpi-delta="incomeTotal"]'),
   totalSpent: document.querySelector('[data-kpi-delta="totalSpent"]'),
+  investedThisMonth: document.querySelector('[data-kpi-delta="investedThisMonth"]'),
   savingsCapacity: document.querySelector('[data-kpi-delta="savingsCapacity"]'),
-  remainingBalance: document.querySelector('[data-kpi-delta="remainingBalance"]'),
-  savingsAmount: document.querySelector('[data-kpi-delta="savingsAmount"]'),
   dailyAverage: document.querySelector('[data-kpi-delta="dailyAverage"]'),
   goalProgress: document.querySelector('[data-kpi-delta="goalProgress"]'),
 };
@@ -204,9 +203,8 @@ const kpiDeltaElements = {
 const kpiCaptionElements = {
   incomeTotal: document.querySelector('[data-kpi-caption="incomeTotal"]'),
   totalSpent: document.querySelector('[data-kpi-caption="totalSpent"]'),
+  investedThisMonth: document.querySelector('[data-kpi-caption="investedThisMonth"]'),
   savingsCapacity: document.querySelector('[data-kpi-caption="savingsCapacity"]'),
-  remainingBalance: document.querySelector('[data-kpi-caption="remainingBalance"]'),
-  savingsAmount: document.querySelector('[data-kpi-caption="savingsAmount"]'),
   dailyAverage: document.querySelector('[data-kpi-caption="dailyAverage"]'),
   goalProgress: document.querySelector('[data-kpi-caption="goalProgress"]'),
 };
@@ -223,6 +221,8 @@ const kpiCardElements = {
   savingsCapacity: document.querySelector('[data-kpi-card="savingsCapacity"]'),
 };
 
+const heroCardElement = document.querySelector('[data-capacity-card="hero"]');
+
 const yearSummaryElements = {
   income: document.querySelector('[data-year-summary="income"]'),
   spent: document.querySelector('[data-year-summary="spent"]'),
@@ -232,11 +232,8 @@ const yearSummaryElements = {
 
 const summaryElements = {
   sidebarFreeCash: document.querySelector('[data-summary="sidebar-free-cash"]'),
-  sidebarSavings: document.querySelector('[data-summary="sidebar-savings"]'),
-  heroRemaining: document.querySelector('[data-summary="hero-remaining"]'),
-  heroGoalSavings: document.querySelector('[data-summary="hero-goal-savings"]'),
-  miniDailyAverage: document.querySelector('[data-summary="mini-daily-average"]'),
-  miniSecondaryValue: document.querySelector('[data-summary="mini-secondary-value"]'),
+  sidebarAvailableToSave: document.querySelector('[data-summary="sidebar-available-to-save"]'),
+  heroSavingsCapacity: document.querySelector('[data-summary="hero-savings-capacity"]'),
   chartTotalSpent: document.querySelector('[data-summary="chart-total-spent"]'),
   goalAmount: document.querySelector('[data-summary="goal-amount"]'),
   goalSaved: document.querySelector('[data-summary="goal-saved"]'),
@@ -246,7 +243,7 @@ const summaryElements = {
   incomeBase: document.querySelector('[data-summary="income-base"]'),
   incomeExtra: document.querySelector('[data-summary="income-extra"]'),
   incomeBalance: document.querySelector('[data-summary="income-balance"]'),
-  incomeSavings: document.querySelector('[data-summary="income-savings"]'),
+  incomeAvailableToSave: document.querySelector('[data-summary="income-available-to-save"]'),
   incomeCapacityAmount: document.querySelector('[data-summary="income-capacity-amount"]'),
   incomeSpent: document.querySelector('[data-summary="income-spent"]'),
   incomeGoalAmount: document.querySelector('[data-summary="income-goal-amount"]'),
@@ -258,12 +255,9 @@ const textElements = {
   periodTitle: document.querySelector("[data-period-title]"),
   periodPill: document.querySelector("[data-period-pill]"),
   sidebarSavingsCapacity: document.querySelector('[data-summary-text="sidebar-savings-capacity"]'),
+  heroAvailableToSave: document.querySelector('[data-summary-text="hero-available-to-save"]'),
+  heroBalanceNote: document.querySelector('[data-summary-text="hero-balance-note"]'),
   heroCaption: document.querySelector('[data-summary-text="hero-caption"]'),
-  heroStat2Value: document.querySelector('[data-summary-text="hero-stat-2-value"]'),
-  miniDailyNote: document.querySelector('[data-summary-text="mini-daily-note"]'),
-  miniSecondaryNote: document.querySelector('[data-summary-text="mini-secondary-note"]'),
-  miniTertiaryValue: document.querySelector('[data-summary-text="mini-tertiary-value"]'),
-  miniTertiaryNote: document.querySelector('[data-summary-text="mini-tertiary-note"]'),
   categoryCountPill: document.querySelector('[data-summary-text="category-count-pill"]'),
   goalHeading: document.querySelector('[data-summary-text="goal-heading"]'),
   goalNote: document.querySelector('[data-summary-text="goal-note"]'),
@@ -290,10 +284,6 @@ const comparisonElements = {
 };
 
 const labelElements = {
-  heroStat1: document.querySelector('[data-summary-label="hero-stat-1-label"]'),
-  heroStat2: document.querySelector('[data-summary-label="hero-stat-2-label"]'),
-  miniSecondary: document.querySelector('[data-summary-label="mini-secondary-label"]'),
-  miniTertiary: document.querySelector('[data-summary-label="mini-tertiary-label"]'),
   goalGap: document.querySelector('[data-summary-label="goal-gap-label"]'),
 };
 
@@ -349,16 +339,35 @@ const getSavingsCapacityState = (percent, totalIncome) => {
   return "low";
 };
 const getSavingsCapacityStateLabel = (state) => SAVINGS_CAPACITY_STATES[state]?.label || SAVINGS_CAPACITY_STATES.low.label;
+const getSavingsCapacityTone = (state) => {
+  if (state === "excellent") {
+    return "positive";
+  }
+
+  if (state === "low") {
+    return "negative";
+  }
+
+  return "neutral";
+};
 const getSavingsCapacityHeadline = (metrics) => {
   if (!metrics.totalIncome) {
     return "Todavia no hay ingreso cargado";
   }
 
   if (metrics.remainingBalance < 0) {
-    return `${getSavingsCapacityStateLabel(metrics.savingsCapacityState)}: vas ${formatPercent(Math.abs(metrics.savingsCapacityPercent), 1)} por encima del ingreso`;
+    return `${getSavingsCapacityStateLabel(metrics.savingsCapacityState)}: no tienes disponible para ahorrar`;
   }
 
-  return `${getSavingsCapacityStateLabel(metrics.savingsCapacityState)}: ${formatPercent(metrics.savingsCapacityPercent, 1)} del ingreso sigue disponible`;
+  if (metrics.savingsCapacityState === "excellent") {
+    return `${getSavingsCapacityStateLabel(metrics.savingsCapacityState)}: estas ahorrando el ${formatPercent(metrics.savingsCapacityPercent, 0)}.`;
+  }
+
+  if (metrics.savingsCapacityState === "healthy") {
+    return "Saludable: buen nivel de ahorro.";
+  }
+
+  return "Bajo: estas gastando demasiado.";
 };
 const getSavingsCapacityInsight = (metrics) => {
   if (!metrics.totalIncome) {
@@ -366,21 +375,28 @@ const getSavingsCapacityInsight = (metrics) => {
   }
 
   if (metrics.remainingBalance < 0) {
-    return `Bajo: ya consumiste ${formatPercent(Math.abs(metrics.savingsCapacityPercent), 0)} por encima del ingreso mensual.`;
+    return "Bajo: estas gastando demasiado.";
   }
 
-  return `${getSavingsCapacityStateLabel(metrics.savingsCapacityState)}: estas ahorrando el ${formatPercent(metrics.savingsCapacityPercent, 0)} de tu ingreso mensual.`;
+  if (metrics.savingsCapacityState === "excellent") {
+    return `Excelente: estas ahorrando el ${formatPercent(metrics.savingsCapacityPercent, 0)}.`;
+  }
+
+  if (metrics.savingsCapacityState === "healthy") {
+    return "Saludable: buen nivel de ahorro.";
+  }
+
+  return "Bajo: estas gastando demasiado.";
 };
 const getSavingsCapacitySecondaryCopy = (metrics) => {
+  return `${formatMoney(metrics.savingsCapacityAmount)} disponibles para ahorrar`;
+};
+const getSavingsCapacityBadgeCopy = (metrics) => {
   if (!metrics.totalIncome) {
-    return "Carga el ingreso para medir tu margen de ahorro.";
+    return "Sin ingreso";
   }
 
-  if (metrics.savingsCapacityAmount >= 0) {
-    return `${formatMoney(metrics.savingsCapacityAmount)} disponibles para ahorrar`;
-  }
-
-  return `${formatMoney(Math.abs(metrics.savingsCapacityAmount))} por encima del ingreso`;
+  return getSavingsCapacityStateLabel(metrics.savingsCapacityState);
 };
 const readDecimals = (element) => Number(element?.dataset.decimals || 0);
 const isValidMonthKey = (value) => MONTH_KEY_PATTERN.test(String(value || "").trim());
@@ -483,27 +499,30 @@ const buildLegendCategories = (breakdown) => {
 };
 
 const summarizeMonth = (expenses, incomeTotal, monthKey) => {
-  const totalSpent = roundCurrency(expenses.reduce((sum, expense) => sum + Number(expense.amount || 0), 0));
-  const fixedSpend = roundCurrency(expenses.filter((expense) => expense.isFixed).reduce((sum, expense) => sum + Number(expense.amount || 0), 0));
-  const variableSpend = roundCurrency(Math.max(totalSpent - fixedSpend, 0));
   const investmentTransactions = expenses.filter((expense) => expense.category === "Inversion");
-  const investedThisMonth = roundCurrency(investmentTransactions.reduce((sum, expense) => sum + Number(expense.amount || 0), 0));
+  const spendingTransactions = expenses.filter((expense) => expense.category !== "Inversion");
+  const totalSpent = roundCurrency(spendingTransactions.reduce((sum, expense) => sum + Number(expense.amount || 0), 0));
+  const totalInvested = roundCurrency(investmentTransactions.reduce((sum, expense) => sum + Number(expense.amount || 0), 0));
+  const fixedSpend = roundCurrency(spendingTransactions.filter((expense) => expense.isFixed).reduce((sum, expense) => sum + Number(expense.amount || 0), 0));
+  const variableSpend = roundCurrency(Math.max(totalSpent - fixedSpend, 0));
+  const investedThisMonth = totalInvested;
   const investmentTransactionsCount = investmentTransactions.length;
+  const expenseTransactionCount = spendingTransactions.length;
   const remainingBalance = roundCurrency(incomeTotal - totalSpent);
-  const savingsAmount = roundCurrency(Math.max(remainingBalance, 0));
+  const savingsCapacityAmount = roundCurrency(Math.max(remainingBalance, 0));
   const daysInMonth = getDaysInMonth(monthKey);
   const elapsedDays = getElapsedDaysForMonth(monthKey, expenses);
   const dailyAverage = roundCurrency(totalSpent / Math.max(elapsedDays, 1));
   const spentRatio = incomeTotal > 0 ? (totalSpent / incomeTotal) * 100 : 0;
   const savingsRate = incomeTotal > 0 ? (remainingBalance / incomeTotal) * 100 : 0;
-  const largestExpense = expenses.reduce((largest, expense) => {
+  const largestExpense = spendingTransactions.reduce((largest, expense) => {
     if (!largest || Number(expense.amount || 0) > Number(largest.amount || 0)) {
       return expense;
     }
 
     return largest;
   }, null);
-  const categoryBreakdown = buildCategoryBreakdown(expenses, totalSpent);
+  const categoryBreakdown = buildCategoryBreakdown(spendingTransactions, totalSpent);
 
   return {
     monthKey,
@@ -511,8 +530,12 @@ const summarizeMonth = (expenses, incomeTotal, monthKey) => {
     monthLabelShort: getMonthLabel(monthKey, { month: "short", year: undefined }).replace(".", ""),
     monthLabelShortYear: getMonthLabel(monthKey, { month: "short", year: "numeric" }).replace(".", ""),
     expenses,
+    spendingTransactions,
+    investmentTransactions,
     transactionCount: expenses.length,
+    expenseTransactionCount,
     totalSpent,
+    totalInvested,
     fixedSpend,
     variableSpend,
     fixedShare: totalSpent > 0 ? (fixedSpend / totalSpent) * 100 : 0,
@@ -520,7 +543,7 @@ const summarizeMonth = (expenses, incomeTotal, monthKey) => {
     investedThisMonth,
     investmentTransactionsCount,
     remainingBalance,
-    savingsAmount,
+    savingsCapacityAmount,
     dailyAverage,
     spentRatio,
     savingsRate,
@@ -602,7 +625,7 @@ const computeMetrics = (state) => {
     incomeBase: Number(state.incomeBase || 0),
     incomeExtra: Number(state.incomeExtra || 0),
     totalIncome,
-    savingsCapacityAmount: currentMonth.remainingBalance,
+    savingsCapacityAmount: currentMonth.savingsCapacityAmount,
     savingsCapacityPercent,
     savingsCapacityBarPercent: clamp(savingsCapacityPercent, 0, 100),
     savingsCapacityState,
@@ -617,7 +640,6 @@ const computeMetrics = (state) => {
       totalSpent: compareMetric(currentMonth.totalSpent, previousMonth.totalSpent, hasPreviousData),
       remainingBalance: compareMetric(currentMonth.remainingBalance, previousMonth.remainingBalance, hasPreviousData),
       investedThisMonth: compareMetric(currentMonth.investedThisMonth, previousMonth.investedThisMonth, hasPreviousData),
-      savingsAmount: compareMetric(currentMonth.savingsAmount, previousMonth.savingsAmount, hasPreviousData),
       dailyAverage: compareMetric(currentMonth.dailyAverage, previousMonth.dailyAverage, hasPreviousData),
     },
     topCategoryShift: hasPreviousData ? getTopCategoryShift(currentMonth.categoryBreakdown, previousMonth.categoryBreakdown) : null,
@@ -708,7 +730,7 @@ const buildYearContext = (state, metrics) => {
   const monthsWithData = months.filter((month) => month.hasData);
   const totalSpent = roundCurrency(months.reduce((sum, month) => sum + month.totalSpent, 0));
   const totalInvested = roundCurrency(months.reduce((sum, month) => sum + month.investedThisMonth, 0));
-  const totalFree = roundCurrency(monthsWithData.reduce((sum, month) => sum + month.savingsAmount, 0));
+  const totalFree = roundCurrency(monthsWithData.reduce((sum, month) => sum + month.savingsCapacityAmount, 0));
 
   return {
     activeYear,
@@ -747,6 +769,16 @@ const applyCapacityState = (element, state) => {
   if (element) {
     element.dataset.capacityState = state;
   }
+};
+
+const applyKpiFeedbackState = (element, state) => {
+  if (!element) {
+    return;
+  }
+
+  applyCapacityState(element, state);
+  element.classList.remove(...KPI_FEEDBACK_CLASSES);
+  element.classList.add(`kpi-card--${getSavingsCapacityTone(state)}`);
 };
 
 const getTrendTone = (difference, { lowerIsBetter = false } = {}) => {
@@ -921,109 +953,31 @@ const renderTopbar = (metrics) => {
 
 const renderSidebar = (metrics, animate) => {
   animateValue(summaryElements.sidebarFreeCash, metrics.remainingBalance, { animate });
-  animateValue(summaryElements.sidebarSavings, metrics.savingsAmount, { animate });
+  animateValue(summaryElements.sidebarAvailableToSave, metrics.savingsCapacityAmount, { animate });
   setTextValue(textElements.sidebarSavingsCapacity, metrics.totalIncome ? formatPercent(metrics.savingsCapacityPercent, 1) : "0%");
   setBarWidth(barElements.sidebarSavingsCapacity, metrics.savingsCapacityBarPercent);
-
-  if (!metrics.totalIncome) {
-    applyStatusPill(statusElements.sidebar, "Cargar ingreso", "neutral");
-    return;
-  }
-
-  if (!metrics.goalAmount) {
-    applyStatusPill(statusElements.sidebar, "Sin meta", "neutral");
-    return;
-  }
-
-  if (metrics.isGoalMet) {
-    applyStatusPill(statusElements.sidebar, "Meta cumplida", "positive");
-    return;
-  }
-
-  if (metrics.investmentTransactionsCount && metrics.projectedInvestmentAmount >= metrics.goalAmount) {
-    applyStatusPill(statusElements.sidebar, "En ritmo", "positive");
-    return;
-  }
-
-  if (!metrics.investmentTransactionsCount) {
-    applyStatusPill(statusElements.sidebar, "Sin aportes", "neutral");
-    return;
-  }
-
-  applyStatusPill(statusElements.sidebar, `${formatPercent(metrics.goalProgressPercent, 1)} invertido`, "neutral");
+  applyStatusPill(
+    statusElements.sidebar,
+    getSavingsCapacityBadgeCopy(metrics),
+    getSavingsCapacityTone(metrics.savingsCapacityState)
+  );
 };
 
 const renderHero = (metrics, animate) => {
-  const hasGoalExceeded = metrics.goalExceededAmount > 0;
-  const goalGapLabel = metrics.isGoalMet ? (hasGoalExceeded ? "Excedente" : "Meta cumplida") : "Te falta invertir";
-  const goalGapValue = metrics.isGoalMet ? metrics.goalExceededAmount : metrics.goalRemainingAmount;
-
-  animateValue(summaryElements.heroRemaining, metrics.remainingBalance, { animate });
-  animateValue(summaryElements.heroGoalSavings, metrics.investedThisMonth, { animate });
-  setTextValue(
-    textElements.heroCaption,
-    !metrics.goalAmount
-      ? "Usa Registrar gasto para cargar tus salidas reales del mes y define una meta de inversion para medir el avance del plan."
-      : metrics.isGoalMet
-      ? hasGoalExceeded
-        ? `Ya registraste ${formatMoney(metrics.investedThisMonth)} en Inversion para "${metrics.goalLabel}" y superaste la meta por ${formatMoney(metrics.goalExceededAmount)}.`
-        : `Ya registraste ${formatMoney(metrics.investedThisMonth)} en Inversion y alcanzaste exactamente la meta "${metrics.goalLabel}".`
-      : metrics.investmentTransactionsCount
-        ? `Saldo disponible: ${formatMoney(metrics.remainingBalance)}. Llevas ${formatMoney(metrics.investedThisMonth)} invertidos para "${metrics.goalLabel}" y te falta invertir ${formatMoney(metrics.goalRemainingAmount)}.`
-        : metrics.transactionCount
-          ? `Saldo disponible: ${formatMoney(metrics.remainingBalance)}. Ya registraste gastos del mes, pero todavia no cargaste aportes en Inversion para avanzar sobre "${metrics.goalLabel}".`
-          : "Empieza por registrar un gasto real del mes y usa \"Registrar inversion\" cuando hagas un aporte en la categoria Inversion."
+  animateValue(summaryElements.heroSavingsCapacity, metrics.savingsCapacityPercent, {
+    animate,
+    decimals: 0,
+    suffix: "%",
+  });
+  setTextValue(textElements.heroAvailableToSave, getSavingsCapacitySecondaryCopy(metrics));
+  setTextValue(textElements.heroBalanceNote, `Saldo disponible despues de gastos: ${formatMoney(metrics.remainingBalance)}`);
+  setTextValue(textElements.heroCaption, getSavingsCapacityInsight(metrics));
+  applyCapacityState(heroCardElement, metrics.savingsCapacityState);
+  applyStatusPill(
+    statusElements.hero,
+    getSavingsCapacityBadgeCopy(metrics),
+    getSavingsCapacityTone(metrics.savingsCapacityState)
   );
-  setTextValue(labelElements.heroStat1, "Invertido este mes");
-  setTextValue(labelElements.heroStat2, "Progreso de inversion");
-  setTextValue(textElements.heroStat2Value, metrics.goalAmount > 0 ? formatPercent(metrics.goalProgressPercent, 1) : "Sin meta");
-  animateValue(summaryElements.miniDailyAverage, metrics.dailyAverage, { animate });
-  animateValue(summaryElements.miniSecondaryValue, goalGapValue, { animate });
-  setTextValue(textElements.miniDailyNote, metrics.transactionCount ? `${metrics.elapsedDays} dia(s) tomados para el promedio.` : "Sin salidas en el mes activo");
-  setTextValue(labelElements.miniSecondary, goalGapLabel);
-  setTextValue(
-    textElements.miniSecondaryNote,
-    metrics.isGoalMet
-      ? hasGoalExceeded
-        ? "Capital invertido por encima de tu objetivo mensual."
-        : "Tu objetivo mensual ya quedo cubierto."
-      : "Monto pendiente para completar la meta."
-  );
-  setTextValue(labelElements.miniTertiary, "Estado de meta");
-  setTextValue(textElements.miniTertiaryValue, metrics.isGoalMet ? "Meta cumplida" : metrics.investmentTransactionsCount ? `${formatPercent(metrics.goalProgressPercent, 1)} invertido` : "Sin aportes");
-  setTextValue(
-    textElements.miniTertiaryNote,
-    metrics.investmentTransactionsCount
-      ? `${formatNumber(metrics.investmentTransactionsCount)} aporte(s) en Inversion.`
-      : "La meta solo avanza con movimientos en Inversion."
-  );
-
-  if (!metrics.totalIncome) {
-    applyStatusPill(statusElements.hero, "Sin ingreso", "neutral");
-    return;
-  }
-
-  if (!metrics.goalAmount) {
-    applyStatusPill(statusElements.hero, "Sin meta", "neutral");
-    return;
-  }
-
-  if (metrics.isGoalMet) {
-    applyStatusPill(statusElements.hero, "Meta cumplida", "positive");
-    return;
-  }
-
-  if (metrics.investmentTransactionsCount && metrics.projectedInvestmentAmount >= metrics.goalAmount) {
-    applyStatusPill(statusElements.hero, "En ritmo", "positive");
-    return;
-  }
-
-  if (!metrics.investmentTransactionsCount) {
-    applyStatusPill(statusElements.hero, "Sin aportes", "neutral");
-    return;
-  }
-
-  applyStatusPill(statusElements.hero, `Falta invertir ${formatMoney(metrics.goalRemainingAmount)}`, "negative");
 };
 
 const renderSplitCard = (metrics, animate) => {
@@ -1038,9 +992,9 @@ const renderSplitCard = (metrics, animate) => {
   setTextValue(
     textElements.goalNote,
     metrics.investmentTransactionsCount
-      ? `${formatNumber(metrics.investmentTransactionsCount)} aporte(s) registrados en Inversion por ${formatMoney(metrics.investedThisMonth)}. Tu saldo disponible sigue aparte en ${formatMoney(metrics.remainingBalance)}.`
+      ? `${formatNumber(metrics.investmentTransactionsCount)} aporte(s) registrados en Inversion por ${formatMoney(metrics.investedThisMonth)}. Tu saldo disponible despues de gastos sigue aparte en ${formatMoney(metrics.remainingBalance)}.`
       : metrics.transactionCount
-        ? `Todavia no registraste aportes en la categoria Inversion. Tienes ${formatMoney(metrics.remainingBalance)} de saldo disponible, pero la meta no sube hasta cargar un aporte.`
+        ? `Todavia no registraste aportes en la categoria Inversion. Tienes ${formatMoney(metrics.remainingBalance)} de saldo disponible despues de gastos, pero la meta no sube hasta cargar un aporte.`
         : "La meta solo suma movimientos en la categoria Inversion. Usa \"Registrar inversion\" cuando hagas un aporte real."
   );
 
@@ -1065,7 +1019,7 @@ const renderSplitCard = (metrics, animate) => {
   }
 
   if (!metrics.hasPreviousData) {
-    setTextValue(textElements.comparisonNote, `No hay movimientos en ${getMonthLabel(metrics.previousMonthKey)} para comparar salidas, saldo disponible e inversion registrada.`);
+    setTextValue(textElements.comparisonNote, `No hay movimientos en ${getMonthLabel(metrics.previousMonthKey)} para comparar salidas, saldo disponible despues de gastos e inversion registrada.`);
     setTextValue(comparisonElements.totalSpentCopy, "Sin base para comparar");
     setTextValue(comparisonElements.totalSpentValue, formatMoney(metrics.totalSpent));
     setTextValue(comparisonElements.remainingBalanceCopy, "Sin base para comparar");
@@ -1077,7 +1031,7 @@ const renderSplitCard = (metrics, animate) => {
     return;
   }
 
-  setTextValue(textElements.comparisonNote, `Comparacion directa contra ${metrics.previousMonth.monthLabelLong} con foco en salidas, saldo disponible e inversion ejecutada.`);
+  setTextValue(textElements.comparisonNote, `Comparacion directa contra ${metrics.previousMonth.monthLabelLong} con foco en salidas, saldo disponible despues de gastos e inversion ejecutada.`);
   setTextValue(comparisonElements.totalSpentCopy, `${formatSignedCurrency(metrics.comparisons.totalSpent.difference)} vs ${metrics.previousMonthLabel}`);
   setTextValue(comparisonElements.totalSpentValue, formatMoney(metrics.totalSpent));
   setTextValue(comparisonElements.remainingBalanceCopy, `${formatSignedCurrency(metrics.comparisons.remainingBalance.difference)} vs ${metrics.previousMonthLabel}`);
@@ -1097,31 +1051,33 @@ const renderSplitCard = (metrics, animate) => {
 };
 
 const renderKpis = (metrics, animate) => {
+  const investedDelta = metrics.hasPreviousData && Number.isFinite(metrics.comparisons.investedThisMonth.percent)
+    ? formatSignedPercent(metrics.comparisons.investedThisMonth.percent)
+    : metrics.investmentTransactionsCount
+      ? `${formatNumber(metrics.investmentTransactionsCount)} aporte(s)`
+      : "Sin aportes";
+
   animateValue(kpiElements.incomeTotal, metrics.totalIncome, { animate });
   animateValue(kpiElements.totalSpent, metrics.totalSpent, { animate });
+  animateValue(kpiElements.investedThisMonth, metrics.investedThisMonth, { animate });
   animateValue(kpiElements.savingsCapacity, metrics.savingsCapacityPercent, { animate, decimals: 0, suffix: "%" });
-  animateValue(kpiElements.remainingBalance, metrics.remainingBalance, { animate });
-  animateValue(kpiElements.savingsAmount, metrics.savingsAmount, { animate });
   animateValue(kpiElements.dailyAverage, metrics.dailyAverage, { animate });
   animateValue(kpiElements.goalProgress, metrics.goalProgressPercent, { animate, decimals: 1, suffix: "%" });
 
   setTextValue(kpiDeltaElements.incomeTotal, metrics.totalIncome ? `${formatMoney(metrics.incomeBase)} base + ${formatMoney(metrics.incomeExtra)} extra` : "Editable");
   setTextValue(kpiCaptionElements.incomeTotal, metrics.totalIncome ? "La suma del ingreso base y el ingreso extra del mes." : "Carga el ingreso del mes para activar el tablero completo.");
+  setTextValue(kpiDeltaElements.investedThisMonth, investedDelta);
   setTextValue(kpiDeltaElements.savingsCapacity, getSavingsCapacityStateLabel(metrics.savingsCapacityState));
   setTextValue(kpiCaptionElements.savingsCapacity, getSavingsCapacityInsight(metrics));
   setTextValue(kpiSecondaryElements.savingsCapacity, getSavingsCapacitySecondaryCopy(metrics));
   setBarWidth(kpiBarElements.savingsCapacity, metrics.savingsCapacityBarPercent);
-  applyCapacityState(kpiCardElements.savingsCapacity, metrics.savingsCapacityState);
+  applyKpiFeedbackState(kpiCardElements.savingsCapacity, metrics.savingsCapacityState);
 
   if (metrics.hasPreviousData) {
     setTextValue(kpiDeltaElements.totalSpent, formatSignedPercent(metrics.comparisons.totalSpent.percent));
-    setTextValue(kpiDeltaElements.remainingBalance, formatSignedPercent(metrics.comparisons.remainingBalance.percent));
-    setTextValue(kpiDeltaElements.savingsAmount, formatSignedPercent(metrics.comparisons.savingsAmount.percent));
     setTextValue(kpiDeltaElements.dailyAverage, formatSignedPercent(metrics.comparisons.dailyAverage.percent));
   } else {
     setTextValue(kpiDeltaElements.totalSpent, "Sin base");
-    setTextValue(kpiDeltaElements.remainingBalance, "Sin base");
-    setTextValue(kpiDeltaElements.savingsAmount, "Sin base");
     setTextValue(kpiDeltaElements.dailyAverage, "Promedio actual");
   }
 
@@ -1138,9 +1094,8 @@ const renderKpis = (metrics, animate) => {
       : "Sin meta"
   );
 
-  setTextValue(kpiCaptionElements.totalSpent, "Las salidas incluyen gastos e inversiones registradas del mes activo.");
-  setTextValue(kpiCaptionElements.remainingBalance, "Ingreso total menos salidas del mes activo.");
-  setTextValue(kpiCaptionElements.savingsAmount, "Saldo libre despues de salidas e inversion que todavia no usaste.");
+  setTextValue(kpiCaptionElements.totalSpent, "Solo gastos reales del mes activo. La inversion se mide aparte.");
+  setTextValue(kpiCaptionElements.investedThisMonth, "Suma de los movimientos cargados en la categoria Inversion.");
   setTextValue(kpiCaptionElements.dailyAverage, "Promedio diario usando los dias cargados o transcurridos.");
   setTextValue(kpiCaptionElements.goalProgress, "Porcentaje de tu meta mensual cubierto con movimientos en Inversion.");
 };
@@ -1157,7 +1112,7 @@ const renderIncomeCard = (metrics, animate) => {
   animateValue(summaryElements.incomeBase, metrics.incomeBase, { animate });
   animateValue(summaryElements.incomeExtra, metrics.incomeExtra, { animate });
   animateValue(summaryElements.incomeBalance, metrics.remainingBalance, { animate });
-  animateValue(summaryElements.incomeSavings, metrics.savingsAmount, { animate });
+  animateValue(summaryElements.incomeAvailableToSave, metrics.savingsCapacityAmount, { animate });
   animateValue(summaryElements.incomeCapacityAmount, metrics.savingsCapacityAmount, { animate });
   animateValue(summaryElements.incomeSpent, metrics.totalSpent, { animate });
   animateValue(summaryElements.incomeGoalAmount, metrics.goalAmount, { animate });
@@ -1172,7 +1127,7 @@ const renderIncomeCard = (metrics, animate) => {
   setTextValue(
     textElements.incomeUsageCopy,
     metrics.totalIncome
-      ? "Capacidad de ahorro = saldo disponible / ingreso total. Cada gasto o inversion reduce este margen al instante."
+      ? "Capacidad de ahorro = saldo disponible / ingreso total. Disponible para ahorrar = saldo disponible positivo despues de gastos reales."
       : "Cuando cargues ingreso y movimientos vas a ver cuanta capacidad de ahorro real te queda."
   );
   setTextValue(textElements.incomeGoalLabel, metrics.goalLabel);
@@ -1190,8 +1145,8 @@ const renderIncomeCard = (metrics, animate) => {
   setTextValue(
     textElements.incomeResultCopy,
     metrics.goalAmount > 0
-      ? `Saldo libre: ${formatMoney(metrics.savingsAmount)}. La meta "${metrics.goalLabel}" lleva ${formatPercent(metrics.goalProgressPercent, 1)} cubierto con aportes reales.`
-      : "El saldo libre queda despues de asignar gastos e inversion; define una meta para seguir el avance real."
+      ? `Disponible para ahorrar: ${formatMoney(metrics.savingsCapacityAmount)}. La meta "${metrics.goalLabel}" lleva ${formatPercent(metrics.goalProgressPercent, 1)} cubierto con aportes reales.`
+      : "El saldo disponible puede quedar negativo; el disponible para ahorrar solo muestra el margen positivo del mes."
   );
 
   if (stackedSegments.length >= 2) {
@@ -1280,7 +1235,7 @@ const renderCategoryMix = (metrics, animate) => {
   if (!metrics.categoryBreakdown.length) {
     uiState.categoryLegendItems = [];
     uiState.categoryHighlightIndex = -1;
-    categoryLegend.innerHTML = '<div class="expense-list__empty"><strong>Sin categorias</strong><p>Carga salidas para ver la mezcla del mes.</p></div>';
+    categoryLegend.innerHTML = '<div class="expense-list__empty"><strong>Sin categorias</strong><p>Carga gastos reales para ver la mezcla del mes.</p></div>';
     if (donutChart) {
       donutChart.style.background = "conic-gradient(from -90deg, rgba(255,255,255,0.08) 0 100%)";
       donutChart.classList.remove("is-highlighted");
@@ -1313,7 +1268,7 @@ const renderLineChart = (metrics) => {
   }
 
   const dailyTotals = new Array(metrics.daysInMonth).fill(0);
-  metrics.expenses.forEach((expense) => {
+  metrics.spendingTransactions.forEach((expense) => {
     const day = getExpenseDate(expense)?.getDate() || 1;
     dailyTotals[day - 1] = roundCurrency(dailyTotals[day - 1] + Number(expense.amount || 0));
   });
@@ -1341,7 +1296,7 @@ const renderLineChart = (metrics) => {
   linePoints.innerHTML = actualPoints.map((point) => `<circle cx="${point.x}" cy="${point.y}" r="5"></circle>`).join("");
   lineAxis.innerHTML = ticks.map((day) => `<span>${day} ${escapeHtml(metrics.monthLabelShort)}</span>`).join("");
 
-  if (!metrics.transactionCount) {
+  if (!metrics.expenseTransactionCount) {
     applyStatusPill(statusElements.line, "Sin salidas", "neutral");
     return;
   }
@@ -1375,7 +1330,7 @@ const generateInsights = (metrics) => {
         ? "mint"
         : "blue"
     : "slate";
-  const dailyAverageTone = metrics.transactionCount
+  const dailyAverageTone = metrics.expenseTransactionCount
     ? metrics.hasPreviousData
       ? metrics.comparisons.dailyAverage.difference < 0
         ? "mint"
@@ -1388,7 +1343,7 @@ const generateInsights = (metrics) => {
     ? metrics.projectedMonthlySpend > metrics.totalIncome
       ? "rose"
       : "mint"
-    : metrics.transactionCount
+    : metrics.expenseTransactionCount
       ? "blue"
       : "slate";
   const dominantCategoryValue = metrics.topCategory ? metrics.topCategory.category : "Sin categoria";
@@ -1409,7 +1364,7 @@ const generateInsights = (metrics) => {
         ? isSpendingOverIncome
           ? `Ya estas usando ${spentRatioValue} y superas tu ingreso.`
           : `Estas usando ${spentRatioValue} de tu ingreso.`
-        : metrics.transactionCount
+        : metrics.expenseTransactionCount
           ? "Carga el ingreso para medir este porcentaje."
           : "Todavia no hay salidas registradas."
     ),
@@ -1427,7 +1382,7 @@ const generateInsights = (metrics) => {
       "Promedio diario",
       dailyAverageTone,
       formatMoney(metrics.dailyAverage),
-      metrics.transactionCount
+      metrics.expenseTransactionCount
         ? "Promedio diario del mes activo."
         : "Se activa cuando registras movimientos."
     ),
@@ -1435,7 +1390,7 @@ const generateInsights = (metrics) => {
       "Proyeccion de cierre",
       projectionTone,
       formatMoney(metrics.projectedMonthlySpend),
-      metrics.transactionCount
+      metrics.expenseTransactionCount
         ? `Si seguis asi, vas a cerrar en ${formatMoney(metrics.projectedMonthlySpend)}.`
         : "Sin movimientos para proyectar el cierre."
     ),
@@ -1600,7 +1555,7 @@ const renderCalendar = (state, metrics, animate) => {
   setTextValue(
     calendarSummaryNote,
     yearContext.monthsWithDataCount
-      ? `Promedio calculado sobre ${formatNumber(yearContext.monthsWithDataCount)} mes(es) con movimientos. Las salidas incluyen gastos e inversiones registradas.`
+      ? `Promedio calculado sobre ${formatNumber(yearContext.monthsWithDataCount)} mes(es) con movimientos. Las salidas muestran solo gastos reales; la inversion va aparte.`
       : "Todavia no hay meses con movimientos en este anio. Usa el calendario para navegar y cargar datos cuando los necesites."
   );
 
