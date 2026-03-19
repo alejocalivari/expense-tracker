@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>aleclv finance</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="is-loading">
+  <div class="app-shell">
+    <div class="mobile-backdrop" data-backdrop></div>
+    <aside class="sidebar" aria-label="Primary">
+      <div class="sidebar__brand">
+        <span class="brand-mark">af</span>
+        <div>
+          <p class="eyebrow">premium finance</p>
+          <h1>aleclv finance</h1>
+        </div>
+      </div>
+
+      <nav class="sidebar__nav">
+        <button class="nav-item is-active" type="button" data-nav-item="dashboard">
+          <span class="nav-item__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M4 13.5h6.5V20H4v-6.5Zm9.5-9.5H20v16h-6.5V4ZM4 4h6.5v6.5H4V4Zm9.5 8.5H20v5h-6.5v-5Z" />
+            </svg>
+          </span>
+          <span>Dashboard</span>
+        </button>
+        <button class="nav-item" type="button" data-nav-item="cashflow">
+          <span class="nav-item__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M4 16.5 9 11l3.4 3.4L20 6.8" />
+              <path d="M15 6.8H20V12" />
+            </svg>
+          </span>
+          <span>Cashflow</span>
+        </button>
+        <button class="nav-item" type="button" data-nav-item="investing">
+          <span class="nav-item__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M6 18.5h12" />
+              <path d="M8.5 18.5V10" />
+              <path d="M12 18.5V5.5" />
+              <path d="M15.5 18.5v-7" />
+            </svg>
+          </span>
+          <span>Investing</span>
+        </button>
+        <button class="nav-item" type="button" data-nav-item="activity">
+          <span class="nav-item__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M4 7.5h16" />
+              <path d="M4 12h12" />
+              <path d="M4 16.5h9" />
+            </svg>
+          </span>
+          <span>Activity</span>
+        </button>
+        <button class="nav-item" type="button" data-nav-item="insights">
+          <span class="nav-item__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M5 18.5 10.2 12l3.3 2.8L19 7.5" />
+              <path d="M15.5 7.5H19v3.5" />
+            </svg>
+          </span>
+          <span>Insights</span>
+        </button>
+      </nav>
+
+      <section class="sidebar__rail panel panel--soft">
+        <div class="panel__header panel__header--stack">
+          <div>
+            <p class="eyebrow">Month to date</p>
+            <h2>$3,520 free cash</h2>
+          </div>
+          <span class="status-pill status-pill--positive">On track</span>
+        </div>
+        <div class="rail-metric">
+          <span>Spent against plan</span>
+          <strong>82%</strong>
+        </div>
+        <div class="progress">
+          <span style="width: 82%;"></span>
+        </div>
+        <div class="rail-metric">
+          <span>Investable this cycle</span>
+          <strong>$1,280</strong>
+        </div>
+      </section>
+
+      <section class="sidebar__footer panel panel--soft">
+        <p class="eyebrow">Operator</p>
+        <div class="profile-card">
+          <div class="profile-card__avatar">AC</div>
+          <div>
+            <strong>Alec Vega</strong>
+            <span>Personal workspace</span>
+          </div>
+        </div>
+      </section>
+    </aside>
+    <div class="main-shell">
+      <header class="topbar">
+        <div class="topbar__leading">
+          <button class="icon-button topbar__menu" type="button" aria-label="Toggle menu" data-menu-toggle>
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M4 7.5h16" />
+              <path d="M4 12h16" />
+              <path d="M4 16.5h16" />
+            </svg>
+          </button>
+          <div>
+            <p class="eyebrow">Premium personal finance workspace</p>
+            <h2>March cashflow dashboard</h2>
+          </div>
+        </div>
+
+        <div class="topbar__actions">
+          <label class="search-shell" aria-label="Search">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <circle cx="11" cy="11" r="5.5" />
+              <path d="m15.5 15.5 4 4" />
+            </svg>
+            <input type="text" placeholder="Search merchants, categories, or notes">
+          </label>
+          <button class="pill pill--quiet" type="button">Mar 2026</button>
+          <button class="button button--ghost" type="button" data-empty-toggle aria-pressed="false">Preview empty state</button>
+        </div>
+      </header>
+      <main class="dashboard">
+        <section class="dashboard-skeleton" aria-hidden="true">
+          <div class="skeleton-grid skeleton-grid--hero">
+            <div class="skeleton-block skeleton-block--hero"></div>
+            <div class="skeleton-block skeleton-block--rail"></div>
+          </div>
+          <div class="skeleton-grid skeleton-grid--kpi">
+            <div class="skeleton-block skeleton-block--kpi"></div>
+            <div class="skeleton-block skeleton-block--kpi"></div>
+            <div class="skeleton-block skeleton-block--kpi"></div>
+            <div class="skeleton-block skeleton-block--kpi"></div>
+            <div class="skeleton-block skeleton-block--kpi"></div>
+            <div class="skeleton-block skeleton-block--kpi"></div>
+          </div>
+          <div class="skeleton-grid skeleton-grid--charts">
+            <div class="skeleton-block skeleton-block--chart"></div>
+            <div class="skeleton-block skeleton-block--chart"></div>
+          </div>
+          <div class="skeleton-grid skeleton-grid--content">
+            <div class="skeleton-block skeleton-block--list"></div>
+            <div class="skeleton-stack">
+              <div class="skeleton-block skeleton-block--stack"></div>
+              <div class="skeleton-block skeleton-block--stack"></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="dashboard-state dashboard-state--content">
+          <section class="hero-grid">
+            <article class="panel hero-card">
+              <div class="panel__header">
+                <div>
+                  <p class="eyebrow">Liquidity snapshot</p>
+                  <h3>Cash free after core bills</h3>
+                </div>
+                <span class="status-pill status-pill--positive">+12.4% vs Feb</span>
+              </div>
+
+              <div class="hero-card__headline">
+                <div>
+                  <p class="hero-card__amount">$3,520</p>
+                  <p class="hero-card__caption">Remaining from $8,450 income after fixed costs, subscriptions, transfers, and planned card payments.</p>
+                </div>
+
+                <div class="hero-stat-cluster">
+                  <div class="hero-stat">
+                    <span>Fixed bills cleared</span>
+                    <strong>72%</strong>
+                  </div>
+                  <div class="hero-stat">
+                    <span>Upcoming large bill</span>
+                    <strong>$780</strong>
+                  </div>
+                </div>
+              </div>
+
+              <div class="runway">
+                <div class="runway__labels">
+                  <span>Cash runway</span>
+                  <span>21 days at current pace</span>
+                </div>
+                <div class="runway__bar">
+                  <span style="width: 72%;"></span>
+                </div>
+              </div>
+
+              <div class="hero-card__footer">
+                <div class="mini-card">
+                  <span>Daily burn</span>
+                  <strong>$164</strong>
+                  <small>Down 8% week over week</small>
+                </div>
+                <div class="mini-card">
+                  <span>Planned transfers</span>
+                  <strong>$1,280</strong>
+                  <small>Invest + emergency fund</small>
+                </div>
+                <div class="mini-card">
+                  <span>Recurring footprint</span>
+                  <strong>$1,940</strong>
+                  <small>Rent, utilities, and subscriptions</small>
+                </div>
+              </div>
+            </article>
+
+            <article class="panel planner-card">
+              <div class="panel__header panel__header--stack">
+                <div>
+                  <p class="eyebrow">Capital plan</p>
+                  <h3>Bucket allocation</h3>
+                </div>
+                <p class="panel-note">Balanced for cash safety first, then investing.</p>
+              </div>
+
+              <div class="planner-card__section">
+                <div class="allocation-row">
+                  <div class="allocation-row__title">
+                    <span>Operating</span>
+                    <strong>$2,240</strong>
+                  </div>
+                  <div class="progress progress--tight">
+                    <span style="width: 58%;"></span>
+                  </div>
+                </div>
+                <div class="allocation-row">
+                  <div class="allocation-row__title">
+                    <span>Savings reserve</span>
+                    <strong>$840</strong>
+                  </div>
+                  <div class="progress progress--tight">
+                    <span style="width: 22%;"></span>
+                  </div>
+                </div>
+                <div class="allocation-row">
+                  <div class="allocation-row__title">
+                    <span>Investable</span>
+                    <strong>$1,280</strong>
+                  </div>
+                  <div class="progress progress--tight progress--accent">
+                    <span style="width: 33%;"></span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="planner-card__section">
+                <p class="planner-card__label">Upcoming</p>
+                <div class="timeline-item">
+                  <div>
+                    <strong>Rent transfer</strong>
+                    <span>Mar 26</span>
+                  </div>
+                  <strong>$780</strong>
+                </div>
+                <div class="timeline-item">
+                  <div>
+                    <strong>Brokerage deposit</strong>
+                    <span>Mar 28</span>
+                  </div>
+                  <strong>$640</strong>
+                </div>
+                <div class="timeline-item">
+                  <div>
+                    <strong>Utilities autopay</strong>
+                    <span>Mar 30</span>
+                  </div>
+                  <strong>$124</strong>
+                </div>
+              </div>
+            </article>
+          </section>
+
+          <section class="kpi-grid">
+            <article class="panel kpi-card kpi-card--income">
+              <div class="kpi-card__header">
+                <span>Monthly income</span>
+                <span class="kpi-card__delta">+4.8%</span>
+              </div>
+              <strong class="kpi-card__value">$8,450</strong>
+              <p class="kpi-card__caption">Salary plus freelance retainer landed on schedule.</p>
+              <div class="sparkline">
+                <span style="height: 32%;"></span>
+                <span style="height: 46%;"></span>
+                <span style="height: 40%;"></span>
+                <span style="height: 58%;"></span>
+                <span style="height: 64%;"></span>
+                <span style="height: 88%;"></span>
+              </div>
+            </article>
+
+            <article class="panel kpi-card kpi-card--spent">
+              <div class="kpi-card__header">
+                <span>Total spent</span>
+                <span class="kpi-card__delta">-6.1%</span>
+              </div>
+              <strong class="kpi-card__value">$4,930</strong>
+              <p class="kpi-card__caption">Lower than last month after travel costs dropped out.</p>
+              <div class="sparkline">
+                <span style="height: 38%;"></span>
+                <span style="height: 62%;"></span>
+                <span style="height: 76%;"></span>
+                <span style="height: 70%;"></span>
+                <span style="height: 54%;"></span>
+                <span style="height: 43%;"></span>
+              </div>
+            </article>
+
+            <article class="panel kpi-card kpi-card--balance">
+              <div class="kpi-card__header">
+                <span>Remaining balance</span>
+                <span class="kpi-card__delta">+12.4%</span>
+              </div>
+              <strong class="kpi-card__value">$3,520</strong>
+              <p class="kpi-card__caption">Room to cover upcoming bills and still keep cash slack.</p>
+              <div class="sparkline">
+                <span style="height: 24%;"></span>
+                <span style="height: 35%;"></span>
+                <span style="height: 49%;"></span>
+                <span style="height: 58%;"></span>
+                <span style="height: 72%;"></span>
+                <span style="height: 86%;"></span>
+              </div>
+            </article>
+
+            <article class="panel kpi-card kpi-card--surplus">
+              <div class="kpi-card__header">
+                <span>Investable surplus</span>
+                <span class="kpi-card__delta">+$320</span>
+              </div>
+              <strong class="kpi-card__value">$1,280</strong>
+              <p class="kpi-card__caption">Safe to deploy after reserve and card payoff targets clear.</p>
+              <div class="sparkline">
+                <span style="height: 18%;"></span>
+                <span style="height: 36%;"></span>
+                <span style="height: 48%;"></span>
+                <span style="height: 66%;"></span>
+                <span style="height: 74%;"></span>
+                <span style="height: 84%;"></span>
+              </div>
+            </article>
+
+            <article class="panel kpi-card kpi-card--daily">
+              <div class="kpi-card__header">
+                <span>Daily average</span>
+                <span class="kpi-card__delta">$164</span>
+              </div>
+              <strong class="kpi-card__value">$164</strong>
+              <p class="kpi-card__caption">Current spend pace sits below the monthly plan baseline.</p>
+              <div class="sparkline">
+                <span style="height: 82%;"></span>
+                <span style="height: 72%;"></span>
+                <span style="height: 66%;"></span>
+                <span style="height: 58%;"></span>
+                <span style="height: 51%;"></span>
+                <span style="height: 47%;"></span>
+              </div>
+            </article>
+
+            <article class="panel kpi-card kpi-card--savings">
+              <div class="kpi-card__header">
+                <span>Savings rate</span>
+                <span class="kpi-card__delta">35.2%</span>
+              </div>
+              <strong class="kpi-card__value">35.2%</strong>
+              <p class="kpi-card__caption">A strong buffer before fresh investing or larger purchases.</p>
+              <div class="sparkline">
+                <span style="height: 26%;"></span>
+                <span style="height: 40%;"></span>
+                <span style="height: 44%;"></span>
+                <span style="height: 52%;"></span>
+                <span style="height: 70%;"></span>
+                <span style="height: 80%;"></span>
+              </div>
+            </article>
+          </section>
+        <section class="charts-grid">
+          <article class="panel chart-card">
+            <div class="panel__header">
+              <div>
+                <p class="eyebrow">Distribution</p>
+                <h3>Category mix</h3>
+              </div>
+              <span class="pill pill--quiet">6 active categories</span>
+            </div>
+
+            <div class="chart-card__content chart-card__content--split">
+              <div class="donut-wrap">
+                <div class="donut-chart">
+                  <div class="donut-chart__hole">
+                    <span>Total spent</span>
+                    <strong>$4,930</strong>
+                  </div>
+                </div>
+              </div>
+
+              <div class="legend-list">
+                <div class="legend-item">
+                  <div class="legend-item__title">
+                    <span class="legend-swatch legend-swatch--mint"></span>
+                    <span>Housing</span>
+                  </div>
+                  <div class="legend-item__value">
+                    <strong>32%</strong>
+                    <span>$1,578</span>
+                  </div>
+                </div>
+                <div class="legend-item">
+                  <div class="legend-item__title">
+                    <span class="legend-swatch legend-swatch--blue"></span>
+                    <span>Food</span>
+                  </div>
+                  <div class="legend-item__value">
+                    <strong>18%</strong>
+                    <span>$887</span>
+                  </div>
+                </div>
+                <div class="legend-item">
+                  <div class="legend-item__title">
+                    <span class="legend-swatch legend-swatch--amber"></span>
+                    <span>Transport</span>
+                  </div>
+                  <div class="legend-item__value">
+                    <strong>11%</strong>
+                    <span>$542</span>
+                  </div>
+                </div>
+                <div class="legend-item">
+                  <div class="legend-item__title">
+                    <span class="legend-swatch legend-swatch--rose"></span>
+                    <span>Leisure</span>
+                  </div>
+                  <div class="legend-item__value">
+                    <strong>9%</strong>
+                    <span>$444</span>
+                  </div>
+                </div>
+                <div class="legend-item">
+                  <div class="legend-item__title">
+                    <span class="legend-swatch legend-swatch--slate"></span>
+                    <span>Other</span>
+                  </div>
+                  <div class="legend-item__value">
+                    <strong>30%</strong>
+                    <span>$1,479</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="panel chart-card chart-card--line">
+            <div class="panel__header">
+              <div>
+                <p class="eyebrow">Velocity</p>
+                <h3>Spending over time</h3>
+              </div>
+              <span class="status-pill status-pill--neutral">6% below plan</span>
+            </div>
+
+            <div class="line-chart__meta">
+              <div class="line-chart__badge">
+                <span class="legend-swatch legend-swatch--mint"></span>
+                <span>Actual spend pace</span>
+              </div>
+              <div class="line-chart__badge">
+                <span class="legend-swatch legend-swatch--slate"></span>
+                <span>Target threshold</span>
+              </div>
+            </div>
+
+            <div class="line-chart">
+              <svg viewBox="0 0 640 280" role="img" aria-label="Spending over time">
+                <defs>
+                  <linearGradient id="areaGradient" x1="0" x2="0" y1="0" y2="1">
+                    <stop offset="0%" stop-color="#75e5c0" stop-opacity="0.34"></stop>
+                    <stop offset="100%" stop-color="#75e5c0" stop-opacity="0"></stop>
+                  </linearGradient>
+                </defs>
+                <g class="line-chart__grid">
+                  <line x1="40" y1="40" x2="600" y2="40"></line>
+                  <line x1="40" y1="95" x2="600" y2="95"></line>
+                  <line x1="40" y1="150" x2="600" y2="150"></line>
+                  <line x1="40" y1="205" x2="600" y2="205"></line>
+                  <line x1="40" y1="260" x2="600" y2="260"></line>
+                </g>
+                <path class="line-chart__target" d="M40 170 L140 165 L240 160 L340 158 L440 156 L540 154 L600 152"></path>
+                <path class="line-chart__area" d="M40 190 L140 175 L240 162 L340 148 L440 132 L540 120 L600 112 L600 260 L40 260 Z"></path>
+                <path class="line-chart__line" d="M40 190 L140 175 L240 162 L340 148 L440 132 L540 120 L600 112"></path>
+                <g class="line-chart__points">
+                  <circle cx="40" cy="190" r="5"></circle>
+                  <circle cx="140" cy="175" r="5"></circle>
+                  <circle cx="240" cy="162" r="5"></circle>
+                  <circle cx="340" cy="148" r="5"></circle>
+                  <circle cx="440" cy="132" r="5"></circle>
+                  <circle cx="540" cy="120" r="5"></circle>
+                  <circle cx="600" cy="112" r="5"></circle>
+                </g>
+              </svg>
+              <div class="line-chart__axis">
+                <span>Mar 1</span>
+                <span>Mar 6</span>
+                <span>Mar 11</span>
+                <span>Mar 16</span>
+                <span>Mar 21</span>
+                <span>Mar 26</span>
+                <span>Mar 31</span>
+              </div>
+            </div>
+          </article>
+        </section>
+
+        <section class="content-grid">
+          <article class="panel expenses-card">
+            <div class="panel__header">
+              <div>
+                <p class="eyebrow">Recent activity</p>
+                <h3>Expenses</h3>
+              </div>
+              <div class="inline-actions">
+                <button class="button button--ghost button--small" type="button">Filters</button>
+                <button class="button button--ghost button--small" type="button">Export</button>
+              </div>
+            </div>
+
+            <div class="expense-list">
+              <article class="expense-row">
+                <div class="expense-row__merchant">
+                  <strong>Whole Foods Market</strong>
+                  <span>Mar 18 at 5:42 PM</span>
+                </div>
+                <div class="expense-row__meta">
+                  <span class="badge badge--food">Food</span>
+                  <span class="expense-row__method">Visa ending 2408</span>
+                </div>
+                <div class="expense-row__side">
+                  <strong class="expense-row__amount">- $84.20</strong>
+                  <div class="expense-row__actions">
+                    <button class="icon-button icon-button--soft" type="button" aria-label="Edit expense">
+                      <svg viewBox="0 0 24 24" fill="none">
+                        <path d="m4 16.5 8.6-8.6 2.5 2.5-8.6 8.6H4v-2.5Z"></path>
+                        <path d="m11.8 8.7 2-2a2 2 0 0 1 2.8 0l.7.7a2 2 0 0 1 0 2.8l-2 2"></path>
+                      </svg>
+                    </button>
+                    <button class="icon-button icon-button--soft" type="button" aria-label="Delete expense">
+                      <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M5.5 7.5h13"></path>
+                        <path d="M9 7.5V5h6v2.5"></path>
+                        <path d="M8.5 10.5v6"></path>
+                        <path d="M12 10.5v6"></path>
+                        <path d="M15.5 10.5v6"></path>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </article>
+
+              <article class="expense-row">
+                <div class="expense-row__merchant">
+                  <strong>Blue Bottle Coffee</strong>
+                  <span>Mar 17 at 8:11 AM</span>
+                </div>
+                <div class="expense-row__meta">
+                  <span class="badge badge--food">Food</span>
+                  <span class="expense-row__method">Apple Pay</span>
+                </div>
+                <div class="expense-row__side">
+                  <strong class="expense-row__amount">- $12.40</strong>
+                  <div class="expense-row__actions">
+                    <button class="icon-button icon-button--soft" type="button" aria-label="Edit expense">
+                      <svg viewBox="0 0 24 24" fill="none">
+                        <path d="m4 16.5 8.6-8.6 2.5 2.5-8.6 8.6H4v-2.5Z"></path>
+                        <path d="m11.8 8.7 2-2a2 2 0 0 1 2.8 0l.7.7a2 2 0 0 1 0 2.8l-2 2"></path>
+                      </svg>
+                    </button>
+                    <button class="icon-button icon-button--soft" type="button" aria-label="Delete expense">
+                      <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M5.5 7.5h13"></path>
+                        <path d="M9 7.5V5h6v2.5"></path>
+                        <path d="M8.5 10.5v6"></path>
+                        <path d="M12 10.5v6"></path>
+                        <path d="M15.5 10.5v6"></path>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </article>
+
+              <article class="expense-row">
+                <div class="expense-row__merchant">
+                  <strong>Chevron Station</strong>
+                  <span>Mar 16 at 7:05 PM</span>
+                </div>
+                <div class="expense-row__meta">
+                  <span class="badge badge--transport">Transport</span>
+                  <span class="expense-row__method">Visa ending 2408</span>
+                </div>
+                <div class="expense-row__side">
+                  <strong class="expense-row__amount">- $54.80</strong>
+                  <div class="expense-row__actions">
+                    <button class="icon-button icon-button--soft" type="button" aria-label="Edit expense">
+                      <svg viewBox="0 0 24 24" fill="none">
+                        <path d="m4 16.5 8.6-8.6 2.5 2.5-8.6 8.6H4v-2.5Z"></path>
+                        <path d="m11.8 8.7 2-2a2 2 0 0 1 2.8 0l.7.7a2 2 0 0 1 0 2.8l-2 2"></path>
+                      </svg>
+                    </button>
+                    <button class="icon-button icon-button--soft" type="button" aria-label="Delete expense">
+                      <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M5.5 7.5h13"></path>
+                        <path d="M9 7.5V5h6v2.5"></path>
+                        <path d="M8.5 10.5v6"></path>
+                        <path d="M12 10.5v6"></path>
+                        <path d="M15.5 10.5v6"></path>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </article>
+
+              <article class="expense-row">
+                <div class="expense-row__merchant">
+                  <strong>Dropbox</strong>
+                  <span>Mar 15 at 9:00 AM</span>
+                </div>
+                <div class="expense-row__meta">
+                  <span class="badge badge--software">Software</span>
+                  <span class="expense-row__method">Autopay</span>
+                </div>
+                <div class="expense-row__side">
+                  <strong class="expense-row__amount">- $19.99</strong>
+                  <div class="expense-row__actions">
+                    <button class="icon-button icon-button--soft" type="button" aria-label="Edit expense">
+                      <svg viewBox="0 0 24 24" fill="none">
+                        <path d="m4 16.5 8.6-8.6 2.5 2.5-8.6 8.6H4v-2.5Z"></path>
+                        <path d="m11.8 8.7 2-2a2 2 0 0 1 2.8 0l.7.7a2 2 0 0 1 0 2.8l-2 2"></path>
+                      </svg>
+                    </button>
+                    <button class="icon-button icon-button--soft" type="button" aria-label="Delete expense">
+                      <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M5.5 7.5h13"></path>
+                        <path d="M9 7.5V5h6v2.5"></path>
+                        <path d="M8.5 10.5v6"></path>
+                        <path d="M12 10.5v6"></path>
+                        <path d="M15.5 10.5v6"></path>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </article>
+
+              <article class="expense-row">
+                <div class="expense-row__merchant">
+                  <strong>Equinox</strong>
+                  <span>Mar 14 at 6:14 AM</span>
+                </div>
+                <div class="expense-row__meta">
+                  <span class="badge badge--lifestyle">Lifestyle</span>
+                  <span class="expense-row__method">Mastercard ending 1182</span>
+                </div>
+                <div class="expense-row__side">
+                  <strong class="expense-row__amount">- $185.00</strong>
+                  <div class="expense-row__actions">
+                    <button class="icon-button icon-button--soft" type="button" aria-label="Edit expense">
+                      <svg viewBox="0 0 24 24" fill="none">
+                        <path d="m4 16.5 8.6-8.6 2.5 2.5-8.6 8.6H4v-2.5Z"></path>
+                        <path d="m11.8 8.7 2-2a2 2 0 0 1 2.8 0l.7.7a2 2 0 0 1 0 2.8l-2 2"></path>
+                      </svg>
+                    </button>
+                    <button class="icon-button icon-button--soft" type="button" aria-label="Delete expense">
+                      <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M5.5 7.5h13"></path>
+                        <path d="M9 7.5V5h6v2.5"></path>
+                        <path d="M8.5 10.5v6"></path>
+                        <path d="M12 10.5v6"></path>
+                        <path d="M15.5 10.5v6"></path>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </article>
+
+              <article class="expense-row">
+                <div class="expense-row__merchant">
+                  <strong>AMC Lincoln Square</strong>
+                  <span>Mar 12 at 9:48 PM</span>
+                </div>
+                <div class="expense-row__meta">
+                  <span class="badge badge--lifestyle">Leisure</span>
+                  <span class="expense-row__method">Visa ending 2408</span>
+                </div>
+                <div class="expense-row__side">
+                  <strong class="expense-row__amount">- $32.00</strong>
+                  <div class="expense-row__actions">
+                    <button class="icon-button icon-button--soft" type="button" aria-label="Edit expense">
+                      <svg viewBox="0 0 24 24" fill="none">
+                        <path d="m4 16.5 8.6-8.6 2.5 2.5-8.6 8.6H4v-2.5Z"></path>
+                        <path d="m11.8 8.7 2-2a2 2 0 0 1 2.8 0l.7.7a2 2 0 0 1 0 2.8l-2 2"></path>
+                      </svg>
+                    </button>
+                    <button class="icon-button icon-button--soft" type="button" aria-label="Delete expense">
+                      <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M5.5 7.5h13"></path>
+                        <path d="M9 7.5V5h6v2.5"></path>
+                        <path d="M8.5 10.5v6"></path>
+                        <path d="M12 10.5v6"></path>
+                        <path d="M15.5 10.5v6"></path>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </article>
+            </div>
+          </article>
+
+          <div class="side-stack">
+            <article class="panel insights-card">
+              <div class="panel__header">
+                <div>
+                  <p class="eyebrow">Signals</p>
+                  <h3>Insights</h3>
+                </div>
+                <span class="pill pill--quiet">Auto generated</span>
+              </div>
+
+              <div class="insight-list">
+                <article class="insight">
+                  <div class="insight__flag insight__flag--rose">Food</div>
+                  <div>
+                    <strong>You spent 18% more on food this month</strong>
+                    <p>Most of the increase came from weekday delivery and premium groceries.</p>
+                  </div>
+                </article>
+                <article class="insight">
+                  <div class="insight__flag insight__flag--mint">Investing</div>
+                  <div>
+                    <strong>You can still invest $320</strong>
+                    <p>Your reserve threshold stays intact even after the next rent transfer.</p>
+                  </div>
+                </article>
+                <article class="insight">
+                  <div class="insight__flag insight__flag--blue">Cashflow</div>
+                  <div>
+                    <strong>Subscriptions are stable at $78 this cycle</strong>
+                    <p>No new recurring charges were detected in the last 30 days.</p>
+                  </div>
+                </article>
+              </div>
+            </article>
+
+            <article class="panel invest-card">
+              <div class="panel__header">
+                <div>
+                  <p class="eyebrow">Investment lane</p>
+                  <h3>Deployable capital</h3>
+                </div>
+              </div>
+
+              <div class="invest-card__amount">
+                <span>Available to invest</span>
+                <strong>$1,280</strong>
+              </div>
+
+              <div class="projection-grid">
+                <div class="projection-tile">
+                  <span>If invested monthly</span>
+                  <strong>$15,360/year</strong>
+                </div>
+                <div class="projection-tile">
+                  <span>12 month target gap</span>
+                  <strong>$2,140 left</strong>
+                </div>
+              </div>
+
+              <div class="allocation-note">
+                <div class="allocation-note__header">
+                  <span>Suggested split</span>
+                  <strong>ETF 70% / Cash reserve 30%</strong>
+                </div>
+                <div class="stacked-bar">
+                  <span class="stacked-bar__segment stacked-bar__segment--mint" style="width: 70%;"></span>
+                  <span class="stacked-bar__segment stacked-bar__segment--slate" style="width: 30%;"></span>
+                </div>
+              </div>
+
+              <button class="button button--accent" type="button">Review investment plan</button>
+            </article>
+          </div>
+        </section>
+
+        </section>
+
+        <section class="dashboard-state dashboard-state--empty">
+          <article class="panel empty-panel">
+            <div class="empty-panel__visual" aria-hidden="true">
+              <span class="empty-orb empty-orb--large"></span>
+              <span class="empty-orb empty-orb--small"></span>
+              <div class="empty-card empty-card--wide"></div>
+              <div class="empty-card empty-card--tall"></div>
+              <div class="empty-card empty-card--mini"></div>
+            </div>
+
+            <p class="eyebrow">No finance data yet</p>
+            <h3>Connect accounts to unlock your dashboard</h3>
+            <p class="empty-panel__copy">KPI cards, cashflow trends, and investment guidance will appear here once transactions start flowing in. This preview shows the empty state inside the same premium dashboard system.</p>
+
+            <div class="empty-panel__actions">
+              <button class="button button--accent" type="button" data-restore>Import sample data</button>
+              <button class="button button--ghost" type="button" data-restore>Back to dashboard</button>
+            </div>
+
+            <div class="empty-panel__foot">
+              <div>
+                <span>Next step</span>
+                <strong>Sync your main checking account</strong>
+              </div>
+              <div>
+                <span>Expected setup</span>
+                <strong>Under 2 minutes</strong>
+              </div>
+            </div>
+          </article>
+        </section>
+      </main>
+    </div>
+    <nav class="mobile-nav" aria-label="Mobile">
+      <button class="mobile-nav__item is-active" type="button" data-nav-item="dashboard">
+        <span class="mobile-nav__icon"></span>
+        <span>Home</span>
+      </button>
+      <button class="mobile-nav__item" type="button" data-nav-item="cashflow">
+        <span class="mobile-nav__icon"></span>
+        <span>Flow</span>
+      </button>
+      <button class="mobile-nav__item" type="button" data-nav-item="investing">
+        <span class="mobile-nav__icon"></span>
+        <span>Invest</span>
+      </button>
+      <button class="mobile-nav__item" type="button" data-nav-item="activity">
+        <span class="mobile-nav__icon"></span>
+        <span>Spend</span>
+      </button>
+      <button class="mobile-nav__item" type="button" data-nav-item="insights">
+        <span class="mobile-nav__icon"></span>
+        <span>Alerts</span>
+      </button>
+    </nav>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
