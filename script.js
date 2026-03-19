@@ -76,7 +76,6 @@ const topbarActions = document.querySelector("[data-topbar-actions]");
 const topbarEyebrow = document.querySelector("[data-topbar-eyebrow]");
 const topbarSearch = document.querySelector("[data-topbar-search]");
 const topbarFilters = document.querySelector("[data-topbar-filters]");
-const topbarIncomeButton = document.querySelector("[data-topbar-income]");
 const dashboardMain = document.querySelector("[data-dashboard-main]");
 const expenseList = document.querySelector("[data-expense-list]");
 const expenseResults = document.querySelector("[data-expense-results]");
@@ -953,12 +952,8 @@ const renderTopbar = (metrics) => {
     topbarFilters.hidden = !config.showFilters;
   }
 
-  if (topbarIncomeButton) {
-    topbarIncomeButton.hidden = !config.showIncomeAction;
-  }
-
   if (topbarActions) {
-    topbarActions.hidden = !config.showSearch && !config.showFilters && !config.showIncomeAction;
+    topbarActions.hidden = !config.showSearch && !config.showFilters;
   }
 };
 

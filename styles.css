@@ -2736,11 +2736,7 @@ body.is-loading .dashboard-state--content {
   }
 
   .income-block--sources {
-    grid-column: span 4;
-  }
-
-  .income-block--capacity {
-    grid-column: span 8;
+    grid-column: span 12;
   }
 
   .income-block--result {
