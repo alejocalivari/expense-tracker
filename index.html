@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>aleclv finance</title>
+  <title>aleclv expense tracker</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@500;600;700;800&display=swap" rel="stylesheet">
@@ -12,1057 +12,174 @@
 <body class="is-loading">
   <div class="app-shell">
     <div class="mobile-backdrop" data-backdrop></div>
-    <aside class="sidebar" aria-label="Primary">
+
+    <aside class="sidebar" aria-label="Principal">
       <div class="sidebar__brand">
-        <span class="brand-mark">af</span>
+        <span class="brand-mark">ae</span>
         <div>
-          <p class="eyebrow">premium finance</p>
-          <h1>aleclv finance</h1>
+          <p class="eyebrow">gastos personales</p>
+          <h1>aleclv expense tracker</h1>
         </div>
       </div>
 
       <nav class="sidebar__nav">
-        <button class="nav-item is-active" type="button" data-nav-item="dashboard">
-          <span class="nav-item__icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none">
-              <path d="M4 13.5h6.5V20H4v-6.5Zm9.5-9.5H20v16h-6.5V4ZM4 4h6.5v6.5H4V4Zm9.5 8.5H20v5h-6.5v-5Z" />
-            </svg>
-          </span>
-          <span>Dashboard</span>
-        </button>
-        <button class="nav-item" type="button" data-nav-item="cashflow">
-          <span class="nav-item__icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none">
-              <path d="M4 16.5 9 11l3.4 3.4L20 6.8" />
-              <path d="M15 6.8H20V12" />
-            </svg>
-          </span>
-          <span>Cashflow</span>
-        </button>
-        <button class="nav-item" type="button" data-nav-item="investing">
-          <span class="nav-item__icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none">
-              <path d="M6 18.5h12" />
-              <path d="M8.5 18.5V10" />
-              <path d="M12 18.5V5.5" />
-              <path d="M15.5 18.5v-7" />
-            </svg>
-          </span>
-          <span>Investing</span>
-        </button>
-        <button class="nav-item" type="button" data-nav-item="activity">
-          <span class="nav-item__icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none">
-              <path d="M4 7.5h16" />
-              <path d="M4 12h12" />
-              <path d="M4 16.5h9" />
-            </svg>
-          </span>
-          <span>Activity</span>
-        </button>
-        <button class="nav-item" type="button" data-nav-item="insights">
-          <span class="nav-item__icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none">
-              <path d="M5 18.5 10.2 12l3.3 2.8L19 7.5" />
-              <path d="M15.5 7.5H19v3.5" />
-            </svg>
-          </span>
-          <span>Insights</span>
-        </button>
+        <button class="nav-item is-active" type="button" data-nav-item="dashboard"><span class="nav-item__icon"><svg viewBox="0 0 24 24" fill="none"><path d="M4 13.5h6.5V20H4v-6.5Zm9.5-9.5H20v16h-6.5V4ZM4 4h6.5v6.5H4V4Zm9.5 8.5H20v5h-6.5v-5Z" /></svg></span><span>Resumen</span></button>
+        <button class="nav-item" type="button" data-nav-item="cashflow"><span class="nav-item__icon"><svg viewBox="0 0 24 24" fill="none"><path d="M4 16.5 9 11l3.4 3.4L20 6.8" /><path d="M15 6.8H20V12" /></svg></span><span>Flujo</span></button>
+        <button class="nav-item" type="button" data-nav-item="investing"><span class="nav-item__icon"><svg viewBox="0 0 24 24" fill="none"><path d="M6 18.5h12" /><path d="M8.5 18.5V10" /><path d="M12 18.5V5.5" /><path d="M15.5 18.5v-7" /></svg></span><span>Ingreso</span></button>
+        <button class="nav-item" type="button" data-nav-item="activity"><span class="nav-item__icon"><svg viewBox="0 0 24 24" fill="none"><path d="M4 7.5h16" /><path d="M4 12h12" /><path d="M4 16.5h9" /></svg></span><span>Actividad</span></button>
+        <button class="nav-item" type="button" data-nav-item="insights"><span class="nav-item__icon"><svg viewBox="0 0 24 24" fill="none"><path d="M5 18.5 10.2 12l3.3 2.8L19 7.5" /><path d="M15.5 7.5H19v3.5" /></svg></span><span>Insights</span></button>
       </nav>
 
       <section class="sidebar__rail panel panel--soft">
         <div class="panel__header panel__header--stack">
           <div>
-            <p class="eyebrow">Month to date</p>
-            <h2><span class="countup" data-summary="sidebar-free-cash" data-countup="3520" data-prefix="$">$3,520</span> free cash</h2>
+            <p class="eyebrow">Mes actual</p>
+            <h2><span class="countup" data-summary="sidebar-free-cash" data-countup="0" data-prefix="$">$0</span> disponibles</h2>
           </div>
-          <span class="status-pill status-pill--positive" data-summary-status="sidebar">On track</span>
+          <span class="status-pill status-pill--neutral" data-summary-status="sidebar">Sin base</span>
         </div>
-        <div class="rail-metric">
-          <span>Spent against plan</span>
-          <strong data-summary-text="sidebar-spend-ratio">82%</strong>
-        </div>
-        <div class="progress">
-          <span data-summary-bar="sidebar-spend-ratio" style="width: 82%;"></span>
-        </div>
-        <div class="rail-metric">
-          <span>Investable this cycle</span>
-          <strong class="countup" data-summary="sidebar-investable" data-countup="1280" data-prefix="$">$1,280</strong>
-        </div>
+        <div class="rail-metric"><span>Gastado del ingreso</span><strong data-summary-text="sidebar-spend-ratio">0%</strong></div>
+        <div class="progress"><span data-summary-bar="sidebar-spend-ratio" style="width: 0%;"></span></div>
+        <div class="rail-metric"><span>Ahorro del mes</span><strong class="countup" data-summary="sidebar-investable" data-countup="0" data-prefix="$">$0</strong></div>
       </section>
 
       <section class="sidebar__footer panel panel--soft">
-        <p class="eyebrow">Operator</p>
-        <div class="profile-card">
-          <div class="profile-card__avatar">AL</div>
-          <div>
-            <strong>Alejo</strong>
-            <span>Personal workspace</span>
-          </div>
-        </div>
+        <p class="eyebrow">Perfil</p>
+        <div class="profile-card"><div class="profile-card__avatar">AL</div><div><strong>Alejo</strong><span>Espacio personal</span></div></div>
       </section>
     </aside>
+
     <div class="main-shell">
       <header class="topbar">
         <div class="topbar__leading">
-          <button class="icon-button topbar__menu" type="button" aria-label="Toggle menu" data-menu-toggle>
-            <svg viewBox="0 0 24 24" fill="none">
-              <path d="M4 7.5h16" />
-              <path d="M4 12h16" />
-              <path d="M4 16.5h16" />
-            </svg>
-          </button>
-          <div>
-            <p class="eyebrow">Premium personal finance workspace</p>
-            <h2 data-period-title>March cashflow dashboard</h2>
-          </div>
+          <button class="icon-button topbar__menu" type="button" aria-label="Abrir menu" data-menu-toggle><svg viewBox="0 0 24 24" fill="none"><path d="M4 7.5h16" /><path d="M4 12h16" /><path d="M4 16.5h16" /></svg></button>
+          <div><p class="eyebrow">control personal mensual</p><h2 data-period-title>marzo 2026 - resumen de gastos</h2></div>
         </div>
-
         <div class="topbar__actions">
-          <label class="search-shell" aria-label="Search">
-            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <circle cx="11" cy="11" r="5.5" />
-              <path d="m15.5 15.5 4 4" />
-            </svg>
-            <input type="text" placeholder="Search merchants, methods, categories, or notes" data-search-input>
-          </label>
-          <button class="pill pill--quiet" type="button" data-period-pill data-open-filters aria-haspopup="dialog">Mar 2026</button>
-          <button class="button button--ghost" type="button" data-open-income aria-haspopup="dialog">Edit income</button>
+          <label class="search-shell" aria-label="Buscar"><svg viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="5.5" /><path d="m15.5 15.5 4 4" /></svg><input type="text" placeholder="Buscar descripcion, categoria, medio de pago o nota" data-search-input></label>
+          <button class="pill pill--quiet" type="button" data-period-pill data-open-filters aria-haspopup="dialog">mar 2026</button>
+          <button class="button button--ghost" type="button" data-open-income aria-haspopup="dialog">Editar ingreso</button>
         </div>
       </header>
+
       <main class="dashboard">
         <section class="dashboard-skeleton" aria-hidden="true">
-          <div class="skeleton-grid skeleton-grid--hero">
-            <div class="skeleton-block skeleton-block--hero"></div>
-            <div class="skeleton-block skeleton-block--rail"></div>
-          </div>
-          <div class="skeleton-grid skeleton-grid--kpi">
-            <div class="skeleton-block skeleton-block--kpi"></div>
-            <div class="skeleton-block skeleton-block--kpi"></div>
-            <div class="skeleton-block skeleton-block--kpi"></div>
-            <div class="skeleton-block skeleton-block--kpi"></div>
-            <div class="skeleton-block skeleton-block--kpi"></div>
-            <div class="skeleton-block skeleton-block--kpi"></div>
-          </div>
-          <div class="skeleton-grid skeleton-grid--charts">
-            <div class="skeleton-block skeleton-block--chart"></div>
-            <div class="skeleton-block skeleton-block--chart"></div>
-          </div>
-          <div class="skeleton-grid skeleton-grid--content">
-            <div class="skeleton-block skeleton-block--list"></div>
-            <div class="skeleton-stack">
-              <div class="skeleton-block skeleton-block--stack"></div>
-              <div class="skeleton-block skeleton-block--stack"></div>
-            </div>
-          </div>
+          <div class="skeleton-grid skeleton-grid--hero"><div class="skeleton-block skeleton-block--hero"></div><div class="skeleton-block skeleton-block--rail"></div></div>
+          <div class="skeleton-grid skeleton-grid--kpi"><div class="skeleton-block skeleton-block--kpi"></div><div class="skeleton-block skeleton-block--kpi"></div><div class="skeleton-block skeleton-block--kpi"></div><div class="skeleton-block skeleton-block--kpi"></div><div class="skeleton-block skeleton-block--kpi"></div><div class="skeleton-block skeleton-block--kpi"></div></div>
+          <div class="skeleton-grid skeleton-grid--charts"><div class="skeleton-block skeleton-block--chart"></div><div class="skeleton-block skeleton-block--chart"></div></div>
+          <div class="skeleton-grid skeleton-grid--content"><div class="skeleton-block skeleton-block--list"></div><div class="skeleton-stack"><div class="skeleton-block skeleton-block--stack"></div><div class="skeleton-block skeleton-block--stack"></div></div></div>
         </section>
 
         <section class="dashboard-state dashboard-state--content">
           <section class="hero-grid">
             <article class="panel hero-card">
-              <div class="panel__header">
-                <div>
-                  <p class="eyebrow">Liquidity snapshot</p>
-                  <h3>Cash free after core bills</h3>
-                </div>
-                <span class="status-pill status-pill--positive" data-summary-status="hero">+12.4% vs Feb</span>
-              </div>
-
+              <div class="panel__header"><div><p class="eyebrow">Balance del mes</p><h3>Lo que te queda despues de tus gastos</h3></div><span class="status-pill status-pill--neutral" data-summary-status="hero">Sin base</span></div>
               <div class="hero-card__headline">
-                <div>
-                  <p class="hero-card__amount countup" data-summary="hero-remaining" data-countup="3520" data-prefix="$">$3,520</p>
-                  <p class="hero-card__caption" data-summary-text="hero-caption">Remaining from $8,450 income after fixed costs, subscriptions, transfers, and planned card payments.</p>
-                </div>
-
+                <div><p class="hero-card__amount countup" data-summary="hero-remaining" data-countup="0" data-prefix="$">$0</p><p class="hero-card__caption" data-summary-text="hero-caption">Carga tu ingreso mensual y tus movimientos para ver el balance real del mes.</p></div>
                 <div class="hero-stat-cluster">
-                  <div class="hero-stat">
-                    <span data-summary-label="hero-stat-1-label">Fixed bills cleared</span>
-                    <strong data-summary-text="hero-stat-1-value">72%</strong>
-                  </div>
-                  <div class="hero-stat">
-                    <span data-summary-label="hero-stat-2-label">Upcoming large bill</span>
-                    <strong data-summary-text="hero-stat-2-value">$780</strong>
-                  </div>
+                  <div class="hero-stat"><span data-summary-label="hero-stat-1-label">Movimientos</span><strong data-summary-text="hero-stat-1-value">0 este mes</strong></div>
+                  <div class="hero-stat"><span data-summary-label="hero-stat-2-label">Gasto fijo</span><strong data-summary-text="hero-stat-2-value">0% del total</strong></div>
                 </div>
               </div>
-
-              <div class="runway">
-                <div class="runway__labels">
-                  <span>Cash runway</span>
-                  <span data-summary-text="hero-runway">21 days at current pace</span>
-                </div>
-                <div class="runway__bar">
-                  <span data-summary-bar="hero-runway" style="width: 72%;"></span>
-                </div>
-              </div>
-
+              <div class="runway"><div class="runway__labels"><span>Gastado del ingreso</span><span data-summary-text="hero-runway">0%</span></div><div class="runway__bar"><span data-summary-bar="hero-runway" style="width: 0%;"></span></div></div>
               <div class="hero-card__footer">
-                <div class="mini-card">
-                  <span>Daily burn</span>
-                  <strong class="countup" data-summary="mini-daily-average" data-countup="164" data-prefix="$">$164</strong>
-                  <small data-summary-text="mini-daily-note">Down 8% week over week</small>
-                </div>
-                <div class="mini-card">
-                  <span data-summary-label="mini-secondary-label">Planned transfers</span>
-                  <strong class="countup" data-summary="mini-secondary-value" data-countup="1280" data-prefix="$">$1,280</strong>
-                  <small data-summary-text="mini-secondary-note">Invest + emergency fund</small>
-                </div>
-                <div class="mini-card">
-                  <span data-summary-label="mini-tertiary-label">Recurring footprint</span>
-                  <strong data-summary-text="mini-tertiary-value">$1,940</strong>
-                  <small data-summary-text="mini-tertiary-note">Rent, utilities, and subscriptions</small>
-                </div>
+                <div class="mini-card"><span>Promedio diario</span><strong class="countup" data-summary="mini-daily-average" data-countup="0" data-prefix="$">$0</strong><small data-summary-text="mini-daily-note">Sin movimientos todavia</small></div>
+                <div class="mini-card"><span data-summary-label="mini-secondary-label">Gasto mas alto</span><strong class="countup" data-summary="mini-secondary-value" data-countup="0" data-prefix="$">$0</strong><small data-summary-text="mini-secondary-note">Todavia no hay gastos cargados</small></div>
+                <div class="mini-card"><span data-summary-label="mini-tertiary-label">Categoria principal</span><strong data-summary-text="mini-tertiary-value">Sin categoria</strong><small data-summary-text="mini-tertiary-note">Sin mezcla de gastos todavia</small></div>
               </div>
             </article>
 
             <article class="panel planner-card">
-              <div class="panel__header panel__header--stack">
-                <div>
-                  <p class="eyebrow">Capital plan</p>
-                  <h3>Bucket allocation</h3>
-                </div>
-                <p class="panel-note" data-summary-text="planner-note">Balanced for cash safety first, then investing.</p>
-              </div>
-
+              <div class="panel__header panel__header--stack"><div><p class="eyebrow">Fijos vs variables</p><h3>Como se repartieron tus gastos</h3></div><p class="panel-note" data-summary-text="planner-note">Separa tus gastos fijos para entender cuanto margen real te queda en el mes.</p></div>
               <div class="planner-card__section">
-                <div class="allocation-row">
-                  <div class="allocation-row__title">
-                    <span data-summary-label="planner-row-1-label">Operating</span>
-                    <strong class="countup" data-summary="planner-row-1-value" data-countup="2240" data-prefix="$">$2,240</strong>
-                  </div>
-                  <div class="progress progress--tight">
-                    <span data-summary-bar="planner-row-1" style="width: 58%;"></span>
-                  </div>
-                </div>
-                <div class="allocation-row">
-                  <div class="allocation-row__title">
-                    <span data-summary-label="planner-row-2-label">Savings reserve</span>
-                    <strong class="countup" data-summary="planner-row-2-value" data-countup="840" data-prefix="$">$840</strong>
-                  </div>
-                  <div class="progress progress--tight">
-                    <span data-summary-bar="planner-row-2" style="width: 22%;"></span>
-                  </div>
-                </div>
-                <div class="allocation-row">
-                  <div class="allocation-row__title">
-                    <span data-summary-label="planner-row-3-label">Investable</span>
-                    <strong class="countup" data-summary="planner-row-3-value" data-countup="1280" data-prefix="$">$1,280</strong>
-                  </div>
-                  <div class="progress progress--tight progress--accent">
-                    <span data-summary-bar="planner-row-3" style="width: 33%;"></span>
-                  </div>
-                </div>
+                <div class="allocation-row"><div class="allocation-row__title"><span data-summary-label="planner-row-1-label">Gastos fijos</span><strong class="countup" data-summary="planner-row-1-value" data-countup="0" data-prefix="$">$0</strong></div><div class="progress progress--tight"><span data-summary-bar="planner-row-1" style="width: 0%;"></span></div></div>
+                <div class="allocation-row"><div class="allocation-row__title"><span data-summary-label="planner-row-2-label">Gastos variables</span><strong class="countup" data-summary="planner-row-2-value" data-countup="0" data-prefix="$">$0</strong></div><div class="progress progress--tight"><span data-summary-bar="planner-row-2" style="width: 0%;"></span></div></div>
+                <div class="allocation-row"><div class="allocation-row__title"><span data-summary-label="planner-row-3-label">Ahorro del mes</span><strong class="countup" data-summary="planner-row-3-value" data-countup="0" data-prefix="$">$0</strong></div><div class="progress progress--tight progress--accent"><span data-summary-bar="planner-row-3" style="width: 0%;"></span></div></div>
               </div>
-
               <div class="planner-card__section">
-                <p class="planner-card__label" data-summary-text="planner-section-label">Upcoming</p>
-                <div class="timeline-item">
-                  <div>
-                    <strong data-summary-text="planner-item-1-title">Rent transfer</strong>
-                    <span data-summary-text="planner-item-1-subtitle">Mar 26</span>
-                  </div>
-                  <strong data-summary-text="planner-item-1-value">$780</strong>
-                </div>
-                <div class="timeline-item">
-                  <div>
-                    <strong data-summary-text="planner-item-2-title">Brokerage deposit</strong>
-                    <span data-summary-text="planner-item-2-subtitle">Mar 28</span>
-                  </div>
-                  <strong data-summary-text="planner-item-2-value">$640</strong>
-                </div>
-                <div class="timeline-item">
-                  <div>
-                    <strong data-summary-text="planner-item-3-title">Utilities autopay</strong>
-                    <span data-summary-text="planner-item-3-subtitle">Mar 30</span>
-                  </div>
-                  <strong data-summary-text="planner-item-3-value">$124</strong>
-                </div>
+                <p class="planner-card__label" data-summary-text="planner-section-label">Resumen rapido</p>
+                <div class="timeline-item"><div><strong data-summary-text="planner-item-1-title">Categoria principal</strong><span data-summary-text="planner-item-1-subtitle">Sin datos todavia</span></div><strong data-summary-text="planner-item-1-value">$0</strong></div>
+                <div class="timeline-item"><div><strong data-summary-text="planner-item-2-title">Gasto mas alto</strong><span data-summary-text="planner-item-2-subtitle">Sin datos todavia</span></div><strong data-summary-text="planner-item-2-value">$0</strong></div>
+                <div class="timeline-item"><div><strong data-summary-text="planner-item-3-title">Promedio diario</strong><span data-summary-text="planner-item-3-subtitle">Sin datos todavia</span></div><strong data-summary-text="planner-item-3-value">$0</strong></div>
               </div>
             </article>
           </section>
 
           <section class="kpi-grid">
-            <article class="panel kpi-card kpi-card--income">
-              <div class="kpi-card__header">
-                <span>Monthly income</span>
-                <span class="kpi-card__delta" data-kpi-delta="income">Editable baseline</span>
-              </div>
-              <strong class="kpi-card__value countup" data-kpi="income" data-countup="8450" data-prefix="$">$8,450</strong>
-              <p class="kpi-card__caption" data-kpi-caption="income">Monthly income baseline driving balance, savings, and investing projections.</p>
-              <div class="sparkline">
-                <span style="height: 32%;"></span>
-                <span style="height: 46%;"></span>
-                <span style="height: 40%;"></span>
-                <span style="height: 58%;"></span>
-                <span style="height: 64%;"></span>
-                <span style="height: 88%;"></span>
-              </div>
-            </article>
+            <article class="panel kpi-card kpi-card--income"><div class="kpi-card__header"><span>Ingreso mensual</span><span class="kpi-card__delta" data-kpi-delta="income">Editable</span></div><strong class="kpi-card__value countup" data-kpi="income" data-countup="0" data-prefix="$">$0</strong><p class="kpi-card__caption" data-kpi-caption="income">Usalo como base para recalcular balance, ahorro e insights al instante.</p><div class="kpi-card__actions"><button class="button button--ghost button--small" type="button" data-open-income>Editar ingreso</button></div><div class="sparkline"><span style="height: 32%;"></span><span style="height: 46%;"></span><span style="height: 40%;"></span><span style="height: 58%;"></span><span style="height: 64%;"></span><span style="height: 88%;"></span></div></article>
+            <article class="panel kpi-card kpi-card--spent"><div class="kpi-card__header"><span>Gastos totales</span><span class="kpi-card__delta" data-kpi-delta="totalSpent">Sin base</span></div><strong class="kpi-card__value countup" data-kpi="totalSpent" data-countup="0" data-prefix="$">$0</strong><p class="kpi-card__caption" data-kpi-caption="totalSpent">Todo lo que cargaste como gasto en el mes activo.</p><div class="sparkline"><span style="height: 38%;"></span><span style="height: 62%;"></span><span style="height: 76%;"></span><span style="height: 70%;"></span><span style="height: 54%;"></span><span style="height: 43%;"></span></div></article>
+            <article class="panel kpi-card kpi-card--balance"><div class="kpi-card__header"><span>Balance restante</span><span class="kpi-card__delta" data-kpi-delta="remainingBalance">Sin base</span></div><strong class="kpi-card__value countup" data-kpi="remainingBalance" data-countup="0" data-prefix="$">$0</strong><p class="kpi-card__caption" data-kpi-caption="remainingBalance">Ingreso menos gastos del mes activo.</p><div class="sparkline"><span style="height: 24%;"></span><span style="height: 35%;"></span><span style="height: 49%;"></span><span style="height: 58%;"></span><span style="height: 72%;"></span><span style="height: 86%;"></span></div></article>
+            <article class="panel kpi-card kpi-card--surplus"><div class="kpi-card__header"><span>Ahorro del mes</span><span class="kpi-card__delta" data-kpi-delta="investableSurplus">Disponible</span></div><strong class="kpi-card__value countup" data-kpi="investableSurplus" data-countup="0" data-prefix="$">$0</strong><p class="kpi-card__caption" data-kpi-caption="investableSurplus">Lo que todavia no consumiste del ingreso del mes.</p><div class="sparkline"><span style="height: 18%;"></span><span style="height: 36%;"></span><span style="height: 48%;"></span><span style="height: 66%;"></span><span style="height: 74%;"></span><span style="height: 84%;"></span></div></article>
+            <article class="panel kpi-card kpi-card--daily"><div class="kpi-card__header"><span>Promedio diario</span><span class="kpi-card__delta" data-kpi-delta="dailyAverage">Promedio actual</span></div><strong class="kpi-card__value countup" data-kpi="dailyAverage" data-countup="0" data-prefix="$">$0</strong><p class="kpi-card__caption" data-kpi-caption="dailyAverage">Promedio real por dia cargado en el mes.</p><div class="sparkline"><span style="height: 82%;"></span><span style="height: 72%;"></span><span style="height: 66%;"></span><span style="height: 58%;"></span><span style="height: 51%;"></span><span style="height: 47%;"></span></div></article>
+            <article class="panel kpi-card kpi-card--savings"><div class="kpi-card__header"><span>Tasa de ahorro</span><span class="kpi-card__delta" data-kpi-delta="savingsRate">0%</span></div><strong class="kpi-card__value countup" data-kpi="savingsRate" data-countup="0" data-suffix="%" data-decimals="1">0%</strong><p class="kpi-card__caption" data-kpi-caption="savingsRate">Que porcentaje del ingreso mensual sigue libre.</p><div class="sparkline"><span style="height: 26%;"></span><span style="height: 40%;"></span><span style="height: 44%;"></span><span style="height: 52%;"></span><span style="height: 70%;"></span><span style="height: 80%;"></span></div></article>
+          </section>
 
-            <article class="panel kpi-card kpi-card--spent">
-              <div class="kpi-card__header">
-                <span>Total spent</span>
-                <span class="kpi-card__delta" data-kpi-delta="totalSpent">-6.1%</span>
-              </div>
-              <strong class="kpi-card__value countup" data-kpi="totalSpent" data-countup="4930" data-prefix="$">$4,930</strong>
-              <p class="kpi-card__caption" data-kpi-caption="totalSpent">Lower than last month after travel costs dropped out.</p>
-              <div class="sparkline">
-                <span style="height: 38%;"></span>
-                <span style="height: 62%;"></span>
-                <span style="height: 76%;"></span>
-                <span style="height: 70%;"></span>
-                <span style="height: 54%;"></span>
-                <span style="height: 43%;"></span>
-              </div>
-            </article>
-
-            <article class="panel kpi-card kpi-card--balance">
-              <div class="kpi-card__header">
-                <span>Remaining balance</span>
-                <span class="kpi-card__delta" data-kpi-delta="remainingBalance">+12.4%</span>
-              </div>
-              <strong class="kpi-card__value countup" data-kpi="remainingBalance" data-countup="3520" data-prefix="$">$3,520</strong>
-              <p class="kpi-card__caption" data-kpi-caption="remainingBalance">Room to cover upcoming bills and still keep cash slack.</p>
-              <div class="sparkline">
-                <span style="height: 24%;"></span>
-                <span style="height: 35%;"></span>
-                <span style="height: 49%;"></span>
-                <span style="height: 58%;"></span>
-                <span style="height: 72%;"></span>
-                <span style="height: 86%;"></span>
-              </div>
-            </article>
-
-            <article class="panel kpi-card kpi-card--surplus">
-              <div class="kpi-card__header">
-                <span>Investable surplus</span>
-                <span class="kpi-card__delta" data-kpi-delta="investableSurplus">+$320</span>
-              </div>
-              <strong class="kpi-card__value countup" data-kpi="investableSurplus" data-countup="1280" data-prefix="$">$1,280</strong>
-              <p class="kpi-card__caption" data-kpi-caption="investableSurplus">Safe to deploy after reserve and card payoff targets clear.</p>
-              <div class="sparkline">
-                <span style="height: 18%;"></span>
-                <span style="height: 36%;"></span>
-                <span style="height: 48%;"></span>
-                <span style="height: 66%;"></span>
-                <span style="height: 74%;"></span>
-                <span style="height: 84%;"></span>
-              </div>
-            </article>
-
-            <article class="panel kpi-card kpi-card--daily">
-              <div class="kpi-card__header">
-                <span>Daily average</span>
-                <span class="kpi-card__delta" data-kpi-delta="dailyAverage">$164</span>
-              </div>
-              <strong class="kpi-card__value countup" data-kpi="dailyAverage" data-countup="164" data-prefix="$">$164</strong>
-              <p class="kpi-card__caption" data-kpi-caption="dailyAverage">Current spend pace sits below the monthly plan baseline.</p>
-              <div class="sparkline">
-                <span style="height: 82%;"></span>
-                <span style="height: 72%;"></span>
-                <span style="height: 66%;"></span>
-                <span style="height: 58%;"></span>
-                <span style="height: 51%;"></span>
-                <span style="height: 47%;"></span>
-              </div>
-            </article>
-
-            <article class="panel kpi-card kpi-card--savings">
-              <div class="kpi-card__header">
-                <span>Savings rate</span>
-                <span class="kpi-card__delta" data-kpi-delta="savingsRate">35.2%</span>
-              </div>
-              <strong class="kpi-card__value countup" data-kpi="savingsRate" data-countup="35.2" data-suffix="%" data-decimals="1">35.2%</strong>
-              <p class="kpi-card__caption" data-kpi-caption="savingsRate">A strong buffer before fresh investing or larger purchases.</p>
-              <div class="sparkline">
-                <span style="height: 26%;"></span>
-                <span style="height: 40%;"></span>
-                <span style="height: 44%;"></span>
-                <span style="height: 52%;"></span>
-                <span style="height: 70%;"></span>
-                <span style="height: 80%;"></span>
-              </div>
+          <section class="charts-grid">
+            <article class="panel chart-card"><div class="panel__header"><div><p class="eyebrow">Categorias</p><h3>Gastos por categoria</h3></div><span class="pill pill--quiet" data-summary-text="category-count-pill">0 categorias activas</span></div><div class="chart-card__content chart-card__content--split"><div class="donut-wrap"><div class="donut-chart" data-donut-chart><div class="donut-chart__hole"><span>Gastos totales</span><strong class="countup" data-summary="chart-total-spent" data-countup="0" data-prefix="$">$0</strong></div></div></div><div class="legend-list" data-category-legend></div></div></article>
+            <article class="panel chart-card chart-card--line">
+              <div class="panel__header"><div><p class="eyebrow">Evolucion</p><h3>Gasto acumulado del mes</h3></div><span class="status-pill status-pill--neutral" data-summary-status="line">Sin datos</span></div>
+              <div class="line-chart__meta"><div class="line-chart__badge"><span class="legend-swatch legend-swatch--mint"></span><span>Gasto acumulado</span></div><div class="line-chart__badge"><span class="legend-swatch legend-swatch--slate"></span><span>Proyeccion lineal</span></div></div>
+              <div class="line-chart"><svg viewBox="0 0 640 280" role="img" aria-label="Gasto acumulado del mes"><defs><linearGradient id="areaGradient" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="#75e5c0" stop-opacity="0.34"></stop><stop offset="100%" stop-color="#75e5c0" stop-opacity="0"></stop></linearGradient></defs><g class="line-chart__grid"><line x1="40" y1="40" x2="600" y2="40"></line><line x1="40" y1="95" x2="600" y2="95"></line><line x1="40" y1="150" x2="600" y2="150"></line><line x1="40" y1="205" x2="600" y2="205"></line><line x1="40" y1="260" x2="600" y2="260"></line></g><path class="line-chart__target" data-line-target d="M40 260 L600 260"></path><path class="line-chart__area" data-line-area d="M40 260 L600 260 L600 260 L40 260 Z"></path><path class="line-chart__line" data-line-actual d="M40 260 L600 260"></path><g class="line-chart__points" data-line-points></g></svg><div class="line-chart__axis" data-line-axis><span>1 mar</span><span>6 mar</span><span>11 mar</span><span>16 mar</span><span>21 mar</span><span>26 mar</span><span>31 mar</span></div></div>
             </article>
           </section>
-        <section class="charts-grid">
-          <article class="panel chart-card">
-            <div class="panel__header">
-              <div>
-                <p class="eyebrow">Distribution</p>
-                <h3>Category mix</h3>
-              </div>
-              <span class="pill pill--quiet" data-summary-text="category-count-pill">6 active categories</span>
-            </div>
 
-            <div class="chart-card__content chart-card__content--split">
-              <div class="donut-wrap">
-                <div class="donut-chart" data-donut-chart>
-                  <div class="donut-chart__hole">
-                    <span>Total spent</span>
-                    <strong class="countup" data-summary="chart-total-spent" data-countup="4930" data-prefix="$">$4,930</strong>
-                  </div>
-                </div>
-              </div>
-
-              <div class="legend-list" data-category-legend>
-                <div class="legend-item">
-                  <div class="legend-item__title">
-                    <span class="legend-swatch legend-swatch--mint"></span>
-                    <span>Housing</span>
-                  </div>
-                  <div class="legend-item__value">
-                    <strong>32%</strong>
-                    <span>$1,578</span>
-                  </div>
-                </div>
-                <div class="legend-item">
-                  <div class="legend-item__title">
-                    <span class="legend-swatch legend-swatch--blue"></span>
-                    <span>Food</span>
-                  </div>
-                  <div class="legend-item__value">
-                    <strong>18%</strong>
-                    <span>$887</span>
-                  </div>
-                </div>
-                <div class="legend-item">
-                  <div class="legend-item__title">
-                    <span class="legend-swatch legend-swatch--amber"></span>
-                    <span>Transport</span>
-                  </div>
-                  <div class="legend-item__value">
-                    <strong>11%</strong>
-                    <span>$542</span>
-                  </div>
-                </div>
-                <div class="legend-item">
-                  <div class="legend-item__title">
-                    <span class="legend-swatch legend-swatch--rose"></span>
-                    <span>Leisure</span>
-                  </div>
-                  <div class="legend-item__value">
-                    <strong>9%</strong>
-                    <span>$444</span>
-                  </div>
-                </div>
-                <div class="legend-item">
-                  <div class="legend-item__title">
-                    <span class="legend-swatch legend-swatch--slate"></span>
-                    <span>Other</span>
-                  </div>
-                  <div class="legend-item__value">
-                    <strong>30%</strong>
-                    <span>$1,479</span>
-                  </div>
-                </div>
-              </div>
+          <section class="content-grid">
+            <article class="panel expenses-card"><div class="panel__header"><div><p class="eyebrow">Actividad reciente</p><h3>Transacciones recientes</h3></div><div class="inline-actions"><button class="button button--ghost button--small" type="button" data-open-filters aria-haspopup="dialog">Filtros</button><button class="button button--ghost button--small" type="button" data-open-export aria-haspopup="dialog">Exportar</button></div></div><div class="expense-list" data-expense-list></div></article>
+            <div class="side-stack">
+              <article class="panel insights-card"><div class="panel__header"><div><p class="eyebrow">Insights utiles</p><h3>Que mirar este mes</h3></div><span class="pill pill--quiet">Automatico</span></div><div class="insight-list" data-insight-list></div></article>
+              <article class="panel invest-card">
+                <div class="panel__header"><div><p class="eyebrow">Ingreso mensual</p><h3>Base del mes</h3></div></div>
+                <div class="invest-card__amount"><span>Ingreso cargado</span><strong class="countup" data-summary="investable-amount" data-countup="0" data-prefix="$">$0</strong></div>
+                <p class="invest-card__caption" data-summary-text="invest-caption">Editar el ingreso actualiza balance, ahorro, promedio diario y comparativas al instante.</p>
+                <div class="projection-grid projection-grid--triple"><div class="projection-tile"><span>Gasto fijo</span><strong class="countup" data-summary="monthly-investable" data-countup="0" data-prefix="$">$0</strong></div><div class="projection-tile"><span>Gasto variable</span><strong class="countup" data-summary="yearly-investable" data-countup="0" data-prefix="$">$0</strong></div><div class="projection-tile projection-tile--feature"><span>Balance restante</span><strong class="countup" data-projection-output data-countup="0" data-prefix="$">$0</strong></div></div>
+                <div class="allocation-note"><div class="allocation-note__header"><span>Distribucion del gasto</span><strong data-projection-label>Fijos vs variables del mes</strong></div><div class="stacked-bar"><span class="stacked-bar__segment stacked-bar__segment--mint" style="width: 50%;"></span><span class="stacked-bar__segment stacked-bar__segment--slate" style="width: 50%;"></span></div><div class="allocation-note__stats"><div class="allocation-stat"><span>Tasa de ahorro</span><strong class="countup" data-projection-gain data-countup="0" data-suffix="%" data-decimals="1">0%</strong></div><div class="allocation-stat"><span>Ahorro del mes</span><strong data-summary-text="reserve-runway">$0</strong></div></div></div>
+                <button class="button button--accent" type="button" data-open-income>Editar ingreso mensual</button>
+              </article>
             </div>
-          </article>
-
-          <article class="panel chart-card chart-card--line">
-            <div class="panel__header">
-              <div>
-                <p class="eyebrow">Velocity</p>
-                <h3>Spending over time</h3>
-              </div>
-              <span class="status-pill status-pill--neutral" data-summary-status="line">6% below plan</span>
-            </div>
-
-            <div class="line-chart__meta">
-              <div class="line-chart__badge">
-                <span class="legend-swatch legend-swatch--mint"></span>
-                <span>Actual spend pace</span>
-              </div>
-              <div class="line-chart__badge">
-                <span class="legend-swatch legend-swatch--slate"></span>
-                <span>Target threshold</span>
-              </div>
-            </div>
-
-            <div class="line-chart">
-              <svg viewBox="0 0 640 280" role="img" aria-label="Spending over time">
-                <defs>
-                  <linearGradient id="areaGradient" x1="0" x2="0" y1="0" y2="1">
-                    <stop offset="0%" stop-color="#75e5c0" stop-opacity="0.34"></stop>
-                    <stop offset="100%" stop-color="#75e5c0" stop-opacity="0"></stop>
-                  </linearGradient>
-                </defs>
-                <g class="line-chart__grid">
-                  <line x1="40" y1="40" x2="600" y2="40"></line>
-                  <line x1="40" y1="95" x2="600" y2="95"></line>
-                  <line x1="40" y1="150" x2="600" y2="150"></line>
-                  <line x1="40" y1="205" x2="600" y2="205"></line>
-                  <line x1="40" y1="260" x2="600" y2="260"></line>
-                </g>
-                <path class="line-chart__target" d="M40 170 L140 165 L240 160 L340 158 L440 156 L540 154 L600 152"></path>
-                <path class="line-chart__area" d="M40 190 L140 175 L240 162 L340 148 L440 132 L540 120 L600 112 L600 260 L40 260 Z"></path>
-                <path class="line-chart__line" d="M40 190 L140 175 L240 162 L340 148 L440 132 L540 120 L600 112"></path>
-                <g class="line-chart__points">
-                  <circle cx="40" cy="190" r="5"></circle>
-                  <circle cx="140" cy="175" r="5"></circle>
-                  <circle cx="240" cy="162" r="5"></circle>
-                  <circle cx="340" cy="148" r="5"></circle>
-                  <circle cx="440" cy="132" r="5"></circle>
-                  <circle cx="540" cy="120" r="5"></circle>
-                  <circle cx="600" cy="112" r="5"></circle>
-                </g>
-              </svg>
-              <div class="line-chart__axis">
-                <span>Mar 1</span>
-                <span>Mar 6</span>
-                <span>Mar 11</span>
-                <span>Mar 16</span>
-                <span>Mar 21</span>
-                <span>Mar 26</span>
-                <span>Mar 31</span>
-              </div>
-            </div>
-          </article>
+          </section>
         </section>
-
-        <section class="content-grid">
-          <article class="panel expenses-card">
-            <div class="panel__header">
-              <div>
-                <p class="eyebrow">Recent activity</p>
-                <h3>Expenses</h3>
-              </div>
-              <div class="inline-actions">
-                <button class="button button--ghost button--small" type="button" data-open-filters aria-haspopup="dialog">Filters</button>
-                <button class="button button--ghost button--small" type="button" data-open-export aria-haspopup="dialog">Export</button>
-              </div>
-            </div>
-
-            <div class="expense-list" data-expense-list>
-              <article class="expense-row">
-                <div class="expense-row__merchant">
-                  <strong>Whole Foods Market</strong>
-                  <span>Mar 18 at 5:42 PM</span>
-                </div>
-                <div class="expense-row__meta">
-                  <span class="badge badge--food">Food</span>
-                  <span class="expense-row__method">Visa ending 2408</span>
-                </div>
-                <div class="expense-row__side">
-                  <strong class="expense-row__amount">- $84.20</strong>
-                  <div class="expense-row__actions">
-                    <button class="icon-button icon-button--soft" type="button" aria-label="Edit expense">
-                      <svg viewBox="0 0 24 24" fill="none">
-                        <path d="m4 16.5 8.6-8.6 2.5 2.5-8.6 8.6H4v-2.5Z"></path>
-                        <path d="m11.8 8.7 2-2a2 2 0 0 1 2.8 0l.7.7a2 2 0 0 1 0 2.8l-2 2"></path>
-                      </svg>
-                    </button>
-                    <button class="icon-button icon-button--soft" type="button" aria-label="Delete expense">
-                      <svg viewBox="0 0 24 24" fill="none">
-                        <path d="M5.5 7.5h13"></path>
-                        <path d="M9 7.5V5h6v2.5"></path>
-                        <path d="M8.5 10.5v6"></path>
-                        <path d="M12 10.5v6"></path>
-                        <path d="M15.5 10.5v6"></path>
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-              </article>
-
-              <article class="expense-row">
-                <div class="expense-row__merchant">
-                  <strong>Blue Bottle Coffee</strong>
-                  <span>Mar 17 at 8:11 AM</span>
-                </div>
-                <div class="expense-row__meta">
-                  <span class="badge badge--food">Food</span>
-                  <span class="expense-row__method">Apple Pay</span>
-                </div>
-                <div class="expense-row__side">
-                  <strong class="expense-row__amount">- $12.40</strong>
-                  <div class="expense-row__actions">
-                    <button class="icon-button icon-button--soft" type="button" aria-label="Edit expense">
-                      <svg viewBox="0 0 24 24" fill="none">
-                        <path d="m4 16.5 8.6-8.6 2.5 2.5-8.6 8.6H4v-2.5Z"></path>
-                        <path d="m11.8 8.7 2-2a2 2 0 0 1 2.8 0l.7.7a2 2 0 0 1 0 2.8l-2 2"></path>
-                      </svg>
-                    </button>
-                    <button class="icon-button icon-button--soft" type="button" aria-label="Delete expense">
-                      <svg viewBox="0 0 24 24" fill="none">
-                        <path d="M5.5 7.5h13"></path>
-                        <path d="M9 7.5V5h6v2.5"></path>
-                        <path d="M8.5 10.5v6"></path>
-                        <path d="M12 10.5v6"></path>
-                        <path d="M15.5 10.5v6"></path>
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-              </article>
-
-              <article class="expense-row">
-                <div class="expense-row__merchant">
-                  <strong>Chevron Station</strong>
-                  <span>Mar 16 at 7:05 PM</span>
-                </div>
-                <div class="expense-row__meta">
-                  <span class="badge badge--transport">Transport</span>
-                  <span class="expense-row__method">Visa ending 2408</span>
-                </div>
-                <div class="expense-row__side">
-                  <strong class="expense-row__amount">- $54.80</strong>
-                  <div class="expense-row__actions">
-                    <button class="icon-button icon-button--soft" type="button" aria-label="Edit expense">
-                      <svg viewBox="0 0 24 24" fill="none">
-                        <path d="m4 16.5 8.6-8.6 2.5 2.5-8.6 8.6H4v-2.5Z"></path>
-                        <path d="m11.8 8.7 2-2a2 2 0 0 1 2.8 0l.7.7a2 2 0 0 1 0 2.8l-2 2"></path>
-                      </svg>
-                    </button>
-                    <button class="icon-button icon-button--soft" type="button" aria-label="Delete expense">
-                      <svg viewBox="0 0 24 24" fill="none">
-                        <path d="M5.5 7.5h13"></path>
-                        <path d="M9 7.5V5h6v2.5"></path>
-                        <path d="M8.5 10.5v6"></path>
-                        <path d="M12 10.5v6"></path>
-                        <path d="M15.5 10.5v6"></path>
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-              </article>
-
-              <article class="expense-row">
-                <div class="expense-row__merchant">
-                  <strong>Dropbox</strong>
-                  <span>Mar 15 at 9:00 AM</span>
-                </div>
-                <div class="expense-row__meta">
-                  <span class="badge badge--software">Software</span>
-                  <span class="expense-row__method">Autopay</span>
-                </div>
-                <div class="expense-row__side">
-                  <strong class="expense-row__amount">- $19.99</strong>
-                  <div class="expense-row__actions">
-                    <button class="icon-button icon-button--soft" type="button" aria-label="Edit expense">
-                      <svg viewBox="0 0 24 24" fill="none">
-                        <path d="m4 16.5 8.6-8.6 2.5 2.5-8.6 8.6H4v-2.5Z"></path>
-                        <path d="m11.8 8.7 2-2a2 2 0 0 1 2.8 0l.7.7a2 2 0 0 1 0 2.8l-2 2"></path>
-                      </svg>
-                    </button>
-                    <button class="icon-button icon-button--soft" type="button" aria-label="Delete expense">
-                      <svg viewBox="0 0 24 24" fill="none">
-                        <path d="M5.5 7.5h13"></path>
-                        <path d="M9 7.5V5h6v2.5"></path>
-                        <path d="M8.5 10.5v6"></path>
-                        <path d="M12 10.5v6"></path>
-                        <path d="M15.5 10.5v6"></path>
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-              </article>
-
-              <article class="expense-row">
-                <div class="expense-row__merchant">
-                  <strong>Equinox</strong>
-                  <span>Mar 14 at 6:14 AM</span>
-                </div>
-                <div class="expense-row__meta">
-                  <span class="badge badge--lifestyle">Lifestyle</span>
-                  <span class="expense-row__method">Mastercard ending 1182</span>
-                </div>
-                <div class="expense-row__side">
-                  <strong class="expense-row__amount">- $185.00</strong>
-                  <div class="expense-row__actions">
-                    <button class="icon-button icon-button--soft" type="button" aria-label="Edit expense">
-                      <svg viewBox="0 0 24 24" fill="none">
-                        <path d="m4 16.5 8.6-8.6 2.5 2.5-8.6 8.6H4v-2.5Z"></path>
-                        <path d="m11.8 8.7 2-2a2 2 0 0 1 2.8 0l.7.7a2 2 0 0 1 0 2.8l-2 2"></path>
-                      </svg>
-                    </button>
-                    <button class="icon-button icon-button--soft" type="button" aria-label="Delete expense">
-                      <svg viewBox="0 0 24 24" fill="none">
-                        <path d="M5.5 7.5h13"></path>
-                        <path d="M9 7.5V5h6v2.5"></path>
-                        <path d="M8.5 10.5v6"></path>
-                        <path d="M12 10.5v6"></path>
-                        <path d="M15.5 10.5v6"></path>
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-              </article>
-
-              <article class="expense-row">
-                <div class="expense-row__merchant">
-                  <strong>AMC Lincoln Square</strong>
-                  <span>Mar 12 at 9:48 PM</span>
-                </div>
-                <div class="expense-row__meta">
-                  <span class="badge badge--lifestyle">Leisure</span>
-                  <span class="expense-row__method">Visa ending 2408</span>
-                </div>
-                <div class="expense-row__side">
-                  <strong class="expense-row__amount">- $32.00</strong>
-                  <div class="expense-row__actions">
-                    <button class="icon-button icon-button--soft" type="button" aria-label="Edit expense">
-                      <svg viewBox="0 0 24 24" fill="none">
-                        <path d="m4 16.5 8.6-8.6 2.5 2.5-8.6 8.6H4v-2.5Z"></path>
-                        <path d="m11.8 8.7 2-2a2 2 0 0 1 2.8 0l.7.7a2 2 0 0 1 0 2.8l-2 2"></path>
-                      </svg>
-                    </button>
-                    <button class="icon-button icon-button--soft" type="button" aria-label="Delete expense">
-                      <svg viewBox="0 0 24 24" fill="none">
-                        <path d="M5.5 7.5h13"></path>
-                        <path d="M9 7.5V5h6v2.5"></path>
-                        <path d="M8.5 10.5v6"></path>
-                        <path d="M12 10.5v6"></path>
-                        <path d="M15.5 10.5v6"></path>
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-              </article>
-            </div>
-          </article>
-
-          <div class="side-stack">
-            <article class="panel insights-card">
-              <div class="panel__header">
-                <div>
-                  <p class="eyebrow">Signals</p>
-                  <h3>Insights</h3>
-                </div>
-                <span class="pill pill--quiet">Auto generated</span>
-              </div>
-
-              <div class="insight-list" data-insight-list>
-                <article class="insight">
-                  <div class="insight__flag insight__flag--rose">Food</div>
-                  <div>
-                    <strong>You spent $120 more on food this month -> this could have been invested</strong>
-                    <p>Bringing weekday delivery back to plan restores a full extra contribution in this cycle.</p>
-                    <span class="insight__meta">Decision: trim three delivery orders and redirect $120 into your next transfer.</span>
-                  </div>
-                </article>
-                <article class="insight">
-                  <div class="insight__flag insight__flag--mint">Investing</div>
-                  <div>
-                    <strong>At your current pace, you'll end March with $1,460 available to invest</strong>
-                    <p>Holding daily spend below $160 keeps reserves intact and adds about $180 above today's surplus.</p>
-                    <span class="insight__meta">Decision: keep non-essential spending flat for the next 12 days to lock in the higher transfer.</span>
-                  </div>
-                </article>
-                <article class="insight">
-                  <div class="insight__flag insight__flag--blue">Leisure</div>
-                  <div>
-                    <strong>Reducing entertainment by 10% would free up $44 monthly</strong>
-                    <p>That one adjustment alone becomes $528 per year before any market growth is applied.</p>
-                    <span class="insight__meta">Decision: cap one leisure purchase per week and auto-route the savings into investing.</span>
-                  </div>
-                </article>
-              </div>
-            </article>
-
-            <article class="panel invest-card">
-              <div class="panel__header">
-                <div>
-                  <p class="eyebrow">Investment lane</p>
-                  <h3>Deployable capital</h3>
-                </div>
-              </div>
-
-              <div class="invest-card__amount">
-                <span>Available to invest</span>
-                <strong class="countup" data-summary="investable-amount" data-countup="1280" data-prefix="$">$1,280</strong>
-              </div>
-
-              <p class="invest-card__caption" data-summary-text="invest-caption">Based on current cashflow, upcoming bills, and reserve targets already accounted for.</p>
-
-              <div class="risk-toggle" role="group" aria-label="Projection profile">
-                <button class="risk-toggle__option" type="button" data-risk-option data-profile="conservative" data-rate="6">Conservative</button>
-                <button class="risk-toggle__option is-active" type="button" data-risk-option data-profile="balanced" data-rate="8" aria-pressed="true">Balanced</button>
-                <button class="risk-toggle__option" type="button" data-risk-option data-profile="aggressive" data-rate="10">Aggressive</button>
-              </div>
-
-              <div class="projection-grid projection-grid--triple">
-                <div class="projection-tile">
-                  <span>Monthly investable amount</span>
-                  <strong class="countup" data-summary="monthly-investable" data-countup="1280" data-prefix="$">$1,280</strong>
-                </div>
-                <div class="projection-tile">
-                  <span>If you invest this monthly</span>
-                  <strong class="countup" data-summary="yearly-investable" data-countup="15360" data-prefix="$" data-suffix="/year">$15,360/year</strong>
-                </div>
-                <div class="projection-tile projection-tile--feature">
-                  <span>Estimated value after 12 months</span>
-                  <strong class="countup" data-projection-output data-countup="15936" data-prefix="$">$15,936</strong>
-                </div>
-              </div>
-
-              <div class="allocation-note">
-                <div class="allocation-note__header">
-                  <span>Growth simulation</span>
-                  <strong data-projection-label>Balanced profile at 8% annual return</strong>
-                </div>
-                <div class="stacked-bar">
-                  <span class="stacked-bar__segment stacked-bar__segment--mint" style="width: 68%;"></span>
-                  <span class="stacked-bar__segment stacked-bar__segment--slate" style="width: 32%;"></span>
-                </div>
-                <div class="allocation-note__stats">
-                  <div class="allocation-stat">
-                    <span>Projected growth</span>
-                    <strong class="countup" data-projection-gain data-countup="576" data-prefix="+$">+$576</strong>
-                  </div>
-                  <div class="allocation-stat">
-                    <span>Reserve runway</span>
-                    <strong data-summary-text="reserve-runway">3.1 months intact</strong>
-                  </div>
-                </div>
-              </div>
-
-              <button class="button button--accent" type="button">Review investment plan</button>
-            </article>
-          </div>
-        </section>
-
       </main>
     </div>
-    <button class="fab" type="button" aria-label="Add expense">
-      <span class="fab__icon" aria-hidden="true">+</span>
-      <span class="fab__label">Add expense</span>
-    </button>
+
+    <button class="fab" type="button" aria-label="Agregar gasto"><span class="fab__icon">+</span><span class="fab__label">Agregar gasto</span></button>
+
     <div class="app-modal" data-modal hidden>
       <div class="app-modal__backdrop" data-modal-close></div>
       <div class="app-modal__dialog panel">
-        <button class="app-modal__close icon-button" type="button" aria-label="Close modal" data-modal-close>
-          <svg viewBox="0 0 24 24" fill="none">
-            <path d="M6 6 18 18"></path>
-            <path d="M18 6 6 18"></path>
-          </svg>
-        </button>
-
+        <button class="app-modal__close icon-button" type="button" aria-label="Cerrar modal" data-modal-close><svg viewBox="0 0 24 24" fill="none"><path d="M6 6 18 18"></path><path d="M18 6 6 18"></path></svg></button>
         <section class="modal-section" data-modal-panel="form">
-          <div class="panel__header panel__header--stack">
-            <div>
-              <p class="eyebrow" data-modal-eyebrow>Add transaction</p>
-              <h3 data-modal-title>Add expense</h3>
-            </div>
-            <p class="panel-note" data-modal-copy>Capture a transaction without leaving the dashboard.</p>
-          </div>
-
+          <div class="panel__header panel__header--stack"><div><p class="eyebrow" data-modal-eyebrow>Agregar movimiento</p><h3 data-modal-title>Agregar gasto</h3></div><p class="panel-note" data-modal-copy>Carga un gasto real del mes sin salir del dashboard.</p></div>
           <form class="expense-form" data-expense-form novalidate>
             <input type="hidden" name="id">
             <div class="expense-form__grid">
-              <label class="field">
-                <span class="field__label">Title</span>
-                <input class="field__control" type="text" name="title" placeholder="Merchant or description" maxlength="80" required>
-              </label>
-              <label class="field">
-                <span class="field__label">Amount</span>
-                <input class="field__control" type="number" name="amount" min="0.01" step="0.01" placeholder="0.00" required>
-              </label>
-              <label class="field">
-                <span class="field__label">Category</span>
-                <select class="field__control field__control--select" name="category" required>
-                  <option value="">Select category</option>
-                  <option value="Food">Food</option>
-                  <option value="Transport">Transport</option>
-                  <option value="Housing">Housing</option>
-                  <option value="Utilities">Utilities</option>
-                  <option value="Subscriptions">Subscriptions</option>
-                  <option value="Software">Software</option>
-                  <option value="Lifestyle">Lifestyle</option>
-                  <option value="Leisure">Leisure</option>
-                  <option value="Travel">Travel</option>
-                  <option value="Other">Other</option>
-                </select>
-              </label>
-              <label class="field">
-                <span class="field__label">Date</span>
-                <input class="field__control" type="date" name="date" required>
-              </label>
-              <label class="field field--full">
-                <span class="field__label">Payment method</span>
-                <input class="field__control" type="text" name="paymentMethod" placeholder="Visa ending 2408" maxlength="60" required>
-              </label>
-              <label class="field field--full">
-                <span class="field__label">Note</span>
-                <textarea class="field__control field__control--textarea" name="note" rows="4" placeholder="Optional note or context"></textarea>
-              </label>
+              <label class="field field--full"><span class="field__label">Descripcion</span><input class="field__control" type="text" name="title" placeholder="Ej: YPF, Supermercado, Spotify" maxlength="80" required></label>
+              <label class="field"><span class="field__label">Monto</span><input class="field__control" type="number" name="amount" min="0.01" step="0.01" placeholder="0,00" required></label>
+              <label class="field"><span class="field__label">Fecha</span><input class="field__control" type="date" name="date" required></label>
+              <label class="field"><span class="field__label">Categoria</span><select class="field__control field__control--select" name="category" required><option value="">Elegir categoria</option><option value="Supermercado">Supermercado</option><option value="Transporte">Transporte</option><option value="Casa/Servicios">Casa/Servicios</option><option value="Gimnasio">Gimnasio</option><option value="Facultad">Facultad</option><option value="Suscripciones">Suscripciones</option><option value="Salidas">Salidas</option><option value="Salud">Salud</option><option value="Auto/Moto">Auto/Moto</option><option value="Inversión">Inversión</option><option value="Otros">Otros</option></select></label>
+              <label class="field"><span class="field__label">Medio de pago</span><select class="field__control field__control--select" name="paymentMethod" required><option value="">Elegir medio de pago</option><option value="Efectivo">Efectivo</option><option value="Débito">Débito</option><option value="Crédito">Crédito</option><option value="Transferencia">Transferencia</option></select></label>
+              <label class="field field--full"><span class="field__label">Notas</span><textarea class="field__control field__control--textarea" name="note" rows="4" placeholder="Detalle opcional del gasto"></textarea></label>
+              <label class="field field--full"><span class="field__label">Tipo de gasto</span><span class="toggle-card"><span class="toggle-card__copy"><strong>Marcar como gasto fijo</strong><small>Ideal para servicios, cuotas, suscripciones o pagos mensuales.</small></span><span class="toggle-switch"><input class="toggle-switch__input" type="checkbox" name="isFixed"><span class="toggle-switch__track" aria-hidden="true"><span class="toggle-switch__thumb"></span></span></span></span></label>
             </div>
-
             <p class="form-feedback" data-form-feedback role="alert"></p>
-
-            <div class="modal-actions">
-              <button class="button button--ghost" type="button" data-modal-close>Cancel</button>
-              <button class="button button--accent" type="submit" data-form-submit>Save expense</button>
-            </div>
+            <div class="modal-actions"><button class="button button--ghost" type="button" data-modal-close>Cancelar</button><button class="button button--accent" type="submit" data-form-submit>Guardar gasto</button></div>
           </form>
         </section>
-
-        <section class="modal-section" data-modal-panel="income" hidden>
-          <div class="panel__header panel__header--stack">
-            <div>
-              <p class="eyebrow">Income baseline</p>
-              <h3>Edit monthly income</h3>
-            </div>
-            <p class="panel-note">This monthly deposit baseline drives remaining balance, savings rate, and investable surplus across the dashboard.</p>
-          </div>
-
-          <form class="expense-form" data-income-form novalidate>
-            <div class="expense-form__grid">
-              <label class="field field--full">
-                <span class="field__label">Monthly income</span>
-                <input class="field__control" type="number" name="income" min="0" step="0.01" placeholder="0.00" data-income-input required>
-              </label>
-            </div>
-
-            <p class="form-feedback" data-income-feedback role="alert"></p>
-
-            <div class="modal-actions">
-              <button class="button button--ghost" type="button" data-modal-close>Cancel</button>
-              <button class="button button--accent" type="submit">Save income</button>
-            </div>
-          </form>
-        </section>
-
-        <section class="modal-section" data-modal-panel="confirm" hidden>
-          <div class="panel__header panel__header--stack">
-            <div>
-              <p class="eyebrow">Delete transaction</p>
-              <h3>Remove expense?</h3>
-            </div>
-            <p class="panel-note">This action updates your dashboard totals immediately and cannot be undone.</p>
-          </div>
-
-          <div class="confirm-card">
-            <strong data-confirm-title>Expense</strong>
-            <span data-confirm-date>Mar 18, 2026</span>
-            <p data-confirm-copy>You are about to delete this transaction from aleclv finance.</p>
-            <strong class="confirm-card__amount" data-confirm-amount>-$0.00</strong>
-          </div>
-
-          <div class="modal-actions">
-            <button class="button button--ghost" type="button" data-modal-close>Cancel</button>
-            <button class="button button--accent button--danger" type="button" data-confirm-delete>Delete expense</button>
-          </div>
-        </section>
-
-        <section class="modal-section" data-modal-panel="filters" hidden>
-          <div class="panel__header panel__header--stack">
-            <div>
-              <p class="eyebrow">View controls</p>
-              <h3>Filters</h3>
-            </div>
-            <p class="panel-note">Month updates the full dashboard context. Category narrows the visible activity list and exports.</p>
-          </div>
-
-          <form class="expense-form" data-filter-form>
-            <div class="expense-form__grid">
-              <label class="field">
-                <span class="field__label">Month</span>
-                <input class="field__control" type="month" name="month" data-filter-month>
-              </label>
-              <label class="field">
-                <span class="field__label">Category</span>
-                <select class="field__control field__control--select" name="category" data-filter-category>
-                  <option value="all">All categories</option>
-                  <option value="Food">Food</option>
-                  <option value="Transport">Transport</option>
-                  <option value="Housing">Housing</option>
-                  <option value="Utilities">Utilities</option>
-                  <option value="Subscriptions">Subscriptions</option>
-                  <option value="Software">Software</option>
-                  <option value="Lifestyle">Lifestyle</option>
-                  <option value="Leisure">Leisure</option>
-                  <option value="Travel">Travel</option>
-                  <option value="Other">Other</option>
-                </select>
-              </label>
-            </div>
-
-            <div class="confirm-card">
-              <strong>Current search</strong>
-              <span data-filter-search-preview>No search applied</span>
-              <p data-filter-results-copy>Visible expenses update live as filters change.</p>
-            </div>
-
-            <div class="modal-actions modal-actions--spread">
-              <button class="button button--ghost" type="button" data-clear-filters>Clear filters</button>
-              <div class="modal-actions__cluster">
-                <button class="button button--ghost" type="button" data-modal-restore-demo>Restore demo data</button>
-                <button class="button button--accent" type="button" data-modal-close>Done</button>
-              </div>
-            </div>
-          </form>
-        </section>
-
-        <section class="modal-section" data-modal-panel="export" hidden>
-          <div class="panel__header panel__header--stack">
-            <div>
-              <p class="eyebrow">Data export</p>
-              <h3>Export visible activity</h3>
-            </div>
-            <p class="panel-note">Exports always respect the current month, category, and search context shown in the dashboard.</p>
-          </div>
-
-          <div class="confirm-card">
-            <strong data-export-summary>0 expenses ready</strong>
-            <span data-export-filename>aleclv-finance-2026-03.csv</span>
-            <p data-export-copy>Adjust filters if you want a different dataset before downloading.</p>
-          </div>
-
-          <div class="modal-actions modal-actions--spread">
-            <button class="button button--ghost" type="button" data-modal-close>Close</button>
-            <div class="modal-actions__cluster">
-              <button class="button button--ghost" type="button" data-export-json>Export JSON</button>
-              <button class="button button--accent" type="button" data-export-csv>Export CSV</button>
-            </div>
-          </div>
-        </section>
-
-        <section class="modal-section" data-modal-panel="reset" hidden>
-          <div class="panel__header panel__header--stack">
-            <div>
-              <p class="eyebrow">Restore workspace</p>
-              <h3>Replace current data with demo activity?</h3>
-            </div>
-            <p class="panel-note">This restores the premium sample dataset and overwrites the current local workspace on this device.</p>
-          </div>
-
-          <div class="confirm-card">
-            <strong>Demo workspace</strong>
-            <span>Income, expenses, insights, and investment projections will reset to the seeded sample state.</span>
-            <p>Use this when you want to get back to a polished showcase view without manually rebuilding activity.</p>
-          </div>
-
-          <div class="modal-actions">
-            <button class="button button--ghost" type="button" data-modal-close>Cancel</button>
-            <button class="button button--accent" type="button" data-confirm-restore>Restore demo data</button>
-          </div>
-        </section>
+        <section class="modal-section" data-modal-panel="income" hidden><div class="panel__header panel__header--stack"><div><p class="eyebrow">Ingreso mensual</p><h3>Editar ingreso del mes</h3></div><p class="panel-note">Este valor actualiza balance, ahorro, promedio diario e insights de forma instantanea.</p></div><form class="expense-form" data-income-form novalidate><div class="expense-form__grid"><label class="field field--full"><span class="field__label">Ingreso mensual</span><input class="field__control" type="number" name="income" min="0" step="0.01" placeholder="0,00" data-income-input required></label></div><p class="form-feedback" data-income-feedback role="alert"></p><div class="modal-actions"><button class="button button--ghost" type="button" data-modal-close>Cancelar</button><button class="button button--accent" type="submit">Guardar ingreso</button></div></form></section>
+        <section class="modal-section" data-modal-panel="confirm" hidden><div class="panel__header panel__header--stack"><div><p class="eyebrow">Eliminar movimiento</p><h3>Quitar este gasto?</h3></div><p class="panel-note">El total del mes se actualiza al instante y esta accion no se puede deshacer.</p></div><div class="confirm-card"><strong data-confirm-title>Gasto</strong><span data-confirm-date>19 mar 2026</span><p data-confirm-copy>Vas a eliminar este gasto del registro mensual.</p><strong class="confirm-card__amount" data-confirm-amount>-$0,00</strong></div><div class="modal-actions"><button class="button button--ghost" type="button" data-modal-close>Cancelar</button><button class="button button--accent button--danger" type="button" data-confirm-delete>Eliminar gasto</button></div></section>
+        <section class="modal-section" data-modal-panel="filters" hidden><div class="panel__header panel__header--stack"><div><p class="eyebrow">Vista</p><h3>Filtros</h3></div><p class="panel-note">El mes cambia el contexto completo del tablero. La categoria filtra la lista visible y las exportaciones.</p></div><form class="expense-form" data-filter-form><div class="expense-form__grid"><label class="field"><span class="field__label">Mes</span><input class="field__control" type="month" name="month" data-filter-month></label><label class="field"><span class="field__label">Categoria</span><select class="field__control field__control--select" name="category" data-filter-category><option value="all">Todas las categorias</option><option value="Supermercado">Supermercado</option><option value="Transporte">Transporte</option><option value="Casa/Servicios">Casa/Servicios</option><option value="Gimnasio">Gimnasio</option><option value="Facultad">Facultad</option><option value="Suscripciones">Suscripciones</option><option value="Salidas">Salidas</option><option value="Salud">Salud</option><option value="Auto/Moto">Auto/Moto</option><option value="Inversión">Inversión</option><option value="Otros">Otros</option></select></label></div><div class="confirm-card"><strong>Busqueda actual</strong><span data-filter-search-preview>Sin busqueda aplicada</span><p data-filter-results-copy>Los movimientos visibles cambian en tiempo real.</p></div><div class="modal-actions modal-actions--spread"><button class="button button--ghost" type="button" data-clear-filters>Limpiar filtros</button><div class="modal-actions__cluster"><button class="button button--ghost" type="button" data-modal-restore-demo>Restaurar ejemplo</button><button class="button button--accent" type="button" data-modal-close>Listo</button></div></div></form></section>
+        <section class="modal-section" data-modal-panel="export" hidden><div class="panel__header panel__header--stack"><div><p class="eyebrow">Exportacion</p><h3>Exportar movimientos visibles</h3></div><p class="panel-note">La exportacion respeta el mes, la categoria y la busqueda que ves en pantalla.</p></div><div class="confirm-card"><strong data-export-summary>0 gastos listos</strong><span data-export-filename>aleclv-expense-tracker-2026-03.csv</span><p data-export-copy>Ajusta los filtros si quieres bajar otro conjunto de datos.</p></div><div class="modal-actions modal-actions--spread"><button class="button button--ghost" type="button" data-modal-close>Cerrar</button><div class="modal-actions__cluster"><button class="button button--ghost" type="button" data-export-json>Exportar JSON</button><button class="button button--accent" type="button" data-export-csv>Exportar CSV</button></div></div></section>
+        <section class="modal-section" data-modal-panel="reset" hidden><div class="panel__header panel__header--stack"><div><p class="eyebrow">Restaurar ejemplo</p><h3>Reemplazar tus datos actuales?</h3></div><p class="panel-note">Esto carga otra vez el dataset demo del tracker y pisa el estado guardado en este navegador.</p></div><div class="confirm-card"><strong>Dataset de ejemplo</strong><span>Se restablecen ingreso, gastos, categorias, insights y filtros a la version demo realista.</span><p>Usalo si quieres volver a una base limpia para seguir explorando la interfaz.</p></div><div class="modal-actions"><button class="button button--ghost" type="button" data-modal-close>Cancelar</button><button class="button button--accent" type="button" data-confirm-restore>Restaurar ejemplo</button></div></section>
       </div>
     </div>
+
     <div class="toast" data-toast hidden role="status" aria-live="polite"></div>
-    <nav class="mobile-nav" aria-label="Mobile">
-      <button class="mobile-nav__item is-active" type="button" data-nav-item="dashboard">
-        <span class="mobile-nav__icon"></span>
-        <span>Home</span>
-      </button>
-      <button class="mobile-nav__item" type="button" data-nav-item="cashflow">
-        <span class="mobile-nav__icon"></span>
-        <span>Flow</span>
-      </button>
-      <button class="mobile-nav__item" type="button" data-nav-item="investing">
-        <span class="mobile-nav__icon"></span>
-        <span>Invest</span>
-      </button>
-      <button class="mobile-nav__item" type="button" data-nav-item="activity">
-        <span class="mobile-nav__icon"></span>
-        <span>Spend</span>
-      </button>
-      <button class="mobile-nav__item" type="button" data-nav-item="insights">
-        <span class="mobile-nav__icon"></span>
-        <span>Alerts</span>
-      </button>
+
+    <nav class="mobile-nav" aria-label="Movil">
+      <button class="mobile-nav__item is-active" type="button" data-nav-item="dashboard"><span class="mobile-nav__icon"></span><span>Inicio</span></button>
+      <button class="mobile-nav__item" type="button" data-nav-item="cashflow"><span class="mobile-nav__icon"></span><span>Flujo</span></button>
+      <button class="mobile-nav__item" type="button" data-nav-item="investing"><span class="mobile-nav__icon"></span><span>Ingreso</span></button>
+      <button class="mobile-nav__item" type="button" data-nav-item="activity"><span class="mobile-nav__icon"></span><span>Gastos</span></button>
+      <button class="mobile-nav__item" type="button" data-nav-item="insights"><span class="mobile-nav__icon"></span><span>Insights</span></button>
     </nav>
   </div>
 

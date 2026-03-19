@@ -1,4 +1,7 @@
 (function () {
+  const DEFAULT_LOCALE = "es-AR";
+  const DEFAULT_CURRENCY = "ARS";
+
   const generateId = () => {
     if (window.crypto && typeof window.crypto.randomUUID === "function") {
       return window.crypto.randomUUID();
@@ -10,8 +13,8 @@
 
   const formatCurrency = (value, options = {}) => {
     const {
-      locale = "en-US",
-      currency = "USD",
+      locale = DEFAULT_LOCALE,
+      currency = DEFAULT_CURRENCY,
       minimumFractionDigits = 2,
       maximumFractionDigits = 2,
     } = options;
@@ -31,7 +34,7 @@
       return "";
     }
 
-    return new Intl.DateTimeFormat("en-US", {
+    return new Intl.DateTimeFormat(DEFAULT_LOCALE, {
       month: "short",
       day: "numeric",
       year: "numeric",

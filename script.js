@@ -1,8 +1,18 @@
 const { getDemoState, getState, setState, updateState } = window.aleclvFinanceState;
 const { formatCurrency, formatDate, generateId } = window.aleclvFinanceUtils;
 
-const OPERATING_BUFFER = 2240;
 const TOAST_TIMEOUT_MS = 2600;
+const MONTH_KEY_PATTERN = /^\d{4}-\d{2}$/;
+const STATUS_PILL_CLASSES = ["status-pill--positive", "status-pill--neutral", "status-pill--negative"];
+const NAV_SCROLL_OFFSET = 20;
+const CATEGORY_SWATCHES = [
+  { className: "mint", color: "var(--accent)" },
+  { className: "blue", color: "var(--accent-blue)" },
+  { className: "amber", color: "var(--accent-amber)" },
+  { className: "rose", color: "var(--accent-rose)" },
+  { className: "slate", color: "var(--accent-slate)" },
+];
+const INSIGHT_FLAG_TONES = { rose: "insight__flag--rose", mint: "insight__flag--mint", blue: "insight__flag--blue" };
 
 const body = document.body;
 const topbar = document.querySelector(".topbar");
@@ -12,14 +22,9 @@ const menuToggle = document.querySelector("[data-menu-toggle]");
 const backdrop = document.querySelector("[data-backdrop]");
 const navItems = document.querySelectorAll("[data-nav-item]");
 const countupElements = document.querySelectorAll(".countup");
-const riskOptions = document.querySelectorAll("[data-risk-option]");
 const openFilterButtons = document.querySelectorAll("[data-open-filters]");
 const openExportButtons = document.querySelectorAll("[data-open-export]");
 const searchInput = document.querySelector("[data-search-input]");
-const projectionOutput = document.querySelector("[data-projection-output]");
-const projectionGain = document.querySelector("[data-projection-gain]");
-const projectionLabel = document.querySelector("[data-projection-label]");
-const stackedSegments = document.querySelectorAll(".stacked-bar__segment");
 const expenseList = document.querySelector("[data-expense-list]");
 const insightList = document.querySelector("[data-insight-list]");
 const fab = document.querySelector(".fab");
@@ -61,31 +66,35 @@ const kpiSection = document.querySelector(".kpi-grid");
 const investSection = document.querySelector(".invest-card");
 const activitySection = document.querySelector(".expenses-card");
 const insightsSection = document.querySelector(".insights-card");
+const stackedSegments = document.querySelectorAll(".stacked-bar__segment");
+const lineActualPath = document.querySelector("[data-line-actual]");
+const lineTargetPath = document.querySelector("[data-line-target]");
+const lineAreaPath = document.querySelector("[data-line-area]");
+const linePoints = document.querySelector("[data-line-points]");
+const lineAxis = document.querySelector("[data-line-axis]");
 
 const kpiElements = {
   income: document.querySelector('[data-kpi="income"]'),
   totalSpent: document.querySelector('[data-kpi="totalSpent"]'),
   remainingBalance: document.querySelector('[data-kpi="remainingBalance"]'),
-  investableSurplus: document.querySelector('[data-kpi="investableSurplus"]'),
+  savingsAmount: document.querySelector('[data-kpi="investableSurplus"]'),
   dailyAverage: document.querySelector('[data-kpi="dailyAverage"]'),
   savingsRate: document.querySelector('[data-kpi="savingsRate"]'),
 };
-
 const summaryElements = {
   sidebarFreeCash: document.querySelector('[data-summary="sidebar-free-cash"]'),
   heroRemaining: document.querySelector('[data-summary="hero-remaining"]'),
   chartTotalSpent: document.querySelector('[data-summary="chart-total-spent"]'),
-  investableAmount: document.querySelector('[data-summary="investable-amount"]'),
-  monthlyInvestable: document.querySelector('[data-summary="monthly-investable"]'),
-  yearlyInvestable: document.querySelector('[data-summary="yearly-investable"]'),
-  sidebarInvestable: document.querySelector('[data-summary="sidebar-investable"]'),
+  incomeHighlight: document.querySelector('[data-summary="investable-amount"]'),
+  fixedAmount: document.querySelector('[data-summary="monthly-investable"]'),
+  variableAmount: document.querySelector('[data-summary="yearly-investable"]'),
+  sidebarSavings: document.querySelector('[data-summary="sidebar-investable"]'),
   miniDailyAverage: document.querySelector('[data-summary="mini-daily-average"]'),
   miniSecondaryValue: document.querySelector('[data-summary="mini-secondary-value"]'),
   plannerRow1Value: document.querySelector('[data-summary="planner-row-1-value"]'),
   plannerRow2Value: document.querySelector('[data-summary="planner-row-2-value"]'),
   plannerRow3Value: document.querySelector('[data-summary="planner-row-3-value"]'),
 };
-
 const textElements = {
   periodTitle: document.querySelector("[data-period-title]"),
   periodPill: document.querySelector("[data-period-pill]"),
@@ -110,10 +119,9 @@ const textElements = {
   plannerItem3Subtitle: document.querySelector('[data-summary-text="planner-item-3-subtitle"]'),
   plannerItem3Value: document.querySelector('[data-summary-text="planner-item-3-value"]'),
   categoryCountPill: document.querySelector('[data-summary-text="category-count-pill"]'),
-  reserveRunway: document.querySelector('[data-summary-text="reserve-runway"]'),
-  investCaption: document.querySelector('[data-summary-text="invest-caption"]'),
+  savingsAmountText: document.querySelector('[data-summary-text="reserve-runway"]'),
+  incomeCaption: document.querySelector('[data-summary-text="invest-caption"]'),
 };
-
 const labelElements = {
   heroStat1: document.querySelector('[data-summary-label="hero-stat-1-label"]'),
   heroStat2: document.querySelector('[data-summary-label="hero-stat-2-label"]'),
@@ -123,7 +131,6 @@ const labelElements = {
   plannerRow2: document.querySelector('[data-summary-label="planner-row-2-label"]'),
   plannerRow3: document.querySelector('[data-summary-label="planner-row-3-label"]'),
 };
-
 const barElements = {
   sidebarSpendRatio: document.querySelector('[data-summary-bar="sidebar-spend-ratio"]'),
   heroRunway: document.querySelector('[data-summary-bar="hero-runway"]'),
@@ -131,443 +138,100 @@ const barElements = {
   plannerRow2: document.querySelector('[data-summary-bar="planner-row-2"]'),
   plannerRow3: document.querySelector('[data-summary-bar="planner-row-3"]'),
 };
-
 const statusElements = {
   sidebar: document.querySelector('[data-summary-status="sidebar"]'),
   hero: document.querySelector('[data-summary-status="hero"]'),
   line: document.querySelector('[data-summary-status="line"]'),
 };
-
 const kpiDeltaElements = {
   income: document.querySelector('[data-kpi-delta="income"]'),
   totalSpent: document.querySelector('[data-kpi-delta="totalSpent"]'),
   remainingBalance: document.querySelector('[data-kpi-delta="remainingBalance"]'),
-  investableSurplus: document.querySelector('[data-kpi-delta="investableSurplus"]'),
+  savingsAmount: document.querySelector('[data-kpi-delta="investableSurplus"]'),
   dailyAverage: document.querySelector('[data-kpi-delta="dailyAverage"]'),
   savingsRate: document.querySelector('[data-kpi-delta="savingsRate"]'),
 };
-
 const kpiCaptionElements = {
   income: document.querySelector('[data-kpi-caption="income"]'),
   totalSpent: document.querySelector('[data-kpi-caption="totalSpent"]'),
   remainingBalance: document.querySelector('[data-kpi-caption="remainingBalance"]'),
-  investableSurplus: document.querySelector('[data-kpi-caption="investableSurplus"]'),
+  savingsAmount: document.querySelector('[data-kpi-caption="investableSurplus"]'),
   dailyAverage: document.querySelector('[data-kpi-caption="dailyAverage"]'),
   savingsRate: document.querySelector('[data-kpi-caption="savingsRate"]'),
 };
 
-const profileMeta = {
-  conservative: {
-    annualRate: 0.06,
-    label: "Conservative profile at 6% annual return",
-    split: [60, 40],
-  },
-  balanced: {
-    annualRate: 0.08,
-    label: "Balanced profile at 8% annual return",
-    split: [68, 32],
-  },
-  aggressive: {
-    annualRate: 0.1,
-    label: "Aggressive profile at 10% annual return",
-    split: [78, 22],
-  },
-};
-
-const uiState = {
-  modalMode: null,
-  activeExpenseId: null,
-  lastFocusedElement: null,
-  toastTimer: null,
-};
-
-const CORE_SPEND_CATEGORIES = new Set(["Housing", "Utilities", "Subscriptions", "Software"]);
-const ENTERTAINMENT_CATEGORIES = ["Leisure", "Lifestyle"];
-const STATUS_PILL_CLASSES = ["status-pill--positive", "status-pill--neutral", "status-pill--negative"];
-const NAV_SCROLL_OFFSET = 20;
-const CATEGORY_SWATCHES = [
-  { className: "mint", color: "var(--accent)" },
-  { className: "blue", color: "var(--accent-blue)" },
-  { className: "amber", color: "var(--accent-amber)" },
-  { className: "rose", color: "var(--accent-rose)" },
-  { className: "slate", color: "var(--accent-slate)" },
-];
-const INSIGHT_FLAG_TONES = {
-  rose: "insight__flag--rose",
-  mint: "insight__flag--mint",
-  blue: "insight__flag--blue",
-};
-const SECTION_TARGETS = {
-  dashboard: heroSection,
-  cashflow: kpiSection,
-  investing: investSection,
-  activity: activitySection,
-  insights: insightsSection,
-};
-
+const uiState = { modalMode: null, activeExpenseId: null, lastFocusedElement: null, toastTimer: null };
+const SECTION_TARGETS = { dashboard: heroSection, cashflow: kpiSection, investing: investSection, activity: activitySection, insights: insightsSection };
 let hasAnimatedCountups = false;
-let riskToggleInitialized = false;
 
-const easeOutCubic = (value) => 1 - Math.pow(1 - value, 3);
-
-const formatValue = (value, decimals = 0) =>
-  value.toLocaleString("en-US", {
-    minimumFractionDigits: decimals,
-    maximumFractionDigits: decimals,
-  });
-
+const formatValue = (value, decimals = 0) => Number(value || 0).toLocaleString("es-AR", { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+const formatMoney = (value, decimals = 2) => formatCurrency(value, { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
 const readDecimals = (element) => Number(element?.dataset.decimals || 0);
-
-const escapeHtml = (value = "") =>
-  String(value)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
-
-const roundCurrency = (value) => Math.round((value + Number.EPSILON) * 100) / 100;
+const escapeHtml = (value = "") => String(value).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#39;");
+const normalizeToken = (value = "") => String(value).normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+const roundCurrency = (value) => Math.round((Number(value || 0) + Number.EPSILON) * 100) / 100;
 const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
-const formatMoney = (value, decimals = 0) =>
-  formatCurrency(value, {
-    minimumFractionDigits: decimals,
-    maximumFractionDigits: decimals,
-  });
-const MONTH_KEY_PATTERN = /^\d{4}-\d{2}$/;
-
 const isValidMonthKey = (value) => MONTH_KEY_PATTERN.test(String(value || "").trim());
-
-const getExpenseDate = (expense) => {
-  const parsedDate = new Date(expense?.date);
-  return Number.isNaN(parsedDate.getTime()) ? null : parsedDate;
-};
-
+const getExpenseDate = (expense) => { const date = new Date(expense?.date); return Number.isNaN(date.getTime()) ? null : date; };
+const getCurrentMonthKey = () => { const now = new Date(); return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`; };
 const getLatestMonthKey = (expenses = []) => {
-  const latestDate = expenses.reduce((latest, expense) => {
-    const expenseDate = getExpenseDate(expense);
-
-    if (!expenseDate) {
-      return latest;
-    }
-
-    return !latest || expenseDate > latest ? expenseDate : latest;
+  const latest = expenses.reduce((latestDate, expense) => {
+    const date = getExpenseDate(expense);
+    return !date || (latestDate && latestDate > date) ? latestDate : date;
   }, null);
-
-  if (!latestDate) {
-    return getCurrentMonthKey();
-  }
-
-  return `${latestDate.getFullYear()}-${String(latestDate.getMonth() + 1).padStart(2, "0")}`;
+  return latest ? `${latest.getFullYear()}-${String(latest.getMonth() + 1).padStart(2, "0")}` : getCurrentMonthKey();
 };
-
-const getDefaultFilters = (state = getState()) => ({
-  month: getLatestMonthKey(state.expenses),
-  category: "all",
-  search: "",
-});
-
-const normalizeMonthFilterValue = (value, fallbackMonth = getCurrentMonthKey()) =>
-  isValidMonthKey(value) ? String(value).trim() : fallbackMonth;
-
-const normalizeCategoryFilterValue = (value) => {
-  const normalizedValue = String(value || "").trim();
-  return normalizedValue || "all";
-};
-
+const normalizeMonthFilterValue = (value, fallback = getCurrentMonthKey()) => isValidMonthKey(value) ? String(value).trim() : fallback;
+const normalizeCategoryFilterValue = (value) => String(value || "").trim() || "all";
 const normalizeSearchValue = (value) => String(value || "").trim();
-
+const getDefaultFilters = (state = getState()) => ({ month: getLatestMonthKey(state.expenses), category: "all", search: "" });
 const getSearchQuery = (state) => normalizeSearchValue(state.filters.search).toLowerCase();
 const hasSearchFilter = (state) => Boolean(getSearchQuery(state));
-const hasCategoryFilter = (state) => state.filters.category !== "all";
-const hasSecondaryExpenseFilters = (state) => hasCategoryFilter(state) || hasSearchFilter(state);
-
-const getVisibleExpensesContext = (state) => {
-  const monthExpenses = getMonthExpenses(state);
-  const filteredExpenses = getFilteredExpenses(state);
-
-  return {
-    monthExpenses,
-    filteredExpenses,
-    hasMonthExpenses: monthExpenses.length > 0,
-    hasResults: filteredExpenses.length > 0,
-    hasSecondaryFilters: hasSecondaryExpenseFilters(state),
-  };
-};
-
-const escapeCsvValue = (value) => {
-  const normalizedValue = String(value ?? "");
-  return `"${normalizedValue.replaceAll('"', '""')}"`;
-};
-
-const serializeExpensesToJson = (expenses) => JSON.stringify(expenses, null, 2);
-
-const serializeExpensesToCsv = (expenses) => {
-  const headers = ["id", "title", "amount", "category", "date", "paymentMethod", "note", "createdAt"];
-  const rows = expenses.map((expense) =>
-    headers
-      .map((header) => {
-        const rawValue = header === "amount" ? roundCurrency(Number(expense[header] || 0)) : expense[header] ?? "";
-        return escapeCsvValue(rawValue);
-      })
-      .join(",")
-  );
-
-  return [headers.join(","), ...rows].join("\n");
-};
-
-const downloadTextFile = (filename, content, mimeType) => {
-  const blob = new Blob([content], { type: mimeType });
-  const downloadUrl = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-
-  link.href = downloadUrl;
-  link.download = filename;
-  document.body.append(link);
-  link.click();
-  link.remove();
-
-  window.setTimeout(() => {
-    URL.revokeObjectURL(downloadUrl);
-  }, 0);
-};
-
-const getExportBaseFilename = (state) => `aleclv-finance-${getActiveMonthKey(state)}`;
-
-const getResultsLabel = (count) =>
-  count === 1 ? "1 expense" : `${formatValue(count, 0)} expenses`;
-
-const showToast = (message, tone = "success") => {
-  if (!toast) {
-    return;
-  }
-
-  if (uiState.toastTimer) {
-    window.clearTimeout(uiState.toastTimer);
-  }
-
-  toast.textContent = message;
-  toast.hidden = false;
-  toast.classList.remove("toast--error");
-
-  if (tone === "error") {
-    toast.classList.add("toast--error");
-  }
-
-  window.requestAnimationFrame(() => {
-    toast.classList.add("is-visible");
-  });
-
-  uiState.toastTimer = window.setTimeout(() => {
-    toast.classList.remove("is-visible");
-    window.setTimeout(() => {
-      toast.hidden = true;
-      uiState.toastTimer = null;
-    }, 180);
-  }, TOAST_TIMEOUT_MS);
-};
-
+const hasCategoryFilter = (state) => normalizeCategoryFilterValue(state.filters.category) !== "all";
 const getFormField = (name) => expenseForm?.elements.namedItem(name);
-const setTextValue = (element, value) => {
-  if (element) {
-    element.textContent = value;
-  }
-};
 
-const setBarWidth = (element, percent) => {
-  if (element) {
-    element.style.width = `${clamp(percent, 0, 100)}%`;
-  }
-};
+const setTextValue = (element, value) => { if (element) element.textContent = value; };
+const setBarWidth = (element, percent) => { if (element) element.style.width = `${clamp(percent, 0, 100)}%`; };
+const applyStatusPill = (element, label, tone = "neutral") => { if (!element) return; element.textContent = label; element.classList.remove(...STATUS_PILL_CLASSES); element.classList.add(`status-pill--${tone}`); };
+const formatSignedPercent = (value, decimals = 1) => !Number.isFinite(value) ? "n/a" : `${value > 0 ? "+" : value < 0 ? "-" : ""}${formatValue(Math.abs(value), decimals)}%`;
+const formatSignedPoints = (value, decimals = 1) => !Number.isFinite(value) ? "n/a" : `${value > 0 ? "+" : value < 0 ? "-" : ""}${formatValue(Math.abs(value), decimals)} pts`;
+const getTrendTone = (change, options = {}) => { const positive = options.lowerIsBetter ? change < 0 : change > 0; return !Number.isFinite(change) || Math.abs(change) < 0.05 ? "neutral" : positive ? "positive" : "negative"; };
+const getMonthLabel = (monthKey, options = {}) => { const date = new Date(`${monthKey}-01T12:00:00`); return Number.isNaN(date.getTime()) ? "" : new Intl.DateTimeFormat("es-AR", { month: "long", year: "numeric", ...options }).format(date); };
+const getDaysInMonth = (monthKey) => { const [year, month] = monthKey.split("-").map(Number); return new Date(year, month, 0).getDate(); };
+const shiftMonthKey = (monthKey, offset) => { const [year, month] = monthKey.split("-").map(Number); const date = new Date(Date.UTC(year, month - 1 + offset, 1, 12)); return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}`; };
+const getActiveMonthKey = (state) => normalizeMonthFilterValue(state.filters.month, getLatestMonthKey(state.expenses));
+const getExpensesForMonth = (state, monthKey) => state.expenses.filter((expense) => expense.date.slice(0, 7) === monthKey);
 
-const applyStatusPill = (element, label, tone = "neutral") => {
-  if (!element) {
-    return;
-  }
-
-  element.textContent = label;
-  element.classList.remove(...STATUS_PILL_CLASSES);
-  element.classList.add(`status-pill--${tone}`);
-};
-
-const formatSignedPercent = (value, decimals = 1) => {
-  if (!Number.isFinite(value)) {
-    return "n/a";
-  }
-
-  const sign = value > 0 ? "+" : value < 0 ? "-" : "";
-  return `${sign}${formatValue(Math.abs(value), decimals)}%`;
-};
-
-const formatSignedPoints = (value, decimals = 1) => {
-  if (!Number.isFinite(value)) {
-    return "n/a";
-  }
-
-  const sign = value > 0 ? "+" : value < 0 ? "-" : "";
-  return `${sign}${formatValue(Math.abs(value), decimals)} pts`;
-};
-
-const getTrendTone = (change, options = {}) => {
-  const { lowerIsBetter = false } = options;
-
-  if (!Number.isFinite(change) || Math.abs(change) < 0.05) {
-    return "neutral";
-  }
-
-  const positiveTrend = lowerIsBetter ? change < 0 : change > 0;
-  return positiveTrend ? "positive" : "negative";
-};
-
-const getActiveMonthKey = (state) => state.filters.month || getCurrentMonthKey();
-
-const shiftMonthKey = (monthKey, offset) => {
-  const [year, month] = monthKey.split("-").map(Number);
-  const shiftedDate = new Date(Date.UTC(year, month - 1 + offset, 1, 12));
-  return `${shiftedDate.getUTCFullYear()}-${String(shiftedDate.getUTCMonth() + 1).padStart(2, "0")}`;
-};
-
-const getDaysInMonth = (monthKey) => {
-  const [year, month] = monthKey.split("-").map(Number);
-  return new Date(Date.UTC(year, month, 0)).getUTCDate();
-};
-
-const getMonthLabel = (monthKey, options = {}) => {
-  const date = new Date(`${monthKey}-01T12:00:00Z`);
-
-  if (Number.isNaN(date.getTime())) {
-    return "";
-  }
-
-  return new Intl.DateTimeFormat("en-US", {
-    month: "long",
-    year: "numeric",
-    ...options,
-  }).format(date);
-};
-
-const getExpensesForMonth = (state, monthKey) =>
-  state.expenses.filter((expense) => expense.date.slice(0, 7) === monthKey);
-
-const getPercentageChange = (currentValue, previousValue, hasBaseline) => {
-  if (!hasBaseline || !Number.isFinite(previousValue) || previousValue === 0) {
-    return null;
-  }
-
-  return ((currentValue - previousValue) / previousValue) * 100;
+const getElapsedDaysForMonth = (monthKey, expenses) => {
+  const daysInMonth = getDaysInMonth(monthKey);
+  const currentMonth = getCurrentMonthKey();
+  if (monthKey === currentMonth) return clamp(new Date().getDate(), 1, daysInMonth);
+  if (monthKey < currentMonth) return daysInMonth;
+  const latest = expenses.reduce((maxDay, expense) => Math.max(maxDay, getExpenseDate(expense)?.getDate() || 0), 0);
+  return clamp(latest || 1, 1, daysInMonth);
 };
 
 const buildCategoryBreakdown = (expenses, totalSpent) => {
-  const totalsByCategory = expenses.reduce((accumulator, expense) => {
-    const categoryName = expense.category || "Other";
-    const nextTotal = (accumulator[categoryName] || 0) + Number(expense.amount || 0);
-    accumulator[categoryName] = roundCurrency(nextTotal);
-    return accumulator;
-  }, {});
-
-  return Object.entries(totalsByCategory)
-    .map(([category, total]) => ({
-      category,
-      total,
-      share: totalSpent > 0 ? (total / totalSpent) * 100 : 0,
-    }))
-    .sort((left, right) => right.total - left.total);
+  const totals = expenses.reduce((acc, expense) => { acc[expense.category] = roundCurrency((acc[expense.category] || 0) + Number(expense.amount || 0)); return acc; }, {});
+  return Object.entries(totals).map(([category, total]) => ({ category, total, share: totalSpent > 0 ? (total / totalSpent) * 100 : 0 })).sort((a, b) => b.total - a.total);
 };
-
-const buildLegendCategories = (categoryBreakdown) => {
-  if (categoryBreakdown.length <= 5) {
-    return categoryBreakdown;
-  }
-
-  const topCategories = categoryBreakdown.slice(0, 4);
-  const otherCategories = categoryBreakdown.slice(4);
-  const otherTotal = otherCategories.reduce((sum, item) => sum + item.total, 0);
-  const otherShare = otherCategories.reduce((sum, item) => sum + item.share, 0);
-
-  return [
-    ...topCategories,
-    {
-      category: "Other",
-      total: roundCurrency(otherTotal),
-      share: otherShare,
-    },
-  ];
-};
-
-const getCategoryTotal = (categoryBreakdown, categories) => {
-  const categoryNames = Array.isArray(categories) ? categories : [categories];
-
-  return roundCurrency(
-    categoryBreakdown.reduce(
-      (sum, item) => (categoryNames.includes(item.category) ? sum + Number(item.total || 0) : sum),
-      0
-    )
-  );
-};
-
-const getCurrentMonthKey = () => {
-  const today = new Date();
-  return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`;
-};
-
-const getLatestExpenseDay = (expenses) =>
-  expenses.reduce((latestDay, expense) => {
-    const expenseDate = new Date(expense.date);
-    return Number.isNaN(expenseDate.getTime()) ? latestDay : Math.max(latestDay, expenseDate.getDate());
-  }, 0);
-
-const getElapsedDaysForMonth = (monthKey, expenses) => {
-  const currentMonthKey = getCurrentMonthKey();
-  const daysInMonth = getDaysInMonth(monthKey);
-
-  if (monthKey === currentMonthKey) {
-    return clamp(new Date().getDate(), 1, daysInMonth);
-  }
-
-  if (monthKey < currentMonthKey) {
-    return daysInMonth;
-  }
-
-  return clamp(getLatestExpenseDay(expenses) || 1, 1, daysInMonth);
-};
+const buildLegendCategories = (breakdown) => breakdown.length <= 5 ? breakdown : [...breakdown.slice(0, 4), { category: "Otros", total: roundCurrency(breakdown.slice(4).reduce((sum, item) => sum + item.total, 0)), share: breakdown.slice(4).reduce((sum, item) => sum + item.share, 0) }];
+const getPercentageChange = (currentValue, previousValue, hasBaseline) => !hasBaseline || !Number.isFinite(previousValue) || previousValue === 0 ? null : ((currentValue - previousValue) / previousValue) * 100;
 
 const summarizeMonth = (expenses, income, monthKey) => {
   const daysInMonth = getDaysInMonth(monthKey);
   const elapsedDays = getElapsedDaysForMonth(monthKey, expenses);
-  const totalSpent = roundCurrency(
-    expenses.reduce((sum, expense) => sum + Number(expense.amount || 0), 0)
-  );
+  const totalSpent = roundCurrency(expenses.reduce((sum, expense) => sum + Number(expense.amount || 0), 0));
   const remainingBalance = roundCurrency(income - totalSpent);
-  const investableSurplus = roundCurrency(Math.max(remainingBalance - OPERATING_BUFFER, 0));
-  const dailyAverage = roundCurrency(totalSpent / Math.max(daysInMonth, 1));
-  const savingsRate = income > 0 ? roundCurrency((remainingBalance / income) * 100) : 0;
-  const largestExpense =
-    expenses.reduce(
-      (largest, expense) =>
-        !largest || Number(expense.amount || 0) > Number(largest.amount || 0) ? expense : largest,
-      null
-    ) || null;
-  const categoryBreakdown = buildCategoryBreakdown(expenses, totalSpent);
-  const topCategory = categoryBreakdown[0] || null;
-  const coreSpend = roundCurrency(
-    expenses.reduce(
-      (sum, expense) =>
-        CORE_SPEND_CATEGORIES.has(expense.category)
-          ? sum + Number(expense.amount || 0)
-          : sum,
-      0
-    )
-  );
-  const variableSpend = roundCurrency(Math.max(totalSpent - coreSpend, 0));
+  const savingsAmount = roundCurrency(Math.max(remainingBalance, 0));
+  const dailyAverage = roundCurrency(totalSpent / Math.max(elapsedDays, 1));
+  const savingsRate = income > 0 ? roundCurrency((savingsAmount / income) * 100) : 0;
+  const largestExpense = expenses.reduce((largest, expense) => !largest || Number(expense.amount || 0) > Number(largest.amount || 0) ? expense : largest, null);
+  const fixedSpend = roundCurrency(expenses.filter((expense) => expense.isFixed).reduce((sum, expense) => sum + Number(expense.amount || 0), 0));
+  const variableSpend = roundCurrency(Math.max(totalSpent - fixedSpend, 0));
   const spentRatio = income > 0 ? (totalSpent / income) * 100 : 0;
-  const runwayDays = dailyAverage > 0 ? Math.max(remainingBalance / dailyAverage, 0) : daysInMonth;
-  const reserveRunwayMonths = coreSpend > 0 ? Math.max(remainingBalance / coreSpend, 0) : 0;
-  const projectedMonthlySpend =
-    totalSpent > 0 ? roundCurrency((totalSpent / Math.max(elapsedDays, 1)) * daysInMonth) : 0;
-  const projectedEndBalance = roundCurrency(income - projectedMonthlySpend);
-  const projectedEndInvestable = roundCurrency(Math.max(projectedEndBalance - OPERATING_BUFFER, 0));
-  const targetDailySpend = roundCurrency(Math.max(income - OPERATING_BUFFER, 0) / Math.max(daysInMonth, 1));
-  const entertainmentSpend = getCategoryTotal(categoryBreakdown, ENTERTAINMENT_CATEGORIES);
-
+  const categoryBreakdown = buildCategoryBreakdown(expenses, totalSpent);
+  const projectedMonthlySpend = totalSpent > 0 ? roundCurrency((totalSpent / Math.max(elapsedDays, 1)) * daysInMonth) : 0;
   return {
     monthKey,
     monthLabelLong: getMonthLabel(monthKey),
@@ -577,1195 +241,349 @@ const summarizeMonth = (expenses, income, monthKey) => {
     elapsedDays,
     totalSpent,
     remainingBalance,
-    investableSurplus,
+    savingsAmount,
     dailyAverage,
     savingsRate,
     transactionCount: expenses.length,
     largestExpense,
-    topCategory,
+    topCategory: categoryBreakdown[0] || null,
     categoryBreakdown,
     activeCategoryCount: categoryBreakdown.length,
-    coreSpend,
+    fixedSpend,
     variableSpend,
+    fixedShare: totalSpent > 0 ? (fixedSpend / totalSpent) * 100 : 0,
+    variableShare: totalSpent > 0 ? (variableSpend / totalSpent) * 100 : 0,
     spentRatio,
-    runwayDays,
-    reserveRunwayMonths,
     projectedMonthlySpend,
-    projectedEndBalance,
-    projectedEndInvestable,
-    targetDailySpend,
-    entertainmentSpend,
+    projectedRemainingBalance: roundCurrency(income - projectedMonthlySpend),
   };
-};
-
-const closeSidebar = () => {
-  body.classList.remove("sidebar-open");
-};
-
-const getScrollBehavior = () =>
-  window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ? "auto" : "smooth";
-
-const setActiveNavItem = (target) => {
-  navItems.forEach((candidate) => {
-    candidate.classList.toggle("is-active", candidate.dataset.navItem === target);
-  });
-};
-
-const scrollToDashboardSection = (target) => {
-  const section = SECTION_TARGETS[target] || SECTION_TARGETS.dashboard;
-
-  if (!section) {
-    return;
-  }
-
-  closeSidebar();
-  setActiveNavItem(target);
-
-  window.requestAnimationFrame(() => {
-    const topOffset = (topbar?.offsetHeight || 0) + NAV_SCROLL_OFFSET;
-    const nextScrollTop = window.scrollY + section.getBoundingClientRect().top - topOffset;
-
-    window.scrollTo({
-      top: Math.max(0, nextScrollTop),
-      behavior: getScrollBehavior(),
-    });
-  });
-};
-
-const getBadgeVariant = (category) => {
-  const normalizedCategory = String(category || "").trim().toLowerCase();
-
-  switch (normalizedCategory) {
-    case "food":
-      return "food";
-    case "transport":
-      return "transport";
-    case "software":
-      return "software";
-    case "lifestyle":
-    case "leisure":
-      return "lifestyle";
-    case "housing":
-      return "housing";
-    case "utilities":
-      return "utilities";
-    case "subscriptions":
-      return "subscriptions";
-    case "travel":
-      return "travel";
-    default:
-      return "other";
-  }
-};
-
-const formatExpenseTimestamp = (value) => {
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return "";
-  }
-
-  const datePart = new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-  }).format(date);
-
-  const timePart = new Intl.DateTimeFormat("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-  }).format(date);
-
-  return `${datePart} at ${timePart}`;
-};
-
-const getMonthExpenses = (state) => {
-  const activeMonth = normalizeMonthFilterValue(getActiveMonthKey(state), getLatestMonthKey(state.expenses));
-
-  if (!activeMonth) {
-    return [...state.expenses];
-  }
-
-  return getExpensesForMonth(state, activeMonth);
-};
-
-const getFilteredExpenses = (state) => {
-  const normalizedSearch = getSearchQuery(state);
-
-  return getMonthExpenses(state)
-    .filter((expense) => {
-      if (normalizeCategoryFilterValue(state.filters.category) !== "all" && expense.category !== state.filters.category) {
-        return false;
-      }
-
-      if (!normalizedSearch) {
-        return true;
-      }
-
-      const haystack = [expense.title, expense.category, expense.paymentMethod, expense.note]
-        .join(" ")
-        .toLowerCase();
-
-      return haystack.includes(normalizedSearch);
-    })
-    .sort((left, right) => (getExpenseDate(right)?.getTime() || 0) - (getExpenseDate(left)?.getTime() || 0));
-};
-
-const calculateFutureValue = (monthlyAmount, annualRate, months = 12) => {
-  const monthlyRate = annualRate / 12;
-
-  if (monthlyRate === 0) {
-    return monthlyAmount * months;
-  }
-
-  return monthlyAmount * ((Math.pow(1 + monthlyRate, months) - 1) / monthlyRate);
 };
 
 const computeDashboardMetrics = (state) => {
   const activeMonthKey = getActiveMonthKey(state);
   const previousMonthKey = shiftMonthKey(activeMonthKey, -1);
-  const currentMonthExpenses = getExpensesForMonth(state, activeMonthKey);
-  const previousMonthExpenses = getExpensesForMonth(state, previousMonthKey);
-  const currentMonth = summarizeMonth(currentMonthExpenses, state.income, activeMonthKey);
-  const previousMonth = summarizeMonth(previousMonthExpenses, state.income, previousMonthKey);
+  const currentMonth = summarizeMonth(getExpensesForMonth(state, activeMonthKey), state.income, activeMonthKey);
+  const previousMonth = summarizeMonth(getExpensesForMonth(state, previousMonthKey), state.income, previousMonthKey);
   const hasPreviousBaseline = previousMonth.transactionCount > 0;
-
   return {
     ...currentMonth,
     activeMonthKey,
     previousMonthKey,
     previousMonthLabelShort: previousMonth.monthLabelShort,
-    previousMonthLabelLong: previousMonth.monthLabelLong,
     previousMonth,
     hasPreviousBaseline,
     comparisons: {
-      totalSpentChange: getPercentageChange(
-        currentMonth.totalSpent,
-        previousMonth.totalSpent,
-        hasPreviousBaseline
-      ),
-      remainingBalanceChange: getPercentageChange(
-        currentMonth.remainingBalance,
-        previousMonth.remainingBalance,
-        hasPreviousBaseline
-      ),
-      investableSurplusChange: getPercentageChange(
-        currentMonth.investableSurplus,
-        previousMonth.investableSurplus,
-        hasPreviousBaseline && previousMonth.investableSurplus > 0
-      ),
-      dailyAverageChange: getPercentageChange(
-        currentMonth.dailyAverage,
-        previousMonth.dailyAverage,
-        hasPreviousBaseline
-      ),
-      savingsRateChange:
-        hasPreviousBaseline && Number.isFinite(previousMonth.savingsRate)
-          ? currentMonth.savingsRate - previousMonth.savingsRate
-          : null,
+      totalSpentChange: getPercentageChange(currentMonth.totalSpent, previousMonth.totalSpent, hasPreviousBaseline),
+      remainingBalanceChange: getPercentageChange(currentMonth.remainingBalance, previousMonth.remainingBalance, hasPreviousBaseline),
+      savingsAmountChange: getPercentageChange(currentMonth.savingsAmount, previousMonth.savingsAmount, hasPreviousBaseline && previousMonth.savingsAmount > 0),
+      dailyAverageChange: getPercentageChange(currentMonth.dailyAverage, previousMonth.dailyAverage, hasPreviousBaseline),
+      savingsRateChange: hasPreviousBaseline ? currentMonth.savingsRate - previousMonth.savingsRate : null,
     },
   };
+};
+
+const getMonthExpenses = (state) => getExpensesForMonth(state, getActiveMonthKey(state));
+const getFilteredExpenses = (state) => {
+  const search = getSearchQuery(state);
+  return getMonthExpenses(state).filter((expense) => (hasCategoryFilter(state) ? expense.category === state.filters.category : true) && (!search || [expense.title, expense.category, expense.paymentMethod, expense.note].join(" ").toLowerCase().includes(search))).sort((a, b) => (getExpenseDate(b)?.getTime() || 0) - (getExpenseDate(a)?.getTime() || 0));
+};
+const getVisibleExpensesContext = (state) => { const monthExpenses = getMonthExpenses(state); const filteredExpenses = getFilteredExpenses(state); return { monthExpenses, filteredExpenses, hasMonthExpenses: monthExpenses.length > 0, hasResults: filteredExpenses.length > 0 }; };
+
+const escapeCsvValue = (value) => `"${String(value ?? "").replaceAll('"', '""')}"`;
+const serializeExpensesToJson = (expenses) => JSON.stringify(expenses, null, 2);
+const serializeExpensesToCsv = (expenses) => {
+  const rows = expenses.map((expense) => [expense.id, expense.title, roundCurrency(expense.amount), expense.category, expense.date, expense.paymentMethod, expense.note, expense.isFixed ? "si" : "no", expense.createdAt].map(escapeCsvValue).join(","));
+  return [["id", "descripcion", "monto", "categoria", "fecha", "medio_pago", "notas", "es_fijo", "creado_en"].join(","), ...rows].join("\n");
+};
+const downloadTextFile = (filename, content, mimeType) => { const blob = new Blob([content], { type: mimeType }); const url = URL.createObjectURL(blob); const link = document.createElement("a"); link.href = url; link.download = filename; document.body.append(link); link.click(); link.remove(); window.setTimeout(() => URL.revokeObjectURL(url), 0); };
+const getExportBaseFilename = (state) => `aleclv-expense-tracker-${getActiveMonthKey(state)}`;
+const getResultsLabel = (count) => count === 1 ? "1 gasto" : `${formatValue(count)} gastos`;
+
+const showToast = (message, tone = "success") => {
+  if (!toast) return;
+  if (uiState.toastTimer) window.clearTimeout(uiState.toastTimer);
+  toast.textContent = message;
+  toast.hidden = false;
+  toast.classList.toggle("toast--error", tone === "error");
+  window.requestAnimationFrame(() => toast.classList.add("is-visible"));
+  uiState.toastTimer = window.setTimeout(() => {
+    toast.classList.remove("is-visible");
+    window.setTimeout(() => { toast.hidden = true; uiState.toastTimer = null; }, 180);
+  }, TOAST_TIMEOUT_MS);
 };
 
 const setCountupText = (element, value) => {
   const decimals = readDecimals(element);
   const prefix = element.dataset.prefix || "";
   const suffix = element.dataset.suffix || "";
-
   if (prefix === "$" || prefix === "+$" || prefix === "-$") {
-    let sign = "";
-
-    if (prefix === "+$") {
-      sign = "+";
-    } else if (prefix === "-$") {
-      sign = "-";
-    } else if (value < 0) {
-      sign = "-";
-    }
-
-    const formattedCurrency = formatCurrency(Math.abs(value), {
-      minimumFractionDigits: decimals,
-      maximumFractionDigits: decimals,
-    });
-
-    element.textContent = `${sign}${formattedCurrency}${suffix}`;
+    const sign = prefix === "+$" ? "+" : prefix === "-$" || value < 0 ? "-" : "";
+    element.textContent = `${sign}${formatCurrency(Math.abs(value), { minimumFractionDigits: decimals, maximumFractionDigits: decimals })}${suffix}`;
     return;
   }
-
   element.textContent = `${prefix}${formatValue(value, decimals)}${suffix}`;
 };
-
 const animateCountup = (element, targetValue, options = {}) => {
-  if (!element || Number.isNaN(targetValue)) {
-    return;
-  }
-
-  const duration = options.duration ?? Number(element.dataset.duration || 1200);
+  if (!element || Number.isNaN(targetValue)) return;
   const startValue = options.from ?? Number(element.dataset.currentValue || 0);
+  const duration = options.duration ?? 720;
   const startTime = performance.now();
-
   const tick = (now) => {
     const progress = Math.min((now - startTime) / duration, 1);
-    const currentValue = startValue + (targetValue - startValue) * easeOutCubic(progress);
-
-    setCountupText(element, currentValue);
-
-    if (progress < 1) {
-      requestAnimationFrame(tick);
-      return;
-    }
-
+    const value = startValue + (targetValue - startValue) * (1 - Math.pow(1 - progress, 3));
+    setCountupText(element, value);
+    if (progress < 1) return requestAnimationFrame(tick);
     element.dataset.currentValue = String(targetValue);
     setCountupText(element, targetValue);
   };
-
   requestAnimationFrame(tick);
 };
+const setMetricValue = (element, value, animate = false) => { if (!element) return; element.dataset.countup = String(value); if (animate && hasAnimatedCountups) return animateCountup(element, value, { from: Number(element.dataset.currentValue || 0) }); element.dataset.currentValue = String(value); setCountupText(element, value); };
+const animateInitialCountups = () => { if (hasAnimatedCountups) return; hasAnimatedCountups = true; countupElements.forEach((element, index) => animateCountup(element, Number(element.dataset.countup || 0), { from: 0, duration: 980 + index * 28 })); };
 
-const setMetricValue = (element, value, animate = false) => {
-  if (!element) {
-    return;
+const getBadgeVariant = (category) => {
+  switch (normalizeToken(category)) {
+    case "Supermercado":
+      return "food";
+    case "Transporte":
+      return "transport";
+    case "Casa/Servicios":
+      return "housing";
+    case "Gimnasio":
+      return "lifestyle";
+    case "Facultad":
+      return "software";
+    case "Suscripciones":
+      return "subscriptions";
+    case "Salidas":
+      return "travel";
+    case "Salud":
+      return "utilities";
+    case "Auto/Moto":
+      return "travel";
+    case "Inversion":
+      return "software";
+    default:
+      return "other";
   }
-
-  element.dataset.countup = String(value);
-
-  if (animate && hasAnimatedCountups) {
-    animateCountup(element, value, {
-      from: Number(element.dataset.currentValue || 0),
-      duration: 720,
-    });
-    return;
-  }
-
-  element.dataset.currentValue = String(value);
-  setCountupText(element, value);
 };
+const formatExpenseTimestamp = (value) => { const date = new Date(value); return Number.isNaN(date.getTime()) ? "" : `${new Intl.DateTimeFormat("es-AR", { day: "numeric", month: "short" }).format(date)} - ${new Intl.DateTimeFormat("es-AR", { hour: "2-digit", minute: "2-digit" }).format(date)}`; };
 
-const animateInitialCountups = () => {
-  if (hasAnimatedCountups) {
-    return;
-  }
+const renderExpenseRow = (expense) => `
+  <article class="expense-row" data-expense-id="${escapeHtml(expense.id)}">
+    <div class="expense-row__merchant"><strong>${escapeHtml(expense.title)}</strong><span>${escapeHtml(formatExpenseTimestamp(expense.date))}</span></div>
+    <div class="expense-row__meta"><span class="badge badge--${escapeHtml(getBadgeVariant(expense.category))}">${escapeHtml(expense.category)}</span><span class="expense-row__method">${escapeHtml(expense.paymentMethod)}${expense.isFixed ? " - Fijo" : ""}</span></div>
+    <div class="expense-row__side"><strong class="expense-row__amount">- ${escapeHtml(formatMoney(expense.amount))}</strong><div class="expense-row__actions"><button class="icon-button icon-button--soft" type="button" aria-label="Editar gasto" data-expense-action="edit" data-expense-id="${escapeHtml(expense.id)}"><svg viewBox="0 0 24 24" fill="none"><path d="m4 16.5 8.6-8.6 2.5 2.5-8.6 8.6H4v-2.5Z"></path><path d="m11.8 8.7 2-2a2 2 0 0 1 2.8 0l.7.7a2 2 0 0 1 0 2.8l-2 2"></path></svg></button><button class="icon-button icon-button--soft" type="button" aria-label="Eliminar gasto" data-expense-action="delete" data-expense-id="${escapeHtml(expense.id)}"><svg viewBox="0 0 24 24" fill="none"><path d="M5.5 7.5h13"></path><path d="M9 7.5V5h6v2.5"></path><path d="M8.5 10.5v6"></path><path d="M12 10.5v6"></path><path d="M15.5 10.5v6"></path></svg></button></div></div>
+  </article>`;
 
-  hasAnimatedCountups = true;
-
-  countupElements.forEach((element, index) => {
-    const targetValue = Number(element.dataset.countup);
-
-    animateCountup(element, targetValue, {
-      from: 0,
-      duration: 980 + index * 36,
-    });
-  });
-};
-
-const renderExpenseRow = (expense) => {
-  const badgeVariant = getBadgeVariant(expense.category);
-  const expenseTimestamp = formatExpenseTimestamp(expense.date) || "Date unavailable";
-
-  return `
-    <article class="expense-row" data-expense-id="${escapeHtml(expense.id)}">
-      <div class="expense-row__merchant">
-        <strong>${escapeHtml(expense.title)}</strong>
-        <span>${escapeHtml(expenseTimestamp)}</span>
-      </div>
-      <div class="expense-row__meta">
-        <span class="badge badge--${escapeHtml(badgeVariant)}">${escapeHtml(expense.category)}</span>
-        <span class="expense-row__method">${escapeHtml(expense.paymentMethod)}</span>
-      </div>
-      <div class="expense-row__side">
-        <strong class="expense-row__amount">- ${escapeHtml(formatCurrency(expense.amount))}</strong>
-        <div class="expense-row__actions">
-          <button class="icon-button icon-button--soft" type="button" aria-label="Edit expense" data-expense-action="edit" data-expense-id="${escapeHtml(expense.id)}">
-            <svg viewBox="0 0 24 24" fill="none">
-              <path d="m4 16.5 8.6-8.6 2.5 2.5-8.6 8.6H4v-2.5Z"></path>
-              <path d="m11.8 8.7 2-2a2 2 0 0 1 2.8 0l.7.7a2 2 0 0 1 0 2.8l-2 2"></path>
-            </svg>
-          </button>
-          <button class="icon-button icon-button--soft" type="button" aria-label="Delete expense" data-expense-action="delete" data-expense-id="${escapeHtml(expense.id)}">
-            <svg viewBox="0 0 24 24" fill="none">
-              <path d="M5.5 7.5h13"></path>
-              <path d="M9 7.5V5h6v2.5"></path>
-              <path d="M8.5 10.5v6"></path>
-              <path d="M12 10.5v6"></path>
-              <path d="M15.5 10.5v6"></path>
-            </svg>
-          </button>
-        </div>
-      </div>
-    </article>
-  `;
-};
-
-const getExpenseEmptyStateMarkup = (state, metrics, context) => {
-  if (!state.expenses.length) {
-    return `
-      <article class="expense-list__empty">
-        <strong>No spending tracked yet</strong>
-        <p>Start tracking your transactions to unlock live cashflow visibility, smarter alerts, and investment-ready planning.</p>
-        <div class="expense-list__actions">
-          <button class="button button--accent button--small" type="button" data-list-action="open-add">Add first expense</button>
-          <button class="button button--ghost button--small" type="button" data-list-action="restore-demo">Restore demo data</button>
-        </div>
-      </article>
-    `;
-  }
-
-  if (!context.hasMonthExpenses) {
-    const baselineCopy = state.income > 0
-      ? `Your ${formatMoney(state.income)} monthly income baseline is still loaded, but no expenses have posted for this period yet.`
-      : "Add a monthly income baseline and a few transactions to unlock balance, savings, and investment projections.";
-
-    return `
-      <article class="expense-list__empty">
-        <strong>No activity recorded for ${escapeHtml(metrics.monthLabelLong)}</strong>
-        <p>${escapeHtml(baselineCopy)}</p>
-        <div class="expense-list__actions">
-          <button class="button button--ghost button--small" type="button" data-list-action="open-filters">Choose another month</button>
-        </div>
-      </article>
-    `;
-  }
-
-  return `
-    <article class="expense-list__empty">
-      <strong>No expenses match the current view</strong>
-      <p>Broaden the search or clear the category filter to bring matching activity back into view.</p>
-      <div class="expense-list__actions">
-        <button class="button button--ghost button--small" type="button" data-list-action="clear-filters">Clear filters</button>
-        <button class="button button--ghost button--small" type="button" data-list-action="open-filters">Refine filters</button>
-      </div>
-    </article>
-  `;
-};
-
-const renderExpenseList = (state, metrics) => {
-  if (!expenseList) {
-    return;
-  }
-
-  const context = getVisibleExpensesContext(state);
-
-  if (!context.filteredExpenses.length) {
-    expenseList.innerHTML = getExpenseEmptyStateMarkup(state, metrics, context);
-    return;
-  }
-
-  expenseList.innerHTML = context.filteredExpenses.map(renderExpenseRow).join("");
-};
+const getExpenseEmptyStateMarkup = (state, metrics, context) => !state.expenses.length ? `<article class="expense-list__empty"><strong>Todavía no cargaste gastos</strong><p>Empezá con tu primer movimiento para activar categorias, balance, ahorro e insights del mes.</p><div class="expense-list__actions"><button class="button button--accent button--small" type="button" data-list-action="open-add">Agregar primer gasto</button><button class="button button--ghost button--small" type="button" data-list-action="restore-demo">Restaurar ejemplo</button></div></article>` : !context.hasMonthExpenses ? `<article class="expense-list__empty"><strong>Sin movimientos en ${escapeHtml(metrics.monthLabelLong)}</strong><p>${state.income > 0 ? `Tu ingreso de ${escapeHtml(formatMoney(state.income))} sigue cargado, pero todavía no hay gastos en este mes.` : "Cargá el ingreso mensual y al menos un gasto para ver el resumen completo."}</p><div class="expense-list__actions"><button class="button button--ghost button--small" type="button" data-list-action="open-filters">Cambiar mes</button><button class="button button--accent button--small" type="button" data-list-action="open-add">Agregar gasto</button></div></article>` : `<article class="expense-list__empty"><strong>No hay gastos para estos filtros</strong><p>Probá limpiar la búsqueda o cambiar la categoría seleccionada.</p><div class="expense-list__actions"><button class="button button--ghost button--small" type="button" data-list-action="clear-filters">Limpiar filtros</button><button class="button button--ghost button--small" type="button" data-list-action="open-filters">Ajustar filtros</button></div></article>`;
+const renderExpenseList = (state, metrics) => { if (!expenseList) return; const context = getVisibleExpensesContext(state); expenseList.innerHTML = context.filteredExpenses.length ? context.filteredExpenses.map(renderExpenseRow).join("") : getExpenseEmptyStateMarkup(state, metrics, context); };
 
 const renderFilterControls = (state, metrics) => {
-  const visibleContext = getVisibleExpensesContext(state);
-  const defaultFilters = getDefaultFilters(state);
-
-  if (searchInput && searchInput.value !== state.filters.search) {
-    searchInput.value = state.filters.search;
-  }
-
-  if (filterMonthInput) {
-    filterMonthInput.value = normalizeMonthFilterValue(state.filters.month, defaultFilters.month);
-  }
-
-  if (filterCategoryInput) {
-    filterCategoryInput.value = normalizeCategoryFilterValue(state.filters.category);
-  }
-
-  setTextValue(
-    filterSearchPreview,
-    hasSearchFilter(state) ? `"${state.filters.search}"` : "No search applied"
-  );
-  setTextValue(
-    filterResultsCopy,
-    visibleContext.hasResults
-      ? `${getResultsLabel(visibleContext.filteredExpenses.length)} visible in ${metrics.monthLabelShortYear}.`
-      : visibleContext.hasMonthExpenses
-        ? `No visible activity in ${metrics.monthLabelShortYear} for the active search and category filters.`
-        : `No activity exists in ${metrics.monthLabelShortYear} yet.`
-  );
+  const visible = getVisibleExpensesContext(state);
+  if (searchInput && searchInput.value !== state.filters.search) searchInput.value = state.filters.search;
+  if (filterMonthInput) filterMonthInput.value = normalizeMonthFilterValue(state.filters.month, getDefaultFilters(state).month);
+  if (filterCategoryInput) filterCategoryInput.value = normalizeCategoryFilterValue(state.filters.category);
+  setTextValue(filterSearchPreview, hasSearchFilter(state) ? `"${state.filters.search}"` : "Sin busqueda aplicada");
+  setTextValue(filterResultsCopy, visible.hasResults ? `${getResultsLabel(visible.filteredExpenses.length)} visibles en ${metrics.monthLabelShortYear}.` : visible.hasMonthExpenses ? `No hay resultados para la busqueda actual en ${metrics.monthLabelShortYear}.` : `Todavía no hay movimientos en ${metrics.monthLabelShortYear}.`);
 };
-
 const renderExportState = (state, metrics) => {
   const { filteredExpenses } = getVisibleExpensesContext(state);
-  const baseFilename = getExportBaseFilename(state);
-
-  setTextValue(exportSummary, `${getResultsLabel(filteredExpenses.length)} ready to export`);
-  setTextValue(exportFilename, `${baseFilename}.csv / ${baseFilename}.json`);
-  setTextValue(
-    exportCopy,
-    filteredExpenses.length
-      ? `This export reflects the visible ${metrics.monthLabelShortYear} dataset currently shown in the dashboard.`
-      : `There are no visible expenses to export for ${metrics.monthLabelShortYear}.`
-  );
-
-  if (exportJsonButton) {
-    exportJsonButton.disabled = filteredExpenses.length === 0;
-  }
-
-  if (exportCsvButton) {
-    exportCsvButton.disabled = filteredExpenses.length === 0;
-  }
+  setTextValue(exportSummary, `${getResultsLabel(filteredExpenses.length)} listos`);
+  setTextValue(exportFilename, `${getExportBaseFilename(state)}.csv / ${getExportBaseFilename(state)}.json`);
+  setTextValue(exportCopy, filteredExpenses.length ? `La exportacion refleja la vista actual de ${metrics.monthLabelShortYear}.` : `No hay gastos visibles para exportar en ${metrics.monthLabelShortYear}.`);
+  if (exportJsonButton) exportJsonButton.disabled = filteredExpenses.length === 0;
+  if (exportCsvButton) exportCsvButton.disabled = filteredExpenses.length === 0;
 };
 
 const renderKpis = (state, metrics, animate = false) => {
   setMetricValue(kpiElements.income, state.income, animate);
   setMetricValue(kpiElements.totalSpent, metrics.totalSpent, animate);
   setMetricValue(kpiElements.remainingBalance, metrics.remainingBalance, animate);
-  setMetricValue(kpiElements.investableSurplus, metrics.investableSurplus, animate);
+  setMetricValue(kpiElements.savingsAmount, metrics.savingsAmount, animate);
   setMetricValue(kpiElements.dailyAverage, metrics.dailyAverage, animate);
   setMetricValue(kpiElements.savingsRate, metrics.savingsRate, animate);
 };
-
-const renderPeriod = (metrics) => {
-  setTextValue(textElements.periodTitle, `${metrics.monthLabelLong} cashflow dashboard`);
-  setTextValue(textElements.periodPill, metrics.monthLabelShortYear);
-};
-
+const renderPeriod = (metrics) => { setTextValue(textElements.periodTitle, `${metrics.monthLabelLong} - resumen de gastos`); setTextValue(textElements.periodPill, metrics.monthLabelShortYear); };
 const renderKpiMeta = (state, metrics) => {
-  const fallbackLabel = `No ${metrics.previousMonthLabelShort} baseline`;
-
-  setTextValue(
-    kpiDeltaElements.income,
-    state.income > 0 ? "User-set baseline" : "Set baseline"
-  );
-  setTextValue(
-    kpiDeltaElements.totalSpent,
-    metrics.hasPreviousBaseline
-      ? `${formatSignedPercent(metrics.comparisons.totalSpentChange)} vs ${metrics.previousMonthLabelShort}`
-      : fallbackLabel
-  );
-  setTextValue(
-    kpiDeltaElements.remainingBalance,
-    metrics.hasPreviousBaseline
-      ? `${formatSignedPercent(metrics.comparisons.remainingBalanceChange)} vs ${metrics.previousMonthLabelShort}`
-      : fallbackLabel
-  );
-  setTextValue(
-    kpiDeltaElements.investableSurplus,
-    metrics.hasPreviousBaseline && Number.isFinite(metrics.comparisons.investableSurplusChange)
-      ? `${formatSignedPercent(metrics.comparisons.investableSurplusChange)} vs ${metrics.previousMonthLabelShort}`
-      : "Available now"
-  );
-  setTextValue(
-    kpiDeltaElements.dailyAverage,
-    metrics.hasPreviousBaseline
-      ? `${formatSignedPercent(metrics.comparisons.dailyAverageChange)} vs ${metrics.previousMonthLabelShort}`
-      : "Month average"
-  );
-  setTextValue(
-    kpiDeltaElements.savingsRate,
-    metrics.hasPreviousBaseline
-      ? `${formatSignedPoints(metrics.comparisons.savingsRateChange)} vs ${metrics.previousMonthLabelShort}`
-      : `${formatValue(metrics.savingsRate, 1)}% saved`
-  );
-
-  setTextValue(
-    kpiCaptionElements.income,
-    state.income > 0
-      ? `Monthly income baseline currently driving ${metrics.monthLabelShort} balance and savings projections.`
-      : "Set a monthly income baseline to unlock balance, savings, and investable cash."
-  );
-  setTextValue(
-    kpiCaptionElements.totalSpent,
-    metrics.transactionCount > 0
-      ? `${metrics.transactionCount} transactions across ${metrics.activeCategoryCount} categories.`
-      : `No expenses posted in ${metrics.monthLabelShort} yet.`
-  );
-  setTextValue(
-    kpiCaptionElements.remainingBalance,
-    state.income > 0
-      ? `Income minus ${formatMoney(metrics.totalSpent)} in spending.`
-      : "Remaining balance needs an income baseline."
-  );
-  setTextValue(
-    kpiCaptionElements.investableSurplus,
-    state.income > 0
-      ? `After holding ${formatMoney(OPERATING_BUFFER)} in operating cash.`
-      : "Add income before deployable capital can be projected."
-  );
-  setTextValue(
-    kpiCaptionElements.dailyAverage,
-    metrics.transactionCount > 0
-      ? `Average across ${metrics.daysInMonth} days in ${metrics.monthLabelShort}.`
-      : `No daily spend pace in ${metrics.monthLabelShort} yet.`
-  );
-  setTextValue(
-    kpiCaptionElements.savingsRate,
-    state.income > 0
-      ? `You kept ${formatMoney(metrics.remainingBalance)} of ${formatMoney(state.income)}.`
-      : "Savings rate appears once income is set."
-  );
+  const fallback = `Sin base de ${metrics.previousMonthLabelShort}`;
+  setTextValue(kpiDeltaElements.income, state.income > 0 ? "Editable" : "Cargar ingreso");
+  setTextValue(kpiDeltaElements.totalSpent, metrics.hasPreviousBaseline ? `${formatSignedPercent(metrics.comparisons.totalSpentChange)} vs ${metrics.previousMonthLabelShort}` : fallback);
+  setTextValue(kpiDeltaElements.remainingBalance, metrics.hasPreviousBaseline ? `${formatSignedPercent(metrics.comparisons.remainingBalanceChange)} vs ${metrics.previousMonthLabelShort}` : fallback);
+  setTextValue(kpiDeltaElements.savingsAmount, metrics.hasPreviousBaseline && Number.isFinite(metrics.comparisons.savingsAmountChange) ? `${formatSignedPercent(metrics.comparisons.savingsAmountChange)} vs ${metrics.previousMonthLabelShort}` : "Disponible hoy");
+  setTextValue(kpiDeltaElements.dailyAverage, metrics.hasPreviousBaseline ? `${formatSignedPercent(metrics.comparisons.dailyAverageChange)} vs ${metrics.previousMonthLabelShort}` : "Promedio del mes");
+  setTextValue(kpiDeltaElements.savingsRate, metrics.hasPreviousBaseline ? `${formatSignedPoints(metrics.comparisons.savingsRateChange)} vs ${metrics.previousMonthLabelShort}` : `${formatValue(metrics.savingsRate, 1)}%`);
+  setTextValue(kpiCaptionElements.income, state.income > 0 ? "Cambiar el ingreso actualiza todos los calculos del dashboard." : "Cargá tu ingreso mensual para activar balance y ahorro.");
+  setTextValue(kpiCaptionElements.totalSpent, metrics.transactionCount ? `${metrics.transactionCount} movimientos en ${metrics.activeCategoryCount} categorias.` : `Todavía no hay gastos en ${metrics.monthLabelShort}.`);
+  setTextValue(kpiCaptionElements.remainingBalance, state.income > 0 ? `De ${formatMoney(state.income)} te quedan ${formatMoney(metrics.remainingBalance)}.` : "Necesita ingreso mensual para calcularse.");
+  setTextValue(kpiCaptionElements.savingsAmount, state.income > 0 ? "Solo cuenta ahorro positivo del mes." : "Aparece cuando definis el ingreso mensual.");
+  setTextValue(kpiCaptionElements.dailyAverage, metrics.transactionCount ? `Promedio sobre ${metrics.elapsedDays} dia(s) cargados.` : "Sin movimientos, no hay promedio.");
+  setTextValue(kpiCaptionElements.savingsRate, state.income > 0 ? `${formatMoney(metrics.savingsAmount)} libres sobre ${formatMoney(state.income)}.` : "La tasa de ahorro depende del ingreso.");
 };
-
-const renderSummaries = (metrics, animate = false) => {
+const renderSummaries = (state, metrics, animate = false) => {
   setMetricValue(summaryElements.sidebarFreeCash, metrics.remainingBalance, animate);
   setMetricValue(summaryElements.heroRemaining, metrics.remainingBalance, animate);
   setMetricValue(summaryElements.chartTotalSpent, metrics.totalSpent, animate);
-  setTextValue(
-    textElements.reserveRunway,
-    metrics.coreSpend > 0
-      ? `${formatValue(metrics.reserveRunwayMonths, 1)} months intact`
-      : "No core bill baseline"
-  );
+  setMetricValue(summaryElements.sidebarSavings, metrics.savingsAmount, animate);
+  setMetricValue(summaryElements.incomeHighlight, state.income, animate);
+  setMetricValue(summaryElements.fixedAmount, metrics.fixedSpend, animate);
+  setMetricValue(summaryElements.variableAmount, metrics.variableSpend, animate);
 };
-
-const renderSidebar = (metrics, animate = false) => {
-  const sidebarLabel = metrics.hasPreviousBaseline
-    ? `${formatSignedPercent(metrics.comparisons.totalSpentChange)} vs ${metrics.previousMonthLabelShort}`
-    : `No ${metrics.previousMonthLabelShort} baseline`;
-
-  setMetricValue(summaryElements.sidebarInvestable, metrics.investableSurplus, animate);
+const renderSidebar = (metrics) => {
+  applyStatusPill(statusElements.sidebar, metrics.hasPreviousBaseline ? `${formatSignedPercent(metrics.comparisons.totalSpentChange)} vs ${metrics.previousMonthLabelShort}` : `Sin base de ${metrics.previousMonthLabelShort}`, getTrendTone(metrics.comparisons.totalSpentChange, { lowerIsBetter: true }));
   setTextValue(textElements.sidebarSpendRatio, `${formatValue(metrics.spentRatio, 1)}%`);
   setBarWidth(barElements.sidebarSpendRatio, metrics.spentRatio);
-  applyStatusPill(
-    statusElements.sidebar,
-    sidebarLabel,
-    getTrendTone(metrics.comparisons.totalSpentChange, { lowerIsBetter: true })
-  );
 };
-
 const renderHero = (state, metrics, animate = false) => {
-  const runwayLabel =
-    metrics.transactionCount > 0
-      ? `${Math.max(0, Math.round(metrics.runwayDays))} days at current pace`
-      : "No spending pace yet";
-  const dailyNote = metrics.hasPreviousBaseline
-    ? `${formatSignedPercent(metrics.comparisons.dailyAverageChange)} vs ${metrics.previousMonthLabelShort} pace`
-    : `Average across ${metrics.daysInMonth} days`;
-  const heroLabel = metrics.hasPreviousBaseline
-    ? `${formatSignedPercent(metrics.comparisons.remainingBalanceChange)} vs ${metrics.previousMonthLabelShort}`
-    : `No ${metrics.previousMonthLabelShort} baseline`;
-
-  applyStatusPill(
-    statusElements.hero,
-    heroLabel,
-    getTrendTone(metrics.comparisons.remainingBalanceChange)
-  );
-  setTextValue(
-    textElements.heroCaption,
-    state.income > 0
-      ? `Remaining from ${formatMoney(state.income)} income after ${formatMoney(metrics.totalSpent)} across ${metrics.transactionCount} posted expenses.`
-      : `No income baseline is set yet. ${formatMoney(metrics.totalSpent)} in spending is currently tracked in this workspace.`
-  );
-  setTextValue(labelElements.heroStat1, "Transactions posted");
-  setTextValue(textElements.heroStat1Value, `${metrics.transactionCount} this month`);
-  setTextValue(labelElements.heroStat2, "Active categories");
-  setTextValue(textElements.heroStat2Value, `${metrics.activeCategoryCount} tracked`);
-  setTextValue(textElements.heroRunway, runwayLabel);
-  setBarWidth(
-    barElements.heroRunway,
-    metrics.transactionCount > 0 ? (metrics.runwayDays / metrics.daysInMonth) * 100 : 100
-  );
-
+  applyStatusPill(statusElements.hero, metrics.hasPreviousBaseline ? `${formatSignedPercent(metrics.comparisons.remainingBalanceChange)} vs ${metrics.previousMonthLabelShort}` : `Sin base de ${metrics.previousMonthLabelShort}`, getTrendTone(metrics.comparisons.remainingBalanceChange));
+  setTextValue(textElements.heroCaption, state.income > 0 ? `De ${formatMoney(state.income)} ingresados, llevas ${formatMoney(metrics.totalSpent)} en gastos y te quedan ${formatMoney(metrics.remainingBalance)}.` : `${formatMoney(metrics.totalSpent)} cargados en gastos. Defini tu ingreso para ver el balance real.`);
+  setTextValue(labelElements.heroStat1, "Movimientos");
+  setTextValue(textElements.heroStat1Value, `${metrics.transactionCount} este mes`);
+  setTextValue(labelElements.heroStat2, "Gasto fijo");
+  setTextValue(textElements.heroStat2Value, `${formatValue(metrics.fixedShare, 1)}% del total`);
+  setTextValue(textElements.heroRunway, `${formatValue(metrics.spentRatio, 1)}%`);
+  setBarWidth(barElements.heroRunway, metrics.spentRatio);
   setMetricValue(summaryElements.miniDailyAverage, metrics.dailyAverage, animate);
-  setTextValue(textElements.miniDailyNote, dailyNote);
-
-  setTextValue(labelElements.miniSecondary, "Largest expense");
-  setMetricValue(
-    summaryElements.miniSecondaryValue,
-    metrics.largestExpense ? Number(metrics.largestExpense.amount || 0) : 0,
-    animate
-  );
-  setTextValue(
-    textElements.miniSecondaryNote,
-    metrics.largestExpense
-      ? `${metrics.largestExpense.title} - ${formatDate(metrics.largestExpense.date, {
-          month: "short",
-          day: "numeric",
-          year: undefined,
-        })}`
-      : "No expenses posted yet"
-  );
-
-  setTextValue(labelElements.miniTertiary, "Top category");
-  setTextValue(textElements.miniTertiaryValue, metrics.topCategory ? metrics.topCategory.category : "No category");
-  setTextValue(
-    textElements.miniTertiaryNote,
-    metrics.topCategory
-      ? `${formatMoney(metrics.topCategory.total)} - ${formatValue(metrics.topCategory.share, 1)}% of spend`
-      : "No category mix yet"
-  );
+  setTextValue(textElements.miniDailyNote, metrics.hasPreviousBaseline ? `${formatSignedPercent(metrics.comparisons.dailyAverageChange)} vs ${metrics.previousMonthLabelShort}` : `Sobre ${metrics.elapsedDays} dia(s) cargados`);
+  setTextValue(labelElements.miniSecondary, "Gasto mas alto");
+  setMetricValue(summaryElements.miniSecondaryValue, metrics.largestExpense ? metrics.largestExpense.amount : 0, animate);
+  setTextValue(textElements.miniSecondaryNote, metrics.largestExpense ? `${metrics.largestExpense.title} - ${formatDate(metrics.largestExpense.date, { month: "short", day: "numeric", year: undefined })}` : "Todavía no hay gastos");
+  setTextValue(labelElements.miniTertiary, "Categoria principal");
+  setTextValue(textElements.miniTertiaryValue, metrics.topCategory ? metrics.topCategory.category : "Sin categoria");
+  setTextValue(textElements.miniTertiaryNote, metrics.topCategory ? `${formatMoney(metrics.topCategory.total)} - ${formatValue(metrics.topCategory.share, 1)}% del total` : "Sin mezcla de gastos");
 };
-
 const renderPlanner = (state, metrics, animate = false) => {
-  setTextValue(
-    textElements.plannerNote,
-    state.income > 0
-      ? `Built from ${metrics.transactionCount} posted expenses against a ${formatMoney(state.income)} monthly income baseline.`
-      : `Add income to turn spending activity into balance, reserve, and investment planning.`
-  );
-
-  setTextValue(labelElements.plannerRow1, "Core bills");
-  setMetricValue(summaryElements.plannerRow1Value, metrics.coreSpend, animate);
-  setBarWidth(barElements.plannerRow1, state.income > 0 ? (metrics.coreSpend / state.income) * 100 : 0);
-
-  setTextValue(labelElements.plannerRow2, "Flexible spend");
+  setTextValue(textElements.plannerNote, state.income > 0 ? `Separacion sobre ${formatMoney(state.income)} de ingreso mensual.` : "Primero carga el ingreso para saber cuanto espacio real te queda.");
+  setTextValue(labelElements.plannerRow1, "Gastos fijos");
+  setTextValue(labelElements.plannerRow2, "Gastos variables");
+  setTextValue(labelElements.plannerRow3, "Ahorro del mes");
+  setMetricValue(summaryElements.plannerRow1Value, metrics.fixedSpend, animate);
   setMetricValue(summaryElements.plannerRow2Value, metrics.variableSpend, animate);
-  setBarWidth(
-    barElements.plannerRow2,
-    state.income > 0 ? (metrics.variableSpend / state.income) * 100 : 0
-  );
-
-  setTextValue(labelElements.plannerRow3, "Investable");
-  setMetricValue(summaryElements.plannerRow3Value, metrics.investableSurplus, animate);
-  setBarWidth(
-    barElements.plannerRow3,
-    state.income > 0 ? (metrics.investableSurplus / state.income) * 100 : 0
-  );
-
-  setTextValue(textElements.plannerSectionLabel, "Month breakdown");
-  setTextValue(textElements.plannerItem1Title, "Transactions posted");
-  setTextValue(
-    textElements.plannerItem1Subtitle,
-    `${metrics.activeCategoryCount} categories active in ${metrics.monthLabelShort}`
-  );
-  setTextValue(textElements.plannerItem1Value, String(metrics.transactionCount));
-
-  setTextValue(textElements.plannerItem2Title, "Largest expense");
-  setTextValue(
-    textElements.plannerItem2Subtitle,
-    metrics.largestExpense ? metrics.largestExpense.title : "No expenses posted"
-  );
-  setTextValue(
-    textElements.plannerItem2Value,
-    metrics.largestExpense ? formatMoney(metrics.largestExpense.amount) : "$0"
-  );
-
-  setTextValue(textElements.plannerItem3Title, "Top category");
-  setTextValue(
-    textElements.plannerItem3Subtitle,
-    metrics.topCategory
-      ? `${formatMoney(metrics.topCategory.total)} - ${formatValue(metrics.topCategory.share, 1)}% of spend`
-      : "No category mix yet"
-  );
-  setTextValue(
-    textElements.plannerItem3Value,
-    metrics.topCategory ? metrics.topCategory.category : "No category"
-  );
+  setMetricValue(summaryElements.plannerRow3Value, metrics.savingsAmount, animate);
+  setBarWidth(barElements.plannerRow1, metrics.fixedShare);
+  setBarWidth(barElements.plannerRow2, metrics.variableShare);
+  setBarWidth(barElements.plannerRow3, metrics.savingsRate);
+  setTextValue(textElements.plannerSectionLabel, "Resumen rapido");
+  setTextValue(textElements.plannerItem1Title, "Categoria principal");
+  setTextValue(textElements.plannerItem1Subtitle, metrics.topCategory ? `${formatValue(metrics.topCategory.share, 1)}% del total` : "Sin datos");
+  setTextValue(textElements.plannerItem1Value, metrics.topCategory ? formatMoney(metrics.topCategory.total) : "$0,00");
+  setTextValue(textElements.plannerItem2Title, "Gasto mas alto");
+  setTextValue(textElements.plannerItem2Subtitle, metrics.largestExpense ? metrics.largestExpense.title : "Sin datos");
+  setTextValue(textElements.plannerItem2Value, metrics.largestExpense ? formatMoney(metrics.largestExpense.amount) : "$0,00");
+  setTextValue(textElements.plannerItem3Title, "Promedio diario");
+  setTextValue(textElements.plannerItem3Subtitle, `${metrics.elapsedDays} dia(s) cargados`);
+  setTextValue(textElements.plannerItem3Value, formatMoney(metrics.dailyAverage));
 };
-
 const renderCategoryMix = (metrics) => {
-  if (!categoryLegend) {
+  if (!categoryLegend) return;
+  const legendItems = buildLegendCategories(metrics.categoryBreakdown);
+  setTextValue(textElements.categoryCountPill, `${metrics.activeCategoryCount} categorias activas`);
+  if (!legendItems.length) {
+    categoryLegend.innerHTML = `<div class="legend-item"><div class="legend-item__title"><span class="legend-swatch legend-swatch--slate"></span><span>Sin categorias</span></div><div class="legend-item__value"><strong>0%</strong><span>$0,00</span></div></div>`;
+    if (donutChart) donutChart.style.background = "";
     return;
   }
-
-  const legendCategories = buildLegendCategories(metrics.categoryBreakdown);
-
-  setTextValue(textElements.categoryCountPill, `${metrics.activeCategoryCount} active categories`);
-
-  if (!legendCategories.length) {
-    categoryLegend.innerHTML = `
-      <div class="legend-item">
-        <div class="legend-item__title">
-          <span class="legend-swatch legend-swatch--slate"></span>
-          <span>No categories yet</span>
-        </div>
-        <div class="legend-item__value">
-          <strong>0%</strong>
-          <span>$0</span>
-        </div>
-      </div>
-    `;
-
-    if (donutChart) {
-      donutChart.style.background = "";
-    }
-
-    return;
-  }
-
-  categoryLegend.innerHTML = legendCategories
-    .map((item, index) => {
-      const swatch = CATEGORY_SWATCHES[index % CATEGORY_SWATCHES.length];
-      const shareLabel = `${formatValue(item.share, item.share < 10 ? 1 : 0)}%`;
-
-      return `
-        <div class="legend-item">
-          <div class="legend-item__title">
-            <span class="legend-swatch legend-swatch--${swatch.className}"></span>
-            <span>${escapeHtml(item.category)}</span>
-          </div>
-          <div class="legend-item__value">
-            <strong>${escapeHtml(shareLabel)}</strong>
-            <span>${escapeHtml(formatMoney(item.total))}</span>
-          </div>
-        </div>
-      `;
-    })
-    .join("");
-
+  categoryLegend.innerHTML = legendItems.map((item, index) => { const swatch = CATEGORY_SWATCHES[index % CATEGORY_SWATCHES.length]; return `<div class="legend-item"><div class="legend-item__title"><span class="legend-swatch legend-swatch--${swatch.className}"></span><span>${escapeHtml(item.category)}</span></div><div class="legend-item__value"><strong>${escapeHtml(`${formatValue(item.share, item.share < 10 ? 1 : 0)}%`)}</strong><span>${escapeHtml(formatMoney(item.total))}</span></div></div>`; }).join("");
   if (donutChart) {
     let cursor = 0;
-    const gradientStops = legendCategories.map((item, index) => {
-      const swatch = CATEGORY_SWATCHES[index % CATEGORY_SWATCHES.length];
-      const start = cursor;
-      const end = cursor + item.share;
-      cursor = end;
-      return `${swatch.color} ${start}% ${end}%`;
-    });
-
-    if (cursor < 100) {
-      gradientStops.push(`rgba(255, 255, 255, 0.05) ${cursor}% 100%`);
-    }
-
-    donutChart.style.background = `conic-gradient(${gradientStops.join(", ")})`;
+    const stops = legendItems.map((item, index) => { const swatch = CATEGORY_SWATCHES[index % CATEGORY_SWATCHES.length]; const start = cursor; cursor += item.share; return `${swatch.color} ${start}% ${cursor}%`; });
+    if (cursor < 100) stops.push(`rgba(255,255,255,0.05) ${cursor}% 100%`);
+    donutChart.style.background = `conic-gradient(${stops.join(", ")})`;
   }
 };
-
-const renderLineStatus = (metrics) => {
-  const lineLabel = metrics.transactionCount === 0
-    ? `No spend pace in ${metrics.monthLabelShort}`
-    : metrics.hasPreviousBaseline
-      ? `${formatSignedPercent(metrics.comparisons.dailyAverageChange)} vs ${metrics.previousMonthLabelShort} pace`
-      : `No ${metrics.previousMonthLabelShort} baseline`;
-
-  applyStatusPill(
-    statusElements.line,
-    lineLabel,
-    getTrendTone(metrics.comparisons.dailyAverageChange, { lowerIsBetter: true })
-  );
+const renderLineChart = (metrics) => {
+  if (!lineActualPath || !lineTargetPath || !lineAreaPath || !linePoints || !lineAxis) return;
+  const daily = new Array(metrics.daysInMonth).fill(0);
+  getExpensesForMonth(getState(), metrics.activeMonthKey).forEach((expense) => { const day = getExpenseDate(expense)?.getDate() || 1; daily[day - 1] = roundCurrency(daily[day - 1] + Number(expense.amount || 0)); });
+  const cumulative = daily.reduce((acc, amount) => { acc.push(roundCurrency((acc[acc.length - 1] || 0) + amount)); return acc; }, []);
+  const ticks = [...new Set(Array.from({ length: 7 }, (_, index) => index === 6 ? metrics.daysInMonth : Math.max(1, Math.round(1 + ((metrics.daysInMonth - 1) * index) / 6))))];
+  const actualSeries = ticks.map((day) => cumulative[day - 1] || 0);
+  const projectedTotal = Math.max(metrics.projectedMonthlySpend, metrics.totalSpent, 1);
+  const targetSeries = ticks.map((day) => roundCurrency((projectedTotal / metrics.daysInMonth) * day));
+  const maxValue = Math.max(...actualSeries, ...targetSeries, 1);
+  const points = ticks.map((day, index) => ({ x: 40 + (560 * index) / Math.max(ticks.length - 1, 1), y: 260 - ((actualSeries[index] || 0) / maxValue) * 220 }));
+  const targetPoints = ticks.map((day, index) => ({ x: 40 + (560 * index) / Math.max(ticks.length - 1, 1), y: 260 - ((targetSeries[index] || 0) / maxValue) * 220 }));
+  const path = (set) => set.map((point, index) => `${index ? "L" : "M"}${point.x} ${point.y}`).join(" ");
+  lineActualPath.setAttribute("d", path(points));
+  lineTargetPath.setAttribute("d", path(targetPoints));
+  lineAreaPath.setAttribute("d", `${path(points)} L${points[points.length - 1].x} 260 L${points[0].x} 260 Z`);
+  linePoints.innerHTML = points.map((point) => `<circle cx="${point.x}" cy="${point.y}" r="5"></circle>`).join("");
+  lineAxis.innerHTML = ticks.map((day) => `<span>${day} ${escapeHtml(getMonthLabel(metrics.activeMonthKey, { month: "short", year: undefined }).replace(".", ""))}</span>`).join("");
+  applyStatusPill(statusElements.line, metrics.transactionCount ? (metrics.hasPreviousBaseline ? `${formatSignedPercent(metrics.comparisons.dailyAverageChange)} vs ${metrics.previousMonthLabelShort}` : `Proyeccion ${formatMoney(metrics.projectedMonthlySpend)}`) : "Sin datos", getTrendTone(metrics.comparisons.dailyAverageChange, { lowerIsBetter: true }));
+};
+const renderIncomeCard = (state, metrics, animate = false) => {
+  setMetricValue(summaryElements.incomeHighlight, state.income, animate);
+  setMetricValue(summaryElements.fixedAmount, metrics.fixedSpend, animate);
+  setMetricValue(summaryElements.variableAmount, metrics.variableSpend, animate);
+  setTextValue(textElements.incomeCaption, state.income > 0 ? "Editar el ingreso actualiza balance, ahorro, promedio diario y comparativas al instante." : "Define el ingreso mensual para que el resumen sea real.");
+  if (stackedSegments.length >= 2) { stackedSegments[0].style.width = `${clamp(metrics.fixedShare, 0, 100)}%`; stackedSegments[1].style.width = `${clamp(metrics.variableShare, 0, 100)}%`; }
+  setTextValue(document.querySelector("[data-projection-label]"), metrics.transactionCount ? `${formatValue(metrics.fixedShare, 1)}% fijos - ${formatValue(metrics.variableShare, 1)}% variables` : "Sin gastos cargados");
+  setMetricValue(document.querySelector("[data-projection-output]"), metrics.remainingBalance, animate);
+  setMetricValue(document.querySelector("[data-projection-gain]"), metrics.savingsRate, animate);
+  setTextValue(textElements.savingsAmountText, formatMoney(metrics.savingsAmount));
 };
 
-const calculateInvestmentPlan = (profileName, metrics) => {
-  const normalizedProfileName = profileMeta[profileName] ? profileName : "balanced";
-  const activeProfile = profileMeta[normalizedProfileName];
-  const monthlyInvestable = metrics.investableSurplus;
-  const yearlyContribution = roundCurrency(monthlyInvestable * 12);
-  const futureValue = roundCurrency(calculateFutureValue(monthlyInvestable, activeProfile.annualRate));
-  const projectedGrowth = roundCurrency(futureValue - yearlyContribution);
-
-  return {
-    profileName: normalizedProfileName,
-    ...activeProfile,
-    monthlyInvestable,
-    yearlyContribution,
-    futureValue,
-    projectedGrowth,
-    annualRatePercent: Math.round(activeProfile.annualRate * 100),
-  };
-};
-
-const renderInvestmentPlan = (investmentPlan, metrics, income, animate = false) => {
-  const {
-    profileName,
-    label,
-    split,
-    monthlyInvestable,
-    yearlyContribution,
-    futureValue,
-    projectedGrowth,
-  } = investmentPlan;
-
-  riskOptions.forEach((option) => {
-    const isActive = option.dataset.profile === profileName;
-    option.classList.toggle("is-active", isActive);
-    option.setAttribute("aria-pressed", String(isActive));
-  });
-
-  if (projectionLabel) {
-    projectionLabel.textContent = label;
-  }
-
-  if (stackedSegments.length >= 2) {
-    stackedSegments[0].style.width = `${split[0]}%`;
-    stackedSegments[1].style.width = `${split[1]}%`;
-  }
-
-  setTextValue(
-    textElements.investCaption,
-    income > 0
-      ? monthlyInvestable > 0
-        ? metrics.coreSpend > 0
-          ? `Based on ${formatMoney(metrics.remainingBalance)} free cash with ${formatValue(metrics.reserveRunwayMonths, 1)} months of reserve runway still protected.`
-          : `Based on ${formatMoney(metrics.remainingBalance)} free cash after current month spending and reserve targets.`
-        : "No deployable capital yet. Reduce flexible spending or raise income to reopen your monthly investment lane."
-      : "Add monthly income to model deployable capital and 12-month investment projections."
-  );
-  setMetricValue(summaryElements.investableAmount, monthlyInvestable, animate);
-  setMetricValue(summaryElements.monthlyInvestable, monthlyInvestable, animate);
-  setMetricValue(summaryElements.yearlyInvestable, yearlyContribution, animate);
-  setMetricValue(projectionOutput, futureValue, animate);
-  setMetricValue(projectionGain, projectedGrowth, animate);
-};
-
-const createInsight = ({ key, priority, flag, tone, title, body, meta }) => ({
-  key,
-  priority,
-  flag,
-  tone,
-  title,
-  body,
-  meta,
-});
-
-const calculateMonthlyOpportunityValue = (monthlyAmount, annualRate) =>
-  roundCurrency(calculateFutureValue(monthlyAmount, annualRate));
-
-const generateInsights = (state, metrics, investmentPlan) => {
-  const insights = [];
-  if (metrics.transactionCount === 0) {
-    if (state.income > 0) {
-      return [
-        createInsight({
-          key: "no-activity",
-          priority: 100,
-          flag: "Tracking",
-          tone: "blue",
-          title: `No spending has been recorded for ${metrics.monthLabelLong} yet.`,
-          body: `${formatMoney(state.income)} of monthly income is still unallocated in this view.`,
-          meta: investmentPlan.monthlyInvestable > 0
-            ? `${formatMoney(investmentPlan.monthlyInvestable)} is currently available to invest once real activity starts posting.`
-            : "Add transactions to turn this dashboard into a live operating and investment plan.",
-        }),
-        createInsight({
-          key: "add-activity",
-          priority: 96,
-          flag: "Flow",
-          tone: "mint",
-          title: "Your dashboard is ready for the first real transaction.",
-          body: "Once spending starts flowing in, aleclv finance will surface category drift, pace risk, and opportunity cost automatically.",
-          meta: "Use the add expense action to start building a real monthly baseline.",
-        }),
-      ];
-    }
-
-    return [
-      createInsight({
-        key: "no-income",
-        priority: 100,
-        flag: "Setup",
-        tone: "mint",
-        title: "Add income and expenses to unlock financial guidance.",
-        body: "The dashboard is stable, but savings, investable capital, and pace insights need a monthly income baseline and activity data.",
-        meta: "Start with one income baseline and your first expense to activate projections.",
-      }),
-    ];
-  }
-
-  const mostIncreasedCategory = metrics.hasPreviousBaseline
-    ? metrics.categoryBreakdown
-        .map((category) => {
-          const previousTotal = getCategoryTotal(metrics.previousMonth.categoryBreakdown, category.category);
-          const delta = roundCurrency(category.total - previousTotal);
-          const change = previousTotal > 0 ? getPercentageChange(category.total, previousTotal, true) : null;
-
-          return {
-            ...category,
-            previousTotal,
-            delta,
-            change,
-          };
-        })
-        .filter(
-          (category) =>
-            category.previousTotal > 0 &&
-            category.delta > 25 &&
-            Number.isFinite(category.change)
-        )
-        .sort((left, right) => right.delta - left.delta || right.change - left.change)[0] || null
-    : null;
-  const entertainmentReduction = roundCurrency(metrics.entertainmentSpend * 0.1);
-  const entertainmentPlanValue = calculateMonthlyOpportunityValue(
-    entertainmentReduction,
-    investmentPlan.annualRate
-  );
-  const topCategoryOpportunityValue = calculateMonthlyOpportunityValue(
-    Math.max(mostIncreasedCategory?.delta || 0, 0),
-    investmentPlan.annualRate
-  );
-  const savingsRateChange = metrics.comparisons.savingsRateChange;
-
-  if (mostIncreasedCategory) {
-    insights.push(
-      createInsight({
-        key: "category-compare",
-        priority: 100,
-        flag: mostIncreasedCategory.category,
-        tone: "rose",
-        title: `You spent ${formatValue(Math.abs(mostIncreasedCategory.change), 1)}% more on ${mostIncreasedCategory.category} than last month.`,
-        body: `${formatMoney(mostIncreasedCategory.delta)} more than ${metrics.previousMonthLabelShort} - that could have been added to your monthly investment plan.`,
-        meta: `Repeated monthly, that change would project to ${formatMoney(topCategoryOpportunityValue)} in 12 months at ${investmentPlan.annualRatePercent}%.`,
-      })
-    );
-  }
-
-  if (metrics.topCategory) {
-    insights.push(
-      createInsight({
-        key: "top-category",
-        priority: metrics.hasPreviousBaseline ? 70 : 92,
-        flag: metrics.topCategory.category,
-        tone: "blue",
-        title: `${metrics.topCategory.category} is your top spending category this month.`,
-        body: `${formatMoney(metrics.topCategory.total)} or ${formatValue(metrics.topCategory.share, 1)}% of current monthly spend.`,
-        meta: "This is the fastest category to tighten if you want to create more investable cash.",
-      })
-    );
-  }
-
-  if (metrics.hasPreviousBaseline && Number.isFinite(savingsRateChange) && Math.abs(savingsRateChange) >= 0.5) {
-    const savingsDirection = savingsRateChange >= 0 ? "improved" : "declined";
-
-    insights.push(
-      createInsight({
-        key: "savings-rate",
-        priority: savingsRateChange > 0 ? 96 : 82,
-        flag: "Savings",
-        tone: savingsRateChange > 0 ? "mint" : "blue",
-        title: `Your savings rate ${savingsDirection} by ${formatValue(Math.abs(savingsRateChange), 1)} points vs ${metrics.previousMonthLabelShort}.`,
-        body: `You are keeping ${formatMoney(metrics.remainingBalance)} from this month's ${formatMoney(state.income)} income.`,
-        meta:
-          savingsRateChange > 0
-            ? "Protect the improvement by routing it into your monthly investment plan before spend expands."
-            : "Recovering even one point restores meaningful monthly free cash for investing.",
-      })
-    );
-  }
-
-  if (investmentPlan.monthlyInvestable > 0) {
-    insights.push(
-      createInsight({
-        key: "investable-now",
-        priority: 98,
-        flag: "Investing",
-        tone: "mint",
-        title: `You still have ${formatMoney(investmentPlan.monthlyInvestable)} available to invest.`,
-        body: `At your current pace, month-end investable cash trends toward ${formatMoney(metrics.projectedEndInvestable)}.`,
-        meta: `${formatMoney(investmentPlan.monthlyInvestable)}/month projects to ${formatMoney(investmentPlan.futureValue)} in 12 months at ${investmentPlan.annualRatePercent}%.`,
-      })
-    );
-  } else {
-    insights.push(
-      createInsight({
-        key: "investable-gap",
-        priority: 94,
-        flag: "Investing",
-        tone: "mint",
-        title: "There is no deployable capital available right now.",
-        body: `At your current pace, month-end spending projects to ${formatMoney(metrics.projectedMonthlySpend)}.`,
-        meta: state.income > 0
-          ? `Holding spend near ${formatMoney(metrics.targetDailySpend)}/day helps reopen your investment lane.`
-          : "Add income first, then use spending controls to reopen your investment lane.",
-      })
-    );
-  }
-
-  if (metrics.entertainmentSpend > 0) {
-    insights.push(
-      createInsight({
-        key: "entertainment-cut",
-        priority: 88,
-        flag: "Entertainment",
-        tone: "blue",
-        title: `Reducing Entertainment by 10% would free up ${formatMoney(entertainmentReduction)} monthly.`,
-        body: `That would lift your investable amount to ${formatMoney(metrics.investableSurplus + entertainmentReduction)} this cycle.`,
-        meta: `Repeated monthly, that shift would project to ${formatMoney(entertainmentPlanValue)} in 12 months at ${investmentPlan.annualRatePercent}%.`,
-      })
-    );
-  }
-
-  if (metrics.transactionCount > 0 && metrics.elapsedDays < metrics.daysInMonth) {
-    insights.push(
-      createInsight({
-        key: "spend-pace",
-        priority: 84,
-        flag: "Pace",
-        tone: "blue",
-        title: `Your current pace projects ${formatMoney(metrics.projectedMonthlySpend)} of monthly spending.`,
-        body: `That would leave ${formatMoney(metrics.projectedEndInvestable)} available to invest by month end.`,
-        meta: `Keeping spend near ${formatMoney(metrics.targetDailySpend)}/day preserves the current reserve target.`,
-      })
-    );
-  }
-
-  const rankedInsights = insights
-    .sort((left, right) => right.priority - left.priority)
-    .filter(
-      (insight, index, list) =>
-        list.findIndex((candidate) => candidate.key === insight.key) === index
-    );
-
-  return rankedInsights.slice(0, 3);
-};
-
-const renderInsights = (insights) => {
-  if (!insightList) {
-    return;
-  }
-
-  insightList.innerHTML = insights
-    .map((insight) => {
-      const toneClass = INSIGHT_FLAG_TONES[insight.tone] || INSIGHT_FLAG_TONES.blue;
-
-      return `
-        <article class="insight">
-          <div class="insight__flag ${toneClass}">${escapeHtml(insight.flag)}</div>
-          <div>
-            <strong>${escapeHtml(insight.title)}</strong>
-            <p>${escapeHtml(insight.body)}</p>
-            <span class="insight__meta">${escapeHtml(insight.meta)}</span>
-          </div>
-        </article>
-      `;
-    })
-    .join("");
-};
+const createInsight = (flag, tone, title, body, meta) => ({ flag, tone, title, body, meta });
+const generateInsights = (state, metrics) => !metrics.transactionCount ? [createInsight("Setup", "mint", "Carga tu primer gasto del mes", "Con un ingreso y al menos un gasto vas a ver balance, ahorro, categorias y comparativas reales.", state.income > 0 ? `Ingreso actual: ${formatMoney(state.income)}.` : "Todavía no hay ingreso mensual cargado.")] : [
+  createInsight(metrics.topCategory?.category || "Categoria", "blue", "Categoria principal", metrics.topCategory ? `${metrics.topCategory.category} concentra ${formatValue(metrics.topCategory.share, 1)}% del gasto del mes.` : "Sin categoria dominante.", metrics.topCategory ? `Total: ${formatMoney(metrics.topCategory.total)}.` : "Sin datos."),
+  createInsight("Mayor gasto", "rose", "Gasto mas alto", metrics.largestExpense ? `${metrics.largestExpense.title} fue el gasto mas grande del mes.` : "Todavía no hay gastos.", metrics.largestExpense ? `${formatMoney(metrics.largestExpense.amount)} el ${formatDate(metrics.largestExpense.date, { month: "short", day: "numeric", year: undefined })}.` : "Sin datos."),
+  createInsight("Promedio", "mint", "Promedio diario", `${formatMoney(metrics.dailyAverage)} por dia sobre ${metrics.elapsedDays} dia(s) cargados.`, `Proyeccion al cierre: ${formatMoney(metrics.projectedMonthlySpend)}.`),
+  createInsight("Ahorro", metrics.savingsRate > 0 ? "mint" : "blue", "Tasa de ahorro", state.income > 0 ? `Llevas ${formatValue(metrics.savingsRate, 1)}% de ahorro sobre tu ingreso del mes.` : "Define tu ingreso mensual para calcular la tasa de ahorro.", state.income > 0 ? `${formatMoney(metrics.savingsAmount)} libres sobre ${formatMoney(state.income)}.` : "Sin ingreso cargado."),
+  createInsight("Split", "blue", "Fijos vs variables", `${formatValue(metrics.fixedShare, 1)}% fijos y ${formatValue(metrics.variableShare, 1)}% variables dentro de tus gastos.`, `Fijos: ${formatMoney(metrics.fixedSpend)} - Variables: ${formatMoney(metrics.variableSpend)}.`),
+];
+const renderInsights = (insights) => { if (!insightList) return; insightList.innerHTML = insights.map((insight) => `<article class="insight"><div class="insight__flag ${INSIGHT_FLAG_TONES[insight.tone] || INSIGHT_FLAG_TONES.blue}">${escapeHtml(insight.flag)}</div><div><strong>${escapeHtml(insight.title)}</strong><p>${escapeHtml(insight.body)}</p><span class="insight__meta">${escapeHtml(insight.meta)}</span></div></article>`).join(""); };
 
 const renderDashboard = (animate = false) => {
   const state = getState();
   const metrics = computeDashboardMetrics(state);
-  const investmentPlan = calculateInvestmentPlan(state.selectedInvestmentProfile, metrics);
-  const insights = generateInsights(state, metrics, investmentPlan);
-
   renderPeriod(metrics);
   renderFilterControls(state, metrics);
   renderExpenseList(state, metrics);
   renderExportState(state, metrics);
   renderKpis(state, metrics, animate);
   renderKpiMeta(state, metrics);
-  renderSummaries(metrics, animate);
-  renderSidebar(metrics, animate);
+  renderSummaries(state, metrics, animate);
+  renderSidebar(metrics);
   renderHero(state, metrics, animate);
   renderPlanner(state, metrics, animate);
   renderCategoryMix(metrics);
-  renderLineStatus(metrics);
-  renderInvestmentPlan(investmentPlan, metrics, state.income, animate);
-  renderInsights(insights);
+  renderLineChart(metrics);
+  renderIncomeCard(state, metrics, animate);
+  renderInsights(generateInsights(state, metrics));
 };
 
-const setModalPanel = (panelName) => {
-  modalPanels.forEach((panel) => {
-    panel.hidden = panel.dataset.modalPanel !== panelName;
-  });
-};
-
-const clearFormFeedback = () => {
-  if (formFeedback) {
-    formFeedback.textContent = "";
-  }
-};
-
-const clearIncomeFeedback = () => {
-  if (incomeFeedback) {
-    incomeFeedback.textContent = "";
-  }
-};
-
-const applyFilterPatch = (patch) => {
-  updateState({
-    filters: patch,
-  });
-  renderDashboard(false);
-};
-
-const resetFilters = () => {
-  updateState((currentState) => ({
-    filters: getDefaultFilters(currentState),
-  }));
-  renderDashboard(false);
-};
-
-const openModal = (focusTarget = null) => {
-  if (!modal) {
-    return;
-  }
-
-  if (modal.hidden && document.activeElement instanceof HTMLElement) {
-    uiState.lastFocusedElement = document.activeElement;
-  }
-
-  modal.hidden = false;
-  body.classList.add("modal-open");
+const closeSidebar = () => body.classList.remove("sidebar-open");
+const getScrollBehavior = () => window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ? "auto" : "smooth";
+const setActiveNavItem = (target) => navItems.forEach((item) => item.classList.toggle("is-active", item.dataset.navItem === target));
+const scrollToDashboardSection = (target) => {
+  const section = SECTION_TARGETS[target] || SECTION_TARGETS.dashboard;
+  if (!section) return;
   closeSidebar();
-
-  if (focusTarget instanceof HTMLElement) {
-    window.requestAnimationFrame(() => {
-      focusTarget.focus();
-    });
-  }
+  setActiveNavItem(target);
+  window.requestAnimationFrame(() => window.scrollTo({ top: Math.max(0, window.scrollY + section.getBoundingClientRect().top - ((topbar?.offsetHeight || 0) + NAV_SCROLL_OFFSET)), behavior: getScrollBehavior() }));
 };
 
-const closeModal = () => {
-  if (!modal) {
-    return;
-  }
+const setModalPanel = (panelName) => modalPanels.forEach((panel) => { panel.hidden = panel.dataset.modalPanel !== panelName; });
+const clearFormFeedback = () => { if (formFeedback) formFeedback.textContent = ""; };
+const clearIncomeFeedback = () => { if (incomeFeedback) incomeFeedback.textContent = ""; };
+const applyFilterPatch = (patch) => { updateState({ filters: patch }); renderDashboard(false); };
+const resetFilters = () => { updateState((state) => ({ filters: getDefaultFilters(state) })); renderDashboard(false); };
+const openModal = (focusTarget = null) => { if (!modal) return; if (modal.hidden && document.activeElement instanceof HTMLElement) uiState.lastFocusedElement = document.activeElement; modal.hidden = false; body.classList.add("modal-open"); closeSidebar(); if (focusTarget instanceof HTMLElement) window.requestAnimationFrame(() => focusTarget.focus()); };
+const closeModal = () => { if (!modal) return; modal.hidden = true; body.classList.remove("modal-open"); uiState.modalMode = null; uiState.activeExpenseId = null; clearFormFeedback(); clearIncomeFeedback(); expenseForm?.reset(); incomeForm?.reset(); if (uiState.lastFocusedElement instanceof HTMLElement) window.requestAnimationFrame(() => uiState.lastFocusedElement.focus()); uiState.lastFocusedElement = null; };
+const getExpenseById = (expenseId) => getState().expenses.find((expense) => expense.id === expenseId) || null;
 
-  modal.hidden = true;
-  body.classList.remove("modal-open");
-  uiState.modalMode = null;
-  uiState.activeExpenseId = null;
-  clearFormFeedback();
-  clearIncomeFeedback();
-
-  if (expenseForm) {
-    expenseForm.reset();
-  }
-
-  if (incomeForm) {
-    incomeForm.reset();
-  }
-
-  if (uiState.lastFocusedElement instanceof HTMLElement) {
-    window.requestAnimationFrame(() => {
-      uiState.lastFocusedElement.focus();
-    });
-  }
-
-  uiState.lastFocusedElement = null;
-};
-
-const getExpenseById = (expenseId) =>
-  getState().expenses.find((expense) => expense.id === expenseId) || null;
-
-const openFiltersModal = () => {
-  uiState.modalMode = "filters";
-  setModalPanel("filters");
-  renderDashboard(false);
-  openModal(filterMonthInput || filterCategoryInput);
-};
-
-const openExportModal = () => {
-  uiState.modalMode = "export";
-  setModalPanel("export");
-  renderDashboard(false);
-  const exportFocusTarget = !exportCsvButton?.disabled
-    ? exportCsvButton
-    : !exportJsonButton?.disabled
-      ? exportJsonButton
-      : modalCloseButton;
-
-  openModal(exportFocusTarget);
-};
-
-const openRestoreModal = () => {
-  uiState.modalMode = "restore";
-  setModalPanel("reset");
-  openModal(confirmRestoreButton || modalCloseButton);
-};
-
-const openIncomeModal = () => {
-  if (!incomeForm || !incomeInput) {
-    return;
-  }
-
-  uiState.modalMode = "income";
-  setModalPanel("income");
-  clearIncomeFeedback();
-  incomeForm.reset();
-  incomeInput.value = String(roundCurrency(getState().income));
-  openModal(incomeInput);
-};
-
+const openFiltersModal = () => { uiState.modalMode = "filters"; setModalPanel("filters"); renderDashboard(false); openModal(filterMonthInput || filterCategoryInput); };
+const openExportModal = () => { uiState.modalMode = "export"; setModalPanel("export"); renderDashboard(false); openModal(!exportCsvButton?.disabled ? exportCsvButton : !exportJsonButton?.disabled ? exportJsonButton : modalCloseButton); };
+const openRestoreModal = () => { uiState.modalMode = "restore"; setModalPanel("reset"); openModal(confirmRestoreButton || modalCloseButton); };
+const openIncomeModal = () => { if (!incomeForm || !incomeInput) return; uiState.modalMode = "income"; setModalPanel("income"); clearIncomeFeedback(); incomeForm.reset(); incomeInput.value = String(roundCurrency(getState().income)); openModal(incomeInput); };
 const openExpenseModal = (mode, expense = null) => {
-  if (!expenseForm || !modalTitle || !modalEyebrow || !modalCopy || !formSubmit) {
-    return;
-  }
-
+  if (!expenseForm || !modalTitle || !modalEyebrow || !modalCopy || !formSubmit) return;
   uiState.modalMode = mode;
   uiState.activeExpenseId = expense?.id || null;
-
   setModalPanel("form");
   openModal();
   clearFormFeedback();
   expenseForm.reset();
-
   getFormField("id").value = expense?.id || "";
   getFormField("title").value = expense?.title || "";
   getFormField("amount").value = expense?.amount ? String(expense.amount) : "";
@@ -1773,411 +591,125 @@ const openExpenseModal = (mode, expense = null) => {
   getFormField("date").value = expense?.date ? expense.date.slice(0, 10) : new Date().toISOString().slice(0, 10);
   getFormField("paymentMethod").value = expense?.paymentMethod || "";
   getFormField("note").value = expense?.note || "";
-
-  if (mode === "edit" && expense) {
-    modalEyebrow.textContent = "Update transaction";
-    modalTitle.textContent = "Edit expense";
-    modalCopy.textContent = "Adjust the transaction details and keep the dashboard in sync.";
-    formSubmit.textContent = "Save changes";
-  } else {
-    modalEyebrow.textContent = "Add transaction";
-    modalTitle.textContent = "Add expense";
-    modalCopy.textContent = "Capture a transaction without leaving the dashboard.";
-    formSubmit.textContent = "Save expense";
-  }
-
-  window.requestAnimationFrame(() => {
-    getFormField("title").focus();
-  });
+  getFormField("isFixed").checked = Boolean(expense?.isFixed);
+  modalEyebrow.textContent = mode === "edit" ? "Editar movimiento" : "Agregar movimiento";
+  modalTitle.textContent = mode === "edit" ? "Editar gasto" : "Agregar gasto";
+  modalCopy.textContent = mode === "edit" ? "Actualiza los datos y el resumen del mes se recalcula al instante." : "Carga un gasto real del mes sin salir del dashboard.";
+  formSubmit.textContent = mode === "edit" ? "Guardar cambios" : "Guardar gasto";
+  window.requestAnimationFrame(() => getFormField("title").focus());
 };
-
 const openDeleteModal = (expense) => {
-  if (!expense || !confirmDeleteButton || !confirmTitle || !confirmDate || !confirmCopy || !confirmAmount) {
-    return;
-  }
-
+  if (!expense || !confirmDeleteButton) return;
   uiState.modalMode = "delete";
   uiState.activeExpenseId = expense.id;
-
   confirmTitle.textContent = expense.title;
-  confirmDate.textContent = formatDate(expense.date, {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-  confirmCopy.textContent = expense.note
-    ? expense.note
-    : "You are about to delete this transaction from aleclv finance.";
-  confirmAmount.textContent = `- ${formatCurrency(expense.amount)}`;
-
+  confirmDate.textContent = formatDate(expense.date, { month: "short", day: "numeric", year: "numeric" });
+  confirmCopy.textContent = expense.note || "Vas a eliminar este gasto del registro mensual.";
+  confirmAmount.textContent = `- ${formatMoney(expense.amount)}`;
   setModalPanel("confirm");
-  openModal();
-
-  window.requestAnimationFrame(() => {
-    confirmDeleteButton.focus();
-  });
+  openModal(confirmDeleteButton);
 };
 
-const validateExpensePayload = (payload) => {
-  if (!payload.title || payload.title.trim().length < 2) {
-    return "Add a clear expense title so it is easy to recognize later.";
-  }
-
-  if (!Number.isFinite(payload.amount) || payload.amount <= 0) {
-    return "Enter an amount greater than zero.";
-  }
-
-  if (!payload.category) {
-    return "Choose a category for this expense.";
-  }
-
-  if (!payload.date || Number.isNaN(new Date(payload.date).getTime())) {
-    return "Select a valid transaction date.";
-  }
-
-  if (!payload.paymentMethod || payload.paymentMethod.trim().length < 2) {
-    return "Add the payment method used for this expense.";
-  }
-
-  return "";
-};
-
-const validateIncomeValue = (rawValue, value) => {
-  if (!rawValue) {
-    return "Enter a monthly income amount.";
-  }
-
-  if (!Number.isFinite(value)) {
-    return "Enter a valid monthly income amount.";
-  }
-
-  if (value < 0) {
-    return "Monthly income cannot be negative.";
-  }
-
-  return "";
-};
-
+const validateExpensePayload = (payload) => !payload.title || payload.title.trim().length < 2 ? "Agrega una descripcion clara." : !Number.isFinite(payload.amount) || payload.amount <= 0 ? "Ingresa un monto mayor a cero." : !payload.category ? "Elegí una categoria." : !payload.date || Number.isNaN(new Date(payload.date).getTime()) ? "Selecciona una fecha valida." : !payload.paymentMethod ? "Elegí un medio de pago." : "";
+const validateIncomeValue = (rawValue, value) => !rawValue ? "Ingresa el monto mensual." : !Number.isFinite(value) ? "Ingresa un numero valido." : value < 0 ? "El ingreso no puede ser negativo." : "";
 const buildExpensePayload = () => {
-  if (!expenseForm) {
-    return null;
-  }
-
-  const formData = new FormData(expenseForm);
+  if (!expenseForm) return null;
+  const data = new FormData(expenseForm);
   const existingExpense = uiState.activeExpenseId ? getExpenseById(uiState.activeExpenseId) : null;
-  const submittedDate = String(formData.get("date") || "").trim();
-  const expenseId = existingExpense?.id || String(formData.get("id") || "").trim() || generateId();
-
+  const submittedDate = String(data.get("date") || "").trim();
   return {
-    id: expenseId,
-    title: String(formData.get("title") || "").trim(),
-    amount: roundCurrency(Number(formData.get("amount"))),
-    category: String(formData.get("category") || "").trim(),
+    id: existingExpense?.id || String(data.get("id") || "").trim() || generateId(),
+    title: String(data.get("title") || "").trim(),
+    amount: roundCurrency(Number(data.get("amount"))),
+    category: String(data.get("category") || "").trim(),
     date: submittedDate ? `${submittedDate}T12:00:00` : "",
-    paymentMethod: String(formData.get("paymentMethod") || "").trim(),
-    note: String(formData.get("note") || "").trim(),
+    paymentMethod: String(data.get("paymentMethod") || "").trim(),
+    note: String(data.get("note") || "").trim(),
     createdAt: existingExpense?.createdAt || new Date().toISOString(),
+    isFixed: Boolean(data.get("isFixed")),
   };
 };
 
 const handleExpenseSubmit = (event) => {
   event.preventDefault();
-
   const payload = buildExpensePayload();
-
-  if (!payload) {
-    return;
-  }
-
-  const validationMessage = validateExpensePayload(payload);
-
-  if (validationMessage) {
-    if (formFeedback) {
-      formFeedback.textContent = validationMessage;
-    }
-    return;
-  }
-
-  updateState((currentState) => {
-    if (uiState.modalMode === "edit" && uiState.activeExpenseId) {
-      return {
-        expenses: currentState.expenses.map((expense) =>
-          expense.id === uiState.activeExpenseId
-            ? {
-                ...expense,
-                ...payload,
-                id: expense.id,
-                createdAt: expense.createdAt,
-              }
-            : expense
-        ),
-      };
-    }
-
-    return {
-      expenses: [payload, ...currentState.expenses],
-    };
-  });
-
+  const validation = validateExpensePayload(payload);
+  if (validation) { if (formFeedback) formFeedback.textContent = validation; return; }
+  const wasEditing = uiState.modalMode === "edit";
+  updateState((state) => wasEditing && uiState.activeExpenseId ? { expenses: state.expenses.map((expense) => expense.id === uiState.activeExpenseId ? { ...expense, ...payload, id: expense.id, createdAt: expense.createdAt } : expense) } : { expenses: [payload, ...state.expenses] });
   closeModal();
   renderDashboard(true);
+  showToast(wasEditing ? "Gasto actualizado." : "Gasto agregado.");
 };
-
-const handleDeleteExpense = () => {
-  if (!uiState.activeExpenseId) {
-    return;
-  }
-
-  updateState((currentState) => ({
-    expenses: currentState.expenses.filter((expense) => expense.id !== uiState.activeExpenseId),
-  }));
-
-  closeModal();
-  renderDashboard(true);
-};
-
+const handleDeleteExpense = () => { if (!uiState.activeExpenseId) return; updateState((state) => ({ expenses: state.expenses.filter((expense) => expense.id !== uiState.activeExpenseId) })); closeModal(); renderDashboard(true); showToast("Gasto eliminado."); };
 const handleIncomeSubmit = (event) => {
   event.preventDefault();
-
-  if (!incomeForm) {
-    return;
-  }
-
-  const formData = new FormData(incomeForm);
-  const rawIncome = String(formData.get("income") || "").trim();
-  const submittedIncome = roundCurrency(Number(rawIncome));
-  const validationMessage = validateIncomeValue(rawIncome, submittedIncome);
-
-  if (validationMessage) {
-    if (incomeFeedback) {
-      incomeFeedback.textContent = validationMessage;
-    }
-    return;
-  }
-
-  updateState({
-    income: submittedIncome,
-  });
-
+  const rawIncome = String(new FormData(incomeForm).get("income") || "").trim();
+  const income = roundCurrency(Number(rawIncome));
+  const validation = validateIncomeValue(rawIncome, income);
+  if (validation) { if (incomeFeedback) incomeFeedback.textContent = validation; return; }
+  updateState({ income });
   closeModal();
   renderDashboard(true);
-  showToast("Monthly income updated.");
+  showToast("Ingreso mensual actualizado.");
 };
-
-const handleSearchUpdate = (value) => {
-  const currentState = getState();
-  const normalizedSearch = normalizeSearchValue(value);
-  const shouldRevealActivity = Boolean(normalizedSearch) && !hasSearchFilter(currentState);
-
-  applyFilterPatch({
-    search: normalizedSearch,
-  });
-
-  if (shouldRevealActivity) {
-    scrollToDashboardSection("activity");
-  }
-};
-
-const handleMonthFilterUpdate = (value) => {
-  const state = getState();
-  applyFilterPatch({
-    month: normalizeMonthFilterValue(value, getDefaultFilters(state).month),
-  });
-};
-
-const handleCategoryFilterUpdate = (value) => {
-  applyFilterPatch({
-    category: normalizeCategoryFilterValue(value),
-  });
-};
-
+const handleSearchUpdate = (value) => { const currentState = getState(); const normalized = normalizeSearchValue(value); const shouldReveal = Boolean(normalized) && !hasSearchFilter(currentState); applyFilterPatch({ search: normalized }); if (shouldReveal) scrollToDashboardSection("activity"); };
+const handleMonthFilterUpdate = (value) => applyFilterPatch({ month: normalizeMonthFilterValue(value, getDefaultFilters(getState()).month) });
+const handleCategoryFilterUpdate = (value) => applyFilterPatch({ category: normalizeCategoryFilterValue(value) });
 const exportVisibleExpenses = (format) => {
   const state = getState();
   const { filteredExpenses } = getVisibleExpensesContext(state);
-
-  if (!filteredExpenses.length) {
-    showToast("No visible expenses to export for the current view.", "error");
-    return;
-  }
-
-  const baseFilename = getExportBaseFilename(state);
-  const content = format === "json"
-    ? serializeExpensesToJson(filteredExpenses)
-    : serializeExpensesToCsv(filteredExpenses);
-  const extension = format === "json" ? "json" : "csv";
-  const mimeType = format === "json" ? "application/json;charset=utf-8" : "text/csv;charset=utf-8";
-
-  downloadTextFile(`${baseFilename}.${extension}`, content, mimeType);
+  if (!filteredExpenses.length) return showToast("No hay gastos visibles para exportar.", "error");
+  const content = format === "json" ? serializeExpensesToJson(filteredExpenses) : serializeExpensesToCsv(filteredExpenses);
+  downloadTextFile(`${getExportBaseFilename(state)}.${format}`, content, format === "json" ? "application/json;charset=utf-8" : "text/csv;charset=utf-8");
   closeModal();
-  showToast(`${format.toUpperCase()} export ready for ${getResultsLabel(filteredExpenses.length)}.`);
+  showToast(`Exportacion ${format.toUpperCase()} lista.`);
 };
-
-const restoreDemoData = () => {
-  setState(getDemoState());
-  closeModal();
-  renderDashboard(true);
-  scrollToDashboardSection("dashboard");
-  showToast("Demo activity restored.");
-};
-
-const initializeRiskToggle = () => {
-  if (riskToggleInitialized) {
-    return;
-  }
-
-  riskToggleInitialized = true;
-
-  riskOptions.forEach((option) => {
-    option.addEventListener("click", () => {
-      updateState({
-        selectedInvestmentProfile: option.dataset.profile,
-      });
-      renderDashboard(true);
-    });
-  });
-};
+const restoreDemoData = () => { setState(getDemoState()); closeModal(); renderDashboard(true); scrollToDashboardSection("dashboard"); showToast("Ejemplo restaurado."); };
 
 const initializeModals = () => {
-  if (fab) {
-    fab.addEventListener("click", () => {
-      openExpenseModal("add");
-    });
-  }
-
-  openIncomeButtons.forEach((button) => {
-    button.addEventListener("click", openIncomeModal);
-  });
-
-  openFilterButtons.forEach((button) => {
-    button.addEventListener("click", openFiltersModal);
-  });
-
-  openExportButtons.forEach((button) => {
-    button.addEventListener("click", openExportModal);
-  });
-
-  modalCloseTriggers.forEach((trigger) => {
-    trigger.addEventListener("click", closeModal);
-  });
-
-  if (expenseForm) {
-    expenseForm.addEventListener("submit", handleExpenseSubmit);
-    expenseForm.addEventListener("input", clearFormFeedback);
-    expenseForm.addEventListener("change", clearFormFeedback);
-  }
-
-  if (incomeForm) {
-    incomeForm.addEventListener("submit", handleIncomeSubmit);
-    incomeForm.addEventListener("input", clearIncomeFeedback);
-    incomeForm.addEventListener("change", clearIncomeFeedback);
-  }
-
-  if (confirmDeleteButton) {
-    confirmDeleteButton.addEventListener("click", handleDeleteExpense);
-  }
-
-  if (confirmRestoreButton) {
-    confirmRestoreButton.addEventListener("click", restoreDemoData);
-  }
-
-  if (searchInput) {
-    searchInput.addEventListener("input", (event) => {
-      handleSearchUpdate(event.target.value);
-    });
-  }
-
-  if (filterMonthInput) {
-    filterMonthInput.addEventListener("change", (event) => {
-      handleMonthFilterUpdate(event.target.value);
-    });
-  }
-
-  if (filterCategoryInput) {
-    filterCategoryInput.addEventListener("change", (event) => {
-      handleCategoryFilterUpdate(event.target.value);
-    });
-  }
-
-  if (clearFiltersButton) {
-    clearFiltersButton.addEventListener("click", resetFilters);
-  }
-
-  if (filterForm) {
-    filterForm.addEventListener("submit", (event) => {
-      event.preventDefault();
-      closeModal();
-    });
-  }
-
-  if (exportJsonButton) {
-    exportJsonButton.addEventListener("click", () => {
-      exportVisibleExpenses("json");
-    });
-  }
-
-  if (exportCsvButton) {
-    exportCsvButton.addEventListener("click", () => {
-      exportVisibleExpenses("csv");
-    });
-  }
-
-  modalRestoreButtons.forEach((button) => {
-    button.addEventListener("click", openRestoreModal);
-  });
-
-  if (expenseList) {
-    expenseList.addEventListener("click", (event) => {
-      const listActionTrigger = event.target.closest("[data-list-action]");
-
-      if (listActionTrigger) {
-        const action = listActionTrigger.dataset.listAction;
-
-        if (action === "clear-filters") {
-          resetFilters();
-        } else if (action === "open-filters") {
-          openFiltersModal();
-        } else if (action === "restore-demo") {
-          openRestoreModal();
-        } else if (action === "open-add") {
-          openExpenseModal("add");
-        }
-
-        return;
-      }
-
-      const actionTrigger = event.target.closest("[data-expense-action]");
-
-      if (!actionTrigger) {
-        return;
-      }
-
-      const expenseId = actionTrigger.dataset.expenseId;
-      const expense = getExpenseById(expenseId);
-
-      if (!expense) {
-        return;
-      }
-
-      if (actionTrigger.dataset.expenseAction === "edit") {
-        openExpenseModal("edit", expense);
-        return;
-      }
-
-      if (actionTrigger.dataset.expenseAction === "delete") {
-        openDeleteModal(expense);
-      }
-    });
-  }
-
-  window.addEventListener("keydown", (event) => {
-    if (event.key === "Escape" && modal && !modal.hidden) {
-      closeModal();
+  if (fab) fab.addEventListener("click", () => openExpenseModal("add"));
+  openIncomeButtons.forEach((button) => button.addEventListener("click", openIncomeModal));
+  openFilterButtons.forEach((button) => button.addEventListener("click", openFiltersModal));
+  openExportButtons.forEach((button) => button.addEventListener("click", openExportModal));
+  modalCloseTriggers.forEach((trigger) => trigger.addEventListener("click", closeModal));
+  expenseForm?.addEventListener("submit", handleExpenseSubmit);
+  expenseForm?.addEventListener("input", clearFormFeedback);
+  expenseForm?.addEventListener("change", clearFormFeedback);
+  incomeForm?.addEventListener("submit", handleIncomeSubmit);
+  incomeForm?.addEventListener("input", clearIncomeFeedback);
+  incomeForm?.addEventListener("change", clearIncomeFeedback);
+  confirmDeleteButton?.addEventListener("click", handleDeleteExpense);
+  confirmRestoreButton?.addEventListener("click", restoreDemoData);
+  searchInput?.addEventListener("input", (event) => handleSearchUpdate(event.target.value));
+  filterMonthInput?.addEventListener("change", (event) => handleMonthFilterUpdate(event.target.value));
+  filterCategoryInput?.addEventListener("change", (event) => handleCategoryFilterUpdate(event.target.value));
+  clearFiltersButton?.addEventListener("click", resetFilters);
+  filterForm?.addEventListener("submit", (event) => { event.preventDefault(); closeModal(); });
+  exportJsonButton?.addEventListener("click", () => exportVisibleExpenses("json"));
+  exportCsvButton?.addEventListener("click", () => exportVisibleExpenses("csv"));
+  modalRestoreButtons.forEach((button) => button.addEventListener("click", openRestoreModal));
+  expenseList?.addEventListener("click", (event) => {
+    const listAction = event.target.closest("[data-list-action]");
+    if (listAction) {
+      const action = listAction.dataset.listAction;
+      if (action === "clear-filters") resetFilters();
+      if (action === "open-filters") openFiltersModal();
+      if (action === "restore-demo") openRestoreModal();
+      if (action === "open-add") openExpenseModal("add");
+      return;
     }
+    const actionTrigger = event.target.closest("[data-expense-action]");
+    if (!actionTrigger) return;
+    const expense = getExpenseById(actionTrigger.dataset.expenseId);
+    if (!expense) return;
+    if (actionTrigger.dataset.expenseAction === "edit") return openExpenseModal("edit", expense);
+    if (actionTrigger.dataset.expenseAction === "delete") openDeleteModal(expense);
   });
+  window.addEventListener("keydown", (event) => { if (event.key === "Escape" && modal && !modal.hidden) closeModal(); });
 };
 
 renderDashboard(false);
-initializeRiskToggle();
 initializeModals();
 
 window.addEventListener("load", () => {
@@ -2188,24 +720,7 @@ window.addEventListener("load", () => {
   }, 950);
 });
 
-if (menuToggle) {
-  menuToggle.addEventListener("click", () => {
-    body.classList.toggle("sidebar-open");
-  });
-}
-
-if (backdrop) {
-  backdrop.addEventListener("click", closeSidebar);
-}
-
-navItems.forEach((item) => {
-  item.addEventListener("click", () => {
-    scrollToDashboardSection(item.dataset.navItem);
-  });
-});
-
-window.addEventListener("resize", () => {
-  if (window.innerWidth >= 1120) {
-    closeSidebar();
-  }
-});
+menuToggle?.addEventListener("click", () => body.classList.toggle("sidebar-open"));
+backdrop?.addEventListener("click", closeSidebar);
+navItems.forEach((item) => item.addEventListener("click", () => scrollToDashboardSection(item.dataset.navItem)));
+window.addEventListener("resize", () => { if (window.innerWidth >= 1120) closeSidebar(); });
