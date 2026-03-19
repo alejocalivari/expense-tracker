@@ -75,29 +75,29 @@
         <div class="panel__header panel__header--stack">
           <div>
             <p class="eyebrow">Month to date</p>
-            <h2>$3,520 free cash</h2>
+            <h2><span class="countup" data-summary="sidebar-free-cash" data-countup="3520" data-prefix="$">$3,520</span> free cash</h2>
           </div>
-          <span class="status-pill status-pill--positive">On track</span>
+          <span class="status-pill status-pill--positive" data-summary-status="sidebar">On track</span>
         </div>
         <div class="rail-metric">
           <span>Spent against plan</span>
-          <strong>82%</strong>
+          <strong data-summary-text="sidebar-spend-ratio">82%</strong>
         </div>
         <div class="progress">
-          <span style="width: 82%;"></span>
+          <span data-summary-bar="sidebar-spend-ratio" style="width: 82%;"></span>
         </div>
         <div class="rail-metric">
           <span>Investable this cycle</span>
-          <strong>$1,280</strong>
+          <strong class="countup" data-summary="sidebar-investable" data-countup="1280" data-prefix="$">$1,280</strong>
         </div>
       </section>
 
       <section class="sidebar__footer panel panel--soft">
         <p class="eyebrow">Operator</p>
         <div class="profile-card">
-          <div class="profile-card__avatar">AC</div>
+          <div class="profile-card__avatar">AL</div>
           <div>
-            <strong>Alec Vega</strong>
+            <strong>Alejo</strong>
             <span>Personal workspace</span>
           </div>
         </div>
@@ -115,7 +115,7 @@
           </button>
           <div>
             <p class="eyebrow">Premium personal finance workspace</p>
-            <h2>March cashflow dashboard</h2>
+            <h2 data-period-title>March cashflow dashboard</h2>
           </div>
         </div>
 
@@ -127,7 +127,7 @@
             </svg>
             <input type="text" placeholder="Search merchants, categories, or notes">
           </label>
-          <button class="pill pill--quiet" type="button">Mar 2026</button>
+          <button class="pill pill--quiet" type="button" data-period-pill>Mar 2026</button>
           <button class="button button--ghost" type="button" data-empty-toggle aria-pressed="false">Preview empty state</button>
         </div>
       </header>
@@ -166,23 +166,23 @@
                   <p class="eyebrow">Liquidity snapshot</p>
                   <h3>Cash free after core bills</h3>
                 </div>
-                <span class="status-pill status-pill--positive">+12.4% vs Feb</span>
+                <span class="status-pill status-pill--positive" data-summary-status="hero">+12.4% vs Feb</span>
               </div>
 
               <div class="hero-card__headline">
                 <div>
-                  <p class="hero-card__amount">$3,520</p>
-                  <p class="hero-card__caption">Remaining from $8,450 income after fixed costs, subscriptions, transfers, and planned card payments.</p>
+                  <p class="hero-card__amount countup" data-summary="hero-remaining" data-countup="3520" data-prefix="$">$3,520</p>
+                  <p class="hero-card__caption" data-summary-text="hero-caption">Remaining from $8,450 income after fixed costs, subscriptions, transfers, and planned card payments.</p>
                 </div>
 
                 <div class="hero-stat-cluster">
                   <div class="hero-stat">
-                    <span>Fixed bills cleared</span>
-                    <strong>72%</strong>
+                    <span data-summary-label="hero-stat-1-label">Fixed bills cleared</span>
+                    <strong data-summary-text="hero-stat-1-value">72%</strong>
                   </div>
                   <div class="hero-stat">
-                    <span>Upcoming large bill</span>
-                    <strong>$780</strong>
+                    <span data-summary-label="hero-stat-2-label">Upcoming large bill</span>
+                    <strong data-summary-text="hero-stat-2-value">$780</strong>
                   </div>
                 </div>
               </div>
@@ -190,28 +190,28 @@
               <div class="runway">
                 <div class="runway__labels">
                   <span>Cash runway</span>
-                  <span>21 days at current pace</span>
+                  <span data-summary-text="hero-runway">21 days at current pace</span>
                 </div>
                 <div class="runway__bar">
-                  <span style="width: 72%;"></span>
+                  <span data-summary-bar="hero-runway" style="width: 72%;"></span>
                 </div>
               </div>
 
               <div class="hero-card__footer">
                 <div class="mini-card">
                   <span>Daily burn</span>
-                  <strong>$164</strong>
-                  <small>Down 8% week over week</small>
+                  <strong class="countup" data-summary="mini-daily-average" data-countup="164" data-prefix="$">$164</strong>
+                  <small data-summary-text="mini-daily-note">Down 8% week over week</small>
                 </div>
                 <div class="mini-card">
-                  <span>Planned transfers</span>
-                  <strong>$1,280</strong>
-                  <small>Invest + emergency fund</small>
+                  <span data-summary-label="mini-secondary-label">Planned transfers</span>
+                  <strong class="countup" data-summary="mini-secondary-value" data-countup="1280" data-prefix="$">$1,280</strong>
+                  <small data-summary-text="mini-secondary-note">Invest + emergency fund</small>
                 </div>
                 <div class="mini-card">
-                  <span>Recurring footprint</span>
-                  <strong>$1,940</strong>
-                  <small>Rent, utilities, and subscriptions</small>
+                  <span data-summary-label="mini-tertiary-label">Recurring footprint</span>
+                  <strong data-summary-text="mini-tertiary-value">$1,940</strong>
+                  <small data-summary-text="mini-tertiary-note">Rent, utilities, and subscriptions</small>
                 </div>
               </div>
             </article>
@@ -222,61 +222,61 @@
                   <p class="eyebrow">Capital plan</p>
                   <h3>Bucket allocation</h3>
                 </div>
-                <p class="panel-note">Balanced for cash safety first, then investing.</p>
+                <p class="panel-note" data-summary-text="planner-note">Balanced for cash safety first, then investing.</p>
               </div>
 
               <div class="planner-card__section">
                 <div class="allocation-row">
                   <div class="allocation-row__title">
-                    <span>Operating</span>
-                    <strong>$2,240</strong>
+                    <span data-summary-label="planner-row-1-label">Operating</span>
+                    <strong class="countup" data-summary="planner-row-1-value" data-countup="2240" data-prefix="$">$2,240</strong>
                   </div>
                   <div class="progress progress--tight">
-                    <span style="width: 58%;"></span>
+                    <span data-summary-bar="planner-row-1" style="width: 58%;"></span>
                   </div>
                 </div>
                 <div class="allocation-row">
                   <div class="allocation-row__title">
-                    <span>Savings reserve</span>
-                    <strong>$840</strong>
+                    <span data-summary-label="planner-row-2-label">Savings reserve</span>
+                    <strong class="countup" data-summary="planner-row-2-value" data-countup="840" data-prefix="$">$840</strong>
                   </div>
                   <div class="progress progress--tight">
-                    <span style="width: 22%;"></span>
+                    <span data-summary-bar="planner-row-2" style="width: 22%;"></span>
                   </div>
                 </div>
                 <div class="allocation-row">
                   <div class="allocation-row__title">
-                    <span>Investable</span>
-                    <strong>$1,280</strong>
+                    <span data-summary-label="planner-row-3-label">Investable</span>
+                    <strong class="countup" data-summary="planner-row-3-value" data-countup="1280" data-prefix="$">$1,280</strong>
                   </div>
                   <div class="progress progress--tight progress--accent">
-                    <span style="width: 33%;"></span>
+                    <span data-summary-bar="planner-row-3" style="width: 33%;"></span>
                   </div>
                 </div>
               </div>
 
               <div class="planner-card__section">
-                <p class="planner-card__label">Upcoming</p>
+                <p class="planner-card__label" data-summary-text="planner-section-label">Upcoming</p>
                 <div class="timeline-item">
                   <div>
-                    <strong>Rent transfer</strong>
-                    <span>Mar 26</span>
+                    <strong data-summary-text="planner-item-1-title">Rent transfer</strong>
+                    <span data-summary-text="planner-item-1-subtitle">Mar 26</span>
                   </div>
-                  <strong>$780</strong>
+                  <strong data-summary-text="planner-item-1-value">$780</strong>
                 </div>
                 <div class="timeline-item">
                   <div>
-                    <strong>Brokerage deposit</strong>
-                    <span>Mar 28</span>
+                    <strong data-summary-text="planner-item-2-title">Brokerage deposit</strong>
+                    <span data-summary-text="planner-item-2-subtitle">Mar 28</span>
                   </div>
-                  <strong>$640</strong>
+                  <strong data-summary-text="planner-item-2-value">$640</strong>
                 </div>
                 <div class="timeline-item">
                   <div>
-                    <strong>Utilities autopay</strong>
-                    <span>Mar 30</span>
+                    <strong data-summary-text="planner-item-3-title">Utilities autopay</strong>
+                    <span data-summary-text="planner-item-3-subtitle">Mar 30</span>
                   </div>
-                  <strong>$124</strong>
+                  <strong data-summary-text="planner-item-3-value">$124</strong>
                 </div>
               </div>
             </article>
@@ -286,10 +286,10 @@
             <article class="panel kpi-card kpi-card--income">
               <div class="kpi-card__header">
                 <span>Monthly income</span>
-                <span class="kpi-card__delta">+4.8%</span>
+                <span class="kpi-card__delta" data-kpi-delta="income">+4.8%</span>
               </div>
-              <strong class="kpi-card__value">$8,450</strong>
-              <p class="kpi-card__caption">Salary plus freelance retainer landed on schedule.</p>
+              <strong class="kpi-card__value countup" data-kpi="income" data-countup="8450" data-prefix="$">$8,450</strong>
+              <p class="kpi-card__caption" data-kpi-caption="income">Salary plus freelance retainer landed on schedule.</p>
               <div class="sparkline">
                 <span style="height: 32%;"></span>
                 <span style="height: 46%;"></span>
@@ -303,10 +303,10 @@
             <article class="panel kpi-card kpi-card--spent">
               <div class="kpi-card__header">
                 <span>Total spent</span>
-                <span class="kpi-card__delta">-6.1%</span>
+                <span class="kpi-card__delta" data-kpi-delta="totalSpent">-6.1%</span>
               </div>
-              <strong class="kpi-card__value">$4,930</strong>
-              <p class="kpi-card__caption">Lower than last month after travel costs dropped out.</p>
+              <strong class="kpi-card__value countup" data-kpi="totalSpent" data-countup="4930" data-prefix="$">$4,930</strong>
+              <p class="kpi-card__caption" data-kpi-caption="totalSpent">Lower than last month after travel costs dropped out.</p>
               <div class="sparkline">
                 <span style="height: 38%;"></span>
                 <span style="height: 62%;"></span>
@@ -320,10 +320,10 @@
             <article class="panel kpi-card kpi-card--balance">
               <div class="kpi-card__header">
                 <span>Remaining balance</span>
-                <span class="kpi-card__delta">+12.4%</span>
+                <span class="kpi-card__delta" data-kpi-delta="remainingBalance">+12.4%</span>
               </div>
-              <strong class="kpi-card__value">$3,520</strong>
-              <p class="kpi-card__caption">Room to cover upcoming bills and still keep cash slack.</p>
+              <strong class="kpi-card__value countup" data-kpi="remainingBalance" data-countup="3520" data-prefix="$">$3,520</strong>
+              <p class="kpi-card__caption" data-kpi-caption="remainingBalance">Room to cover upcoming bills and still keep cash slack.</p>
               <div class="sparkline">
                 <span style="height: 24%;"></span>
                 <span style="height: 35%;"></span>
@@ -337,10 +337,10 @@
             <article class="panel kpi-card kpi-card--surplus">
               <div class="kpi-card__header">
                 <span>Investable surplus</span>
-                <span class="kpi-card__delta">+$320</span>
+                <span class="kpi-card__delta" data-kpi-delta="investableSurplus">+$320</span>
               </div>
-              <strong class="kpi-card__value">$1,280</strong>
-              <p class="kpi-card__caption">Safe to deploy after reserve and card payoff targets clear.</p>
+              <strong class="kpi-card__value countup" data-kpi="investableSurplus" data-countup="1280" data-prefix="$">$1,280</strong>
+              <p class="kpi-card__caption" data-kpi-caption="investableSurplus">Safe to deploy after reserve and card payoff targets clear.</p>
               <div class="sparkline">
                 <span style="height: 18%;"></span>
                 <span style="height: 36%;"></span>
@@ -354,10 +354,10 @@
             <article class="panel kpi-card kpi-card--daily">
               <div class="kpi-card__header">
                 <span>Daily average</span>
-                <span class="kpi-card__delta">$164</span>
+                <span class="kpi-card__delta" data-kpi-delta="dailyAverage">$164</span>
               </div>
-              <strong class="kpi-card__value">$164</strong>
-              <p class="kpi-card__caption">Current spend pace sits below the monthly plan baseline.</p>
+              <strong class="kpi-card__value countup" data-kpi="dailyAverage" data-countup="164" data-prefix="$">$164</strong>
+              <p class="kpi-card__caption" data-kpi-caption="dailyAverage">Current spend pace sits below the monthly plan baseline.</p>
               <div class="sparkline">
                 <span style="height: 82%;"></span>
                 <span style="height: 72%;"></span>
@@ -371,10 +371,10 @@
             <article class="panel kpi-card kpi-card--savings">
               <div class="kpi-card__header">
                 <span>Savings rate</span>
-                <span class="kpi-card__delta">35.2%</span>
+                <span class="kpi-card__delta" data-kpi-delta="savingsRate">35.2%</span>
               </div>
-              <strong class="kpi-card__value">35.2%</strong>
-              <p class="kpi-card__caption">A strong buffer before fresh investing or larger purchases.</p>
+              <strong class="kpi-card__value countup" data-kpi="savingsRate" data-countup="35.2" data-suffix="%" data-decimals="1">35.2%</strong>
+              <p class="kpi-card__caption" data-kpi-caption="savingsRate">A strong buffer before fresh investing or larger purchases.</p>
               <div class="sparkline">
                 <span style="height: 26%;"></span>
                 <span style="height: 40%;"></span>
@@ -392,20 +392,20 @@
                 <p class="eyebrow">Distribution</p>
                 <h3>Category mix</h3>
               </div>
-              <span class="pill pill--quiet">6 active categories</span>
+              <span class="pill pill--quiet" data-summary-text="category-count-pill">6 active categories</span>
             </div>
 
             <div class="chart-card__content chart-card__content--split">
               <div class="donut-wrap">
-                <div class="donut-chart">
+                <div class="donut-chart" data-donut-chart>
                   <div class="donut-chart__hole">
                     <span>Total spent</span>
-                    <strong>$4,930</strong>
+                    <strong class="countup" data-summary="chart-total-spent" data-countup="4930" data-prefix="$">$4,930</strong>
                   </div>
                 </div>
               </div>
 
-              <div class="legend-list">
+              <div class="legend-list" data-category-legend>
                 <div class="legend-item">
                   <div class="legend-item__title">
                     <span class="legend-swatch legend-swatch--mint"></span>
@@ -466,7 +466,7 @@
                 <p class="eyebrow">Velocity</p>
                 <h3>Spending over time</h3>
               </div>
-              <span class="status-pill status-pill--neutral">6% below plan</span>
+              <span class="status-pill status-pill--neutral" data-summary-status="line">6% below plan</span>
             </div>
 
             <div class="line-chart__meta">
@@ -534,7 +534,7 @@
               </div>
             </div>
 
-            <div class="expense-list">
+            <div class="expense-list" data-expense-list>
               <article class="expense-row">
                 <div class="expense-row__merchant">
                   <strong>Whole Foods Market</strong>
@@ -737,22 +737,25 @@
                 <article class="insight">
                   <div class="insight__flag insight__flag--rose">Food</div>
                   <div>
-                    <strong>You spent 18% more on food this month</strong>
-                    <p>Most of the increase came from weekday delivery and premium groceries.</p>
+                    <strong>You spent $120 more on food this month -> this could have been invested</strong>
+                    <p>Bringing weekday delivery back to plan restores a full extra contribution in this cycle.</p>
+                    <span class="insight__meta">Decision: trim three delivery orders and redirect $120 into your next transfer.</span>
                   </div>
                 </article>
                 <article class="insight">
                   <div class="insight__flag insight__flag--mint">Investing</div>
                   <div>
-                    <strong>You can still invest $320</strong>
-                    <p>Your reserve threshold stays intact even after the next rent transfer.</p>
+                    <strong>At your current pace, you'll end March with $1,460 available to invest</strong>
+                    <p>Holding daily spend below $160 keeps reserves intact and adds about $180 above today's surplus.</p>
+                    <span class="insight__meta">Decision: keep non-essential spending flat for the next 12 days to lock in the higher transfer.</span>
                   </div>
                 </article>
                 <article class="insight">
-                  <div class="insight__flag insight__flag--blue">Cashflow</div>
+                  <div class="insight__flag insight__flag--blue">Leisure</div>
                   <div>
-                    <strong>Subscriptions are stable at $78 this cycle</strong>
-                    <p>No new recurring charges were detected in the last 30 days.</p>
+                    <strong>Reducing entertainment by 10% would free up $44 monthly</strong>
+                    <p>That one adjustment alone becomes $528 per year before any market growth is applied.</p>
+                    <span class="insight__meta">Decision: cap one leisure purchase per week and auto-route the savings into investing.</span>
                   </div>
                 </article>
               </div>
@@ -768,36 +771,56 @@
 
               <div class="invest-card__amount">
                 <span>Available to invest</span>
-                <strong>$1,280</strong>
+                <strong class="countup" data-summary="investable-amount" data-countup="1280" data-prefix="$">$1,280</strong>
               </div>
 
-              <div class="projection-grid">
+              <p class="invest-card__caption">Based on current cashflow, upcoming bills, and reserve targets already accounted for.</p>
+
+              <div class="risk-toggle" role="group" aria-label="Projection profile">
+                <button class="risk-toggle__option" type="button" data-risk-option data-profile="conservative" data-rate="6">Conservative</button>
+                <button class="risk-toggle__option is-active" type="button" data-risk-option data-profile="balanced" data-rate="8" aria-pressed="true">Balanced</button>
+                <button class="risk-toggle__option" type="button" data-risk-option data-profile="aggressive" data-rate="10">Aggressive</button>
+              </div>
+
+              <div class="projection-grid projection-grid--triple">
                 <div class="projection-tile">
-                  <span>If invested monthly</span>
-                  <strong>$15,360/year</strong>
+                  <span>Monthly investable amount</span>
+                  <strong class="countup" data-summary="monthly-investable" data-countup="1280" data-prefix="$">$1,280</strong>
                 </div>
                 <div class="projection-tile">
-                  <span>12 month target gap</span>
-                  <strong>$2,140 left</strong>
+                  <span>If you invest this monthly</span>
+                  <strong class="countup" data-summary="yearly-investable" data-countup="15360" data-prefix="$" data-suffix="/year">$15,360/year</strong>
+                </div>
+                <div class="projection-tile projection-tile--feature">
+                  <span>Estimated value after 12 months</span>
+                  <strong class="countup" data-projection-output data-countup="15936" data-prefix="$">$15,936</strong>
                 </div>
               </div>
 
               <div class="allocation-note">
                 <div class="allocation-note__header">
-                  <span>Suggested split</span>
-                  <strong>ETF 70% / Cash reserve 30%</strong>
+                  <span>Growth simulation</span>
+                  <strong data-projection-label>Balanced profile at 8% annual return</strong>
                 </div>
                 <div class="stacked-bar">
-                  <span class="stacked-bar__segment stacked-bar__segment--mint" style="width: 70%;"></span>
-                  <span class="stacked-bar__segment stacked-bar__segment--slate" style="width: 30%;"></span>
+                  <span class="stacked-bar__segment stacked-bar__segment--mint" style="width: 68%;"></span>
+                  <span class="stacked-bar__segment stacked-bar__segment--slate" style="width: 32%;"></span>
+                </div>
+                <div class="allocation-note__stats">
+                  <div class="allocation-stat">
+                    <span>Projected growth</span>
+                    <strong class="countup" data-projection-gain data-countup="576" data-prefix="+$">+$576</strong>
+                  </div>
+                  <div class="allocation-stat">
+                    <span>Reserve runway</span>
+                    <strong data-summary-text="reserve-runway">3.1 months intact</strong>
+                  </div>
                 </div>
               </div>
 
               <button class="button button--accent" type="button">Review investment plan</button>
             </article>
           </div>
-        </section>
-
         </section>
 
         <section class="dashboard-state dashboard-state--empty">
@@ -810,28 +833,124 @@
               <div class="empty-card empty-card--mini"></div>
             </div>
 
-            <p class="eyebrow">No finance data yet</p>
-            <h3>Connect accounts to unlock your dashboard</h3>
-            <p class="empty-panel__copy">KPI cards, cashflow trends, and investment guidance will appear here once transactions start flowing in. This preview shows the empty state inside the same premium dashboard system.</p>
+            <p class="eyebrow">No spending history yet</p>
+            <h3>Start tracking your spending to unlock insights and investment potential.</h3>
+            <p class="empty-panel__copy">Once activity starts flowing in, aleclv finance will show where cash is leaking, what can be redirected, and how much is safe to invest each month.</p>
 
             <div class="empty-panel__actions">
-              <button class="button button--accent" type="button" data-restore>Import sample data</button>
+              <button class="button button--accent" type="button" data-restore>Load sample activity</button>
               <button class="button button--ghost" type="button" data-restore>Back to dashboard</button>
             </div>
 
             <div class="empty-panel__foot">
               <div>
-                <span>Next step</span>
-                <strong>Sync your main checking account</strong>
+                <span>First step</span>
+                <strong>Add your first expense</strong>
               </div>
               <div>
-                <span>Expected setup</span>
-                <strong>Under 2 minutes</strong>
+                <span>What you'll unlock</span>
+                <strong>Insights + investable cash</strong>
               </div>
             </div>
           </article>
         </section>
       </main>
+    </div>
+    <button class="fab" type="button" aria-label="Add expense">
+      <span class="fab__icon" aria-hidden="true">+</span>
+      <span class="fab__label">Add expense</span>
+    </button>
+    <div class="app-modal" data-modal hidden>
+      <div class="app-modal__backdrop" data-modal-close></div>
+      <div class="app-modal__dialog panel">
+        <button class="app-modal__close icon-button" type="button" aria-label="Close modal" data-modal-close>
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M6 6 18 18"></path>
+            <path d="M18 6 6 18"></path>
+          </svg>
+        </button>
+
+        <section class="modal-section" data-modal-panel="form">
+          <div class="panel__header panel__header--stack">
+            <div>
+              <p class="eyebrow" data-modal-eyebrow>Add transaction</p>
+              <h3 data-modal-title>Add expense</h3>
+            </div>
+            <p class="panel-note" data-modal-copy>Capture a transaction without leaving the dashboard.</p>
+          </div>
+
+          <form class="expense-form" data-expense-form novalidate>
+            <input type="hidden" name="id">
+            <div class="expense-form__grid">
+              <label class="field">
+                <span class="field__label">Title</span>
+                <input class="field__control" type="text" name="title" placeholder="Merchant or description" maxlength="80" required>
+              </label>
+              <label class="field">
+                <span class="field__label">Amount</span>
+                <input class="field__control" type="number" name="amount" min="0.01" step="0.01" placeholder="0.00" required>
+              </label>
+              <label class="field">
+                <span class="field__label">Category</span>
+                <select class="field__control field__control--select" name="category" required>
+                  <option value="">Select category</option>
+                  <option value="Food">Food</option>
+                  <option value="Transport">Transport</option>
+                  <option value="Housing">Housing</option>
+                  <option value="Utilities">Utilities</option>
+                  <option value="Subscriptions">Subscriptions</option>
+                  <option value="Software">Software</option>
+                  <option value="Lifestyle">Lifestyle</option>
+                  <option value="Leisure">Leisure</option>
+                  <option value="Travel">Travel</option>
+                  <option value="Other">Other</option>
+                </select>
+              </label>
+              <label class="field">
+                <span class="field__label">Date</span>
+                <input class="field__control" type="date" name="date" required>
+              </label>
+              <label class="field field--full">
+                <span class="field__label">Payment method</span>
+                <input class="field__control" type="text" name="paymentMethod" placeholder="Visa ending 2408" maxlength="60" required>
+              </label>
+              <label class="field field--full">
+                <span class="field__label">Note</span>
+                <textarea class="field__control field__control--textarea" name="note" rows="4" placeholder="Optional note or context"></textarea>
+              </label>
+            </div>
+
+            <p class="form-feedback" data-form-feedback role="alert"></p>
+
+            <div class="modal-actions">
+              <button class="button button--ghost" type="button" data-modal-close>Cancel</button>
+              <button class="button button--accent" type="submit" data-form-submit>Save expense</button>
+            </div>
+          </form>
+        </section>
+
+        <section class="modal-section" data-modal-panel="confirm" hidden>
+          <div class="panel__header panel__header--stack">
+            <div>
+              <p class="eyebrow">Delete transaction</p>
+              <h3>Remove expense?</h3>
+            </div>
+            <p class="panel-note">This action updates your dashboard totals immediately and cannot be undone.</p>
+          </div>
+
+          <div class="confirm-card">
+            <strong data-confirm-title>Expense</strong>
+            <span data-confirm-date>Mar 18, 2026</span>
+            <p data-confirm-copy>You are about to delete this transaction from aleclv finance.</p>
+            <strong class="confirm-card__amount" data-confirm-amount>-$0.00</strong>
+          </div>
+
+          <div class="modal-actions">
+            <button class="button button--ghost" type="button" data-modal-close>Cancel</button>
+            <button class="button button--accent button--danger" type="button" data-confirm-delete>Delete expense</button>
+          </div>
+        </section>
+      </div>
     </div>
     <nav class="mobile-nav" aria-label="Mobile">
       <button class="mobile-nav__item is-active" type="button" data-nav-item="dashboard">
@@ -857,6 +976,8 @@
     </nav>
   </div>
 
+  <script src="utils.js"></script>
+  <script src="state.js"></script>
   <script src="script.js"></script>
 </body>
 </html>
