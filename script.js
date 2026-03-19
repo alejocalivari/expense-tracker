@@ -211,8 +211,8 @@ const kpiCaptionElements = {
   goalProgress: document.querySelector('[data-kpi-caption="goalProgress"]'),
 };
 
-const kpiProgressElements = {
-  savingsCapacity: document.querySelector('[data-kpi-progress="savingsCapacity"]'),
+const kpiSecondaryElements = {
+  savingsCapacity: document.querySelector('[data-kpi-secondary="savingsCapacity"]'),
 };
 
 const kpiBarElements = {
@@ -366,10 +366,21 @@ const getSavingsCapacityInsight = (metrics) => {
   }
 
   if (metrics.remainingBalance < 0) {
-    return `Bajo: ya consumiste ${formatPercent(Math.abs(metrics.savingsCapacityPercent), 1)} por encima del ingreso mensual.`;
+    return `Bajo: ya consumiste ${formatPercent(Math.abs(metrics.savingsCapacityPercent), 0)} por encima del ingreso mensual.`;
   }
 
-  return `${getSavingsCapacityStateLabel(metrics.savingsCapacityState)}: estas ahorrando el ${formatPercent(metrics.savingsCapacityPercent, 1)} de tu ingreso mensual.`;
+  return `${getSavingsCapacityStateLabel(metrics.savingsCapacityState)}: estas ahorrando el ${formatPercent(metrics.savingsCapacityPercent, 0)} de tu ingreso mensual.`;
+};
+const getSavingsCapacitySecondaryCopy = (metrics) => {
+  if (!metrics.totalIncome) {
+    return "Carga el ingreso para medir tu margen de ahorro.";
+  }
+
+  if (metrics.savingsCapacityAmount >= 0) {
+    return `${formatMoney(metrics.savingsCapacityAmount)} disponibles para ahorrar`;
+  }
+
+  return `${formatMoney(Math.abs(metrics.savingsCapacityAmount))} por encima del ingreso`;
 };
 const readDecimals = (element) => Number(element?.dataset.decimals || 0);
 const isValidMonthKey = (value) => MONTH_KEY_PATTERN.test(String(value || "").trim());
@@ -1088,7 +1099,7 @@ const renderSplitCard = (metrics, animate) => {
 const renderKpis = (metrics, animate) => {
   animateValue(kpiElements.incomeTotal, metrics.totalIncome, { animate });
   animateValue(kpiElements.totalSpent, metrics.totalSpent, { animate });
-  animateValue(kpiElements.savingsCapacity, metrics.savingsCapacityAmount, { animate });
+  animateValue(kpiElements.savingsCapacity, metrics.savingsCapacityPercent, { animate, decimals: 0, suffix: "%" });
   animateValue(kpiElements.remainingBalance, metrics.remainingBalance, { animate });
   animateValue(kpiElements.savingsAmount, metrics.savingsAmount, { animate });
   animateValue(kpiElements.dailyAverage, metrics.dailyAverage, { animate });
@@ -1098,7 +1109,7 @@ const renderKpis = (metrics, animate) => {
   setTextValue(kpiCaptionElements.incomeTotal, metrics.totalIncome ? "La suma del ingreso base y el ingreso extra del mes." : "Carga el ingreso del mes para activar el tablero completo.");
   setTextValue(kpiDeltaElements.savingsCapacity, getSavingsCapacityStateLabel(metrics.savingsCapacityState));
   setTextValue(kpiCaptionElements.savingsCapacity, getSavingsCapacityInsight(metrics));
-  setTextValue(kpiProgressElements.savingsCapacity, metrics.totalIncome ? formatPercent(metrics.savingsCapacityPercent, 1) : "0%");
+  setTextValue(kpiSecondaryElements.savingsCapacity, getSavingsCapacitySecondaryCopy(metrics));
   setBarWidth(kpiBarElements.savingsCapacity, metrics.savingsCapacityBarPercent);
   applyCapacityState(kpiCardElements.savingsCapacity, metrics.savingsCapacityState);
 
@@ -1381,21 +1392,23 @@ const generateInsights = (metrics) => {
       ? "blue"
       : "slate";
   const dominantCategoryValue = metrics.topCategory ? metrics.topCategory.category : "Sin categoria";
+  const spentRatioValue = metrics.totalIncome > 0 ? formatPercent(metrics.spentRatio, 1) : "Sin ingreso";
+  const savingsCapacityValue = metrics.totalIncome > 0 ? formatPercent(metrics.savingsCapacityPercent, 1) : "Sin ingreso";
   const investedIncomePercent = metrics.totalIncome > 0 ? roundCurrency((metrics.investedThisMonth / metrics.totalIncome) * 100) : 0;
   const investmentTone = metrics.investedThisMonth > 0 ? "amber" : "slate";
   const dominantCategoryDetails = metrics.topCategory
-    ? `${formatPercent(metrics.topCategory.share, 1)} del total - ${formatMoney(metrics.topCategory.total)}.`
+    ? `Tu mayor gasto es ${metrics.topCategory.category} (${formatPercent(metrics.topCategory.share, 1)}).`
     : "Todavia no hay una categoria dominante.";
 
   return [
     createInsight(
       "Uso del ingreso",
       spendingTone,
-      metrics.totalIncome > 0 ? formatPercent(metrics.spentRatio, 1) : "Sin ingreso",
+      spentRatioValue,
       metrics.totalIncome > 0
         ? isSpendingOverIncome
-          ? "Ya estas por encima de tu ingreso mensual."
-          : `Estas usando ${formatPercent(metrics.spentRatio, 1)} de tu ingreso.`
+          ? `Ya estas usando ${spentRatioValue} y superas tu ingreso.`
+          : `Estas usando ${spentRatioValue} de tu ingreso.`
         : metrics.transactionCount
           ? "Carga el ingreso para medir este porcentaje."
           : "Todavia no hay salidas registradas."
@@ -1403,32 +1416,28 @@ const generateInsights = (metrics) => {
     createInsight(
       "Capacidad de ahorro",
       capacityTone,
-      metrics.totalIncome > 0 ? formatPercent(metrics.savingsCapacityPercent, 1) : "Sin ingreso",
+      savingsCapacityValue,
       metrics.totalIncome > 0
         ? metrics.remainingBalance >= 0
-          ? `${formatMoney(metrics.savingsCapacityAmount)} siguen disponibles este mes.`
-          : `Vas ${formatMoney(Math.abs(metrics.remainingBalance))} por encima del ingreso.`
+          ? `Tu capacidad de ahorro es ${savingsCapacityValue}.`
+          : "Tu saldo ya supera el ingreso mensual."
         : "Se calcula con saldo disponible / ingreso total."
     ),
     createInsight(
-      "Ritmo de gasto",
+      "Promedio diario",
       dailyAverageTone,
       formatMoney(metrics.dailyAverage),
       metrics.transactionCount
-        ? `Promedio diario sobre ${formatNumber(metrics.elapsedDays)} dia(s) del mes.`
-        : "Se activara cuando registres movimientos."
+        ? "Promedio diario del mes activo."
+        : "Se activa cuando registras movimientos."
     ),
     createInsight(
       "Proyeccion de cierre",
       projectionTone,
       formatMoney(metrics.projectedMonthlySpend),
       metrics.transactionCount
-        ? metrics.totalIncome > 0
-          ? metrics.projectedMonthlySpend > metrics.totalIncome
-            ? `Si seguis asi, cerrarias ${formatMoney(metrics.projectedMonthlySpend - metrics.totalIncome)} arriba del ingreso.`
-            : `Si seguis asi, te quedarian ${formatMoney(metrics.totalIncome - metrics.projectedMonthlySpend)} dentro del ingreso.`
-          : "Manteniendo el ritmo actual del mes."
-        : "Sin movimientos todavia para proyectar el cierre."
+        ? `Si seguis asi, vas a cerrar en ${formatMoney(metrics.projectedMonthlySpend)}.`
+        : "Sin movimientos para proyectar el cierre."
     ),
     createInsight(
       "Categoria dominante",
@@ -1437,12 +1446,12 @@ const generateInsights = (metrics) => {
       dominantCategoryDetails
     ),
     createInsight(
-      "Inversion",
+      "Inversion del mes",
       investmentTone,
       formatMoney(metrics.investedThisMonth),
       metrics.investedThisMonth > 0
         ? metrics.totalIncome > 0
-          ? `${formatPercent(investedIncomePercent, 1)} del ingreso en ${formatNumber(metrics.investmentTransactionsCount)} aporte(s).`
+          ? `Invertiste ${formatMoney(metrics.investedThisMonth)} (${formatPercent(investedIncomePercent, 1)} del ingreso).`
           : `${formatNumber(metrics.investmentTransactionsCount)} aporte(s) registrados este mes.`
         : "Todavia no registraste aportes en Inversion."
     ),

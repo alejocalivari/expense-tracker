@@ -113,7 +113,7 @@
           <section class="kpi-grid">
             <article class="panel kpi-card kpi-card--income"><div class="kpi-card__header"><span>Ingreso total</span><span class="kpi-card__delta" data-kpi-delta="incomeTotal">Editable</span></div><strong class="kpi-card__value countup" data-kpi="incomeTotal" data-countup="0" data-prefix="$">$0</strong><p class="kpi-card__caption" data-kpi-caption="incomeTotal">Ingreso base mas extra del mes activo.</p><div class="sparkline"><span style="height: 32%;"></span><span style="height: 46%;"></span><span style="height: 40%;"></span><span style="height: 58%;"></span><span style="height: 64%;"></span><span style="height: 88%;"></span></div></article>
             <article class="panel kpi-card kpi-card--spent"><div class="kpi-card__header"><span>Salidas totales</span><span class="kpi-card__delta" data-kpi-delta="totalSpent">Sin base</span></div><strong class="kpi-card__value countup" data-kpi="totalSpent" data-countup="0" data-prefix="$">$0</strong><p class="kpi-card__caption" data-kpi-caption="totalSpent">Las salidas incluyen gastos e inversiones registradas del mes activo.</p><div class="sparkline"><span style="height: 38%;"></span><span style="height: 62%;"></span><span style="height: 76%;"></span><span style="height: 70%;"></span><span style="height: 54%;"></span><span style="height: 43%;"></span></div></article>
-            <article class="panel kpi-card kpi-card--capacity" data-kpi-card="savingsCapacity"><div class="kpi-card__header"><span>Capacidad de ahorro</span><span class="kpi-card__delta" data-kpi-delta="savingsCapacity">Sin ingreso</span></div><strong class="kpi-card__value countup" data-kpi="savingsCapacity" data-countup="0" data-prefix="$">$0</strong><div class="kpi-card__progress-block"><div class="kpi-card__progress-meta"><span>Porcentaje del ingreso</span><strong data-kpi-progress="savingsCapacity">0%</strong></div><div class="progress progress--tight kpi-card__progress"><span data-kpi-bar="savingsCapacity" style="width: 0%;"></span></div></div><p class="kpi-card__caption" data-kpi-caption="savingsCapacity">Carga el ingreso del mes para calcular tu capacidad de ahorro.</p></article>
+            <article class="panel kpi-card kpi-card--capacity" data-kpi-card="savingsCapacity"><div class="kpi-card__header"><span>Capacidad de ahorro</span><span class="kpi-card__delta" data-kpi-delta="savingsCapacity">Sin ingreso</span></div><strong class="kpi-card__value countup" data-kpi="savingsCapacity" data-countup="0" data-suffix="%">0%</strong><p class="kpi-card__secondary" data-kpi-secondary="savingsCapacity">$0 disponibles para ahorrar</p><div class="kpi-card__progress-block"><div class="progress progress--tight kpi-card__progress"><span data-kpi-bar="savingsCapacity" style="width: 0%;"></span></div></div><p class="kpi-card__caption" data-kpi-caption="savingsCapacity">Carga el ingreso del mes para calcular tu capacidad de ahorro.</p></article>
           </section>
           </section>
 
@@ -169,15 +169,20 @@
                 </div>
                 <section class="income-actions-panel">
                   <div class="income-actions-panel__header">
-                    <p class="income-actions-panel__eyebrow">Ajustes del mes</p>
                     <p class="panel-note income-actions-panel__copy" data-summary-text="income-goal-copy">Ajusta tus ingresos y metas para mantener coherencia mensual.</p>
                   </div>
-                  <div class="income-actions-primary">
-                    <button class="button button--accent income-actions-button" type="button" data-open-income>Editar ingreso mensual</button>
-                    <button class="button button--ghost income-actions-button" type="button" data-open-goal>Editar meta mensual</button>
+                  <div class="income-actions-group">
+                    <p class="income-actions-group__title">Ajustes del mes</p>
+                    <div class="income-actions-primary">
+                      <button class="button button--accent income-actions-button income-actions-button--primary" type="button" data-open-income>Editar ingreso mensual</button>
+                      <button class="button button--accent income-actions-button income-actions-button--primary" type="button" data-open-goal>Editar meta mensual</button>
+                    </div>
                   </div>
-                  <div class="income-actions-secondary">
-                    <button class="button button--ghost button--small income-actions-button income-actions-button--secondary" type="button" data-open-investment>Registrar inversion</button>
+                  <div class="income-actions-group income-actions-group--secondary">
+                    <p class="income-actions-group__title">Aportes</p>
+                    <div class="income-actions-secondary">
+                      <button class="button button--ghost button--small income-actions-button income-actions-button--secondary" type="button" data-open-investment>Registrar inversion</button>
+                    </div>
                   </div>
                 </section>
               </article>
