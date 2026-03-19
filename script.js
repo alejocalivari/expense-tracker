@@ -963,7 +963,7 @@ const renderTopbar = (metrics) => {
 };
 
 const renderSidebar = (metrics, animate) => {
-  animateValue(summaryElements.sidebarFreeCash, metrics.remainingBalance, { animate });
+  animateValue(summaryElements.sidebarFreeCash, metrics.liquidityFinal, { animate });
   animateValue(summaryElements.sidebarAvailableToSave, metrics.savingsCapacityAmount, { animate });
   setTextValue(textElements.sidebarSavingsCapacity, metrics.totalIncome ? formatPercent(metrics.savingsCapacityPercent, 1) : "0%");
   setBarWidth(barElements.sidebarSavingsCapacity, metrics.savingsCapacityBarPercent);
@@ -1000,7 +1000,7 @@ const renderHero = (metrics, animate) => {
   animateValue(summaryElements.heroIncome, metrics.totalIncome, { animate });
   animateValue(summaryElements.heroSpent, metrics.totalSpent, { animate });
   animateValue(summaryElements.heroInvested, metrics.investedThisMonth, { animate });
-  setTextValue(textElements.heroLiquidityCopy, "Esto es lo que te queda para vivir hasta el proximo ingreso");
+  setTextValue(textElements.heroLiquidityCopy, "Liquidez hasta pr\u00f3ximo ingreso");
   setTextValue(textElements.heroBalanceNote, `Disponible antes de invertir: ${formatMoney(metrics.remainingBalance)}`);
   setTextValue(
     textElements.heroCaption,
