@@ -2915,6 +2915,28 @@ body.is-loading .dashboard-state--content {
   }
 }
 
+@media (max-width: 768px) {
+  .sidebar,
+  .mobile-backdrop,
+  .topbar__menu {
+    display: none !important;
+  }
+
+  .app-shell {
+    display: block !important;
+    grid-template-columns: 1fr !important;
+  }
+
+  .main-shell {
+    width: 100%;
+  }
+
+  body.sidebar-open .sidebar,
+  body.sidebar-open .mobile-backdrop {
+    display: none !important;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
