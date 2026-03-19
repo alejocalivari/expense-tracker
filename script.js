@@ -25,7 +25,7 @@ const VIEW_TOPBAR_CONFIG = {
     getTitle: () => "plan de ingreso del mes",
     showSearch: false,
     showFilters: false,
-    showIncomeAction: true,
+    showIncomeAction: false,
   },
   actividad: {
     eyebrow: "operaciones del mes",

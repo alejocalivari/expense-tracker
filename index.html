@@ -138,57 +138,132 @@
 
           <section class="dashboard-view view-ingreso is-hidden" data-view="ingreso" hidden>
             <section class="content-grid content-grid--income">
-              <article class="panel income-card">
-                <div class="panel__header"><div><p class="eyebrow">Plan del ingreso</p><h3>Centro de control del mes</h3></div></div>
-                <section class="income-block">
-                  <div class="panel__header panel__header--stack"><div><p class="eyebrow">Ingreso total</p><h3>Base + extra</h3></div><p class="panel-note income-card__caption" data-summary-text="income-caption">Editar ingreso base o extra actualiza salidas, inversion y saldo disponible al instante.</p></div>
-                  <div class="income-card__amount"><span>Ingreso total calculado</span><strong class="countup" data-summary="income-total" data-countup="0" data-prefix="$">$0</strong></div>
-                  <div class="projection-grid projection-grid--triple">
-                    <div class="projection-tile"><span>Ingreso base</span><strong class="countup" data-summary="income-base" data-countup="0" data-prefix="$">$0</strong></div>
-                    <div class="projection-tile"><span>Ingreso extra</span><strong class="countup" data-summary="income-extra" data-countup="0" data-prefix="$">$0</strong></div>
-                    <div class="projection-tile projection-tile--feature"><span>Saldo disponible despues de gastos</span><strong class="countup" data-summary="income-balance" data-countup="0" data-prefix="$">$0</strong></div>
+              <article class="panel income-card income-board">
+                <div class="panel__header income-board__header">
+                  <div>
+                    <p class="eyebrow">Plan del ingreso</p>
+                    <h3>Centro de control del mes</h3>
                   </div>
-                </section>
-                <section class="income-block">
-                  <div class="panel__header panel__header--stack"><div><p class="eyebrow">Capacidad de ahorro</p><h3>Saldo disponible sobre ingreso</h3></div><p class="panel-note" data-summary-text="income-usage-copy">Capacidad de ahorro = saldo disponible / ingreso total.</p></div>
-                  <div class="allocation-note"><div class="allocation-note__header"><span>Capacidad del mes</span><strong data-income-usage-label>0% del ingreso sigue disponible</strong></div><div class="stacked-bar"><span class="stacked-bar__segment stacked-bar__segment--mint" style="width: 50%;"></span><span class="stacked-bar__segment stacked-bar__segment--slate" style="width: 50%;"></span></div><div class="allocation-note__stats"><div class="allocation-stat"><span>Disponible para ahorrar</span><strong class="countup" data-summary="income-capacity-amount" data-countup="0" data-prefix="$">$0</strong></div><div class="allocation-stat"><span>Salidas totales</span><strong class="countup" data-summary="income-spent" data-countup="0" data-prefix="$">$0</strong></div></div></div>
-                </section>
-                <section class="income-block">
-                  <div class="panel__header panel__header--stack"><div><p class="eyebrow">Resultado</p><h3>Disponible para ahorrar + meta</h3></div><p class="panel-note" data-summary-text="income-result-copy">El disponible para ahorrar toma solo el saldo positivo del mes; la meta solo sube con aportes en Inversion.</p></div>
-                  <div class="projection-grid projection-grid--triple income-result-grid">
-                    <div class="projection-tile projection-tile--feature"><span>Disponible para ahorrar</span><strong class="countup" data-summary="income-available-to-save" data-countup="0" data-prefix="$">$0</strong></div>
-                    <div class="projection-tile"><span data-summary-text="income-goal-label">Meta mensual de inversion</span><strong class="countup" data-summary="income-goal-amount" data-countup="0" data-prefix="$">$0</strong></div>
-                    <div class="projection-tile"><span>Invertido este mes</span><strong class="countup" data-summary="income-goal-saved" data-countup="0" data-prefix="$">$0</strong></div>
-                    <div class="projection-tile"><span data-summary-text="income-goal-gap-label">Te falta invertir</span><strong class="countup" data-summary="income-goal-gap" data-countup="0" data-prefix="$">$0</strong></div>
-                  </div>
-                </section>
-              </article>
-              <article class="panel income-actions-card">
-                <div class="panel__header"><div><p class="eyebrow">Acciones del mes</p><h3>Ajustes y aportes</h3></div></div>
-                <div class="income-helper-list">
-                  <div class="income-helper-item"><strong>Saldo disponible</strong><span>Se recalcula como ingreso total menos los gastos reales del mes.</span></div>
-                  <div class="income-helper-item"><strong>Capacidad de ahorro</strong><span>Se calcula con el saldo disponible actual sobre el ingreso total del mes, sin mezclar inversiones.</span></div>
-                  <div class="income-helper-item"><strong>Meta de inversion</strong><span>Solo sube cuando guardas un movimiento en la categoria Inversion.</span></div>
+                  <p class="panel-note income-board__note" data-summary-text="income-caption">Editar ingreso base o extra actualiza salidas, inversion y saldo disponible al instante.</p>
                 </div>
-                <section class="income-actions-panel">
-                  <div class="income-actions-panel__header">
-                    <p class="panel-note income-actions-panel__copy" data-summary-text="income-goal-copy">Ajusta tus ingresos y metas para mantener coherencia mensual.</p>
-                  </div>
-                  <div class="income-actions-group">
-                    <p class="income-actions-group__title">Ajustes del mes</p>
-                    <div class="income-actions-primary">
-                      <button class="button button--accent income-actions-button income-actions-button--primary" type="button" data-open-income>Editar ingreso mensual</button>
-                      <button class="button button--accent income-actions-button income-actions-button--primary" type="button" data-open-goal>Editar meta mensual</button>
+
+                <section class="income-kpi-grid" aria-label="Resumen del ingreso">
+                  <article class="income-kpi-card income-kpi-card--income">
+                    <div class="income-kpi-card__eyebrow">
+                      <span>Ingreso total</span>
+                      <small>Base + extra</small>
+                    </div>
+                    <strong class="income-kpi-card__value countup" data-summary="income-total" data-countup="0" data-prefix="$">$0</strong>
+                  </article>
+                  <article class="income-kpi-card income-kpi-card--balance">
+                    <div class="income-kpi-card__eyebrow">
+                      <span>Saldo disponible</span>
+                      <small>Despues de gastos</small>
+                    </div>
+                    <strong class="income-kpi-card__value countup" data-summary="income-balance" data-countup="0" data-prefix="$">$0</strong>
+                  </article>
+                  <article class="income-kpi-card income-kpi-card--capacity">
+                    <div class="income-kpi-card__eyebrow">
+                      <span>Capacidad de ahorro</span>
+                      <small>Margen actual</small>
+                    </div>
+                    <strong class="income-kpi-card__value income-kpi-card__value--compact" data-income-usage-label>0% del ingreso sigue disponible</strong>
+                  </article>
+                </section>
+
+                <div class="income-board__grid">
+                  <section class="income-block income-block--sources">
+                    <div class="panel__header panel__header--stack">
+                      <div>
+                        <p class="eyebrow">Ingreso</p>
+                        <h3>Composicion del mes</h3>
+                      </div>
+                    </div>
+                    <div class="projection-grid income-source-grid">
+                      <div class="projection-tile">
+                        <span>Ingreso base</span>
+                        <strong class="countup" data-summary="income-base" data-countup="0" data-prefix="$">$0</strong>
+                      </div>
+                      <div class="projection-tile">
+                        <span>Ingreso extra</span>
+                        <strong class="countup" data-summary="income-extra" data-countup="0" data-prefix="$">$0</strong>
+                      </div>
+                    </div>
+                  </section>
+
+                  <section class="income-block income-block--capacity">
+                    <div class="panel__header panel__header--stack">
+                      <div>
+                        <p class="eyebrow">Capacidad</p>
+                        <h3>Disponible frente a salidas</h3>
+                      </div>
+                      <p class="panel-note" data-summary-text="income-usage-copy">Capacidad de ahorro = saldo disponible / ingreso total.</p>
+                    </div>
+                    <div class="allocation-note">
+                      <div class="stacked-bar"><span class="stacked-bar__segment stacked-bar__segment--mint" style="width: 50%;"></span><span class="stacked-bar__segment stacked-bar__segment--slate" style="width: 50%;"></span></div>
+                      <div class="allocation-note__stats">
+                        <div class="allocation-stat">
+                          <span>Disponible para ahorrar</span>
+                          <strong class="countup" data-summary="income-capacity-amount" data-countup="0" data-prefix="$">$0</strong>
+                        </div>
+                        <div class="allocation-stat">
+                          <span>Salidas totales</span>
+                          <strong class="countup" data-summary="income-spent" data-countup="0" data-prefix="$">$0</strong>
+                        </div>
+                      </div>
+                    </div>
+                  </section>
+
+                  <section class="income-block income-block--result">
+                    <div class="panel__header panel__header--stack">
+                      <div>
+                        <p class="eyebrow">Resultado</p>
+                        <h3>Meta y margen real del mes</h3>
+                      </div>
+                      <p class="panel-note" data-summary-text="income-result-copy">El disponible para ahorrar toma solo el saldo positivo del mes; la meta solo sube con aportes en Inversion.</p>
+                    </div>
+                    <div class="projection-grid income-result-grid">
+                      <div class="projection-tile projection-tile--feature">
+                        <span>Disponible para ahorrar</span>
+                        <strong class="countup" data-summary="income-available-to-save" data-countup="0" data-prefix="$">$0</strong>
+                      </div>
+                      <div class="projection-tile">
+                        <span data-summary-text="income-goal-label">Meta mensual de inversion</span>
+                        <strong class="countup" data-summary="income-goal-amount" data-countup="0" data-prefix="$">$0</strong>
+                      </div>
+                      <div class="projection-tile">
+                        <span>Invertido este mes</span>
+                        <strong class="countup" data-summary="income-goal-saved" data-countup="0" data-prefix="$">$0</strong>
+                      </div>
+                      <div class="projection-tile">
+                        <span data-summary-text="income-goal-gap-label">Te falta invertir</span>
+                        <strong class="countup" data-summary="income-goal-gap" data-countup="0" data-prefix="$">$0</strong>
+                      </div>
+                    </div>
+                  </section>
+                </div>
+              </article>
+
+              <aside class="income-rail">
+                <article class="panel income-actions-card">
+                  <div class="panel__header income-actions-card__header">
+                    <div>
+                      <p class="eyebrow">Acciones del mes</p>
+                      <h3>Ajustes y aportes</h3>
                     </div>
                   </div>
-                  <div class="income-actions-group income-actions-group--secondary">
-                    <p class="income-actions-group__title">Aportes</p>
+                  <section class="income-actions-panel">
+                    <span data-summary-text="income-goal-copy" hidden>Ajusta tus ingresos y metas para mantener coherencia mensual.</span>
+                    <div class="income-actions-primary">
+                      <button class="button button--accent income-actions-button income-actions-button--primary" type="button" data-open-income>Editar ingreso mensual</button>
+                      <button class="button button--ghost income-actions-button income-actions-button--primary" type="button" data-open-goal>Editar meta mensual</button>
+                    </div>
                     <div class="income-actions-secondary">
                       <button class="button button--ghost button--small income-actions-button income-actions-button--secondary" type="button" data-open-investment>Registrar inversion</button>
                     </div>
-                  </div>
-                </section>
-              </article>
+                  </section>
+                </article>
+              </aside>
             </section>
           </section>
 
