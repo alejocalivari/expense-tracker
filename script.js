@@ -50,10 +50,11 @@ const CATEGORY_SWATCHES = [
   { className: "slate", color: "var(--accent-slate)" },
 ];
 const STATUS_PILL_CLASSES = ["status-pill--positive", "status-pill--neutral", "status-pill--negative"];
-const INSIGHT_FLAG_TONES = {
-  mint: "insight__flag--mint",
-  blue: "insight__flag--blue",
-  rose: "insight__flag--rose",
+const SAVINGS_CAPACITY_STATES = {
+  neutral: { label: "Sin ingreso" },
+  excellent: { label: "Excelente" },
+  healthy: { label: "Saludable" },
+  low: { label: "Bajo" },
 };
 const DEFAULT_GOAL_LABEL = "Meta mensual de inversion";
 
@@ -183,7 +184,7 @@ const persistActiveView = (viewName) => {
 const kpiElements = {
   incomeTotal: document.querySelector('[data-kpi="incomeTotal"]'),
   totalSpent: document.querySelector('[data-kpi="totalSpent"]'),
-  assignedAmount: document.querySelector('[data-kpi="assignedAmount"]'),
+  savingsCapacity: document.querySelector('[data-kpi="savingsCapacity"]'),
   remainingBalance: document.querySelector('[data-kpi="remainingBalance"]'),
   savingsAmount: document.querySelector('[data-kpi="savingsAmount"]'),
   dailyAverage: document.querySelector('[data-kpi="dailyAverage"]'),
@@ -193,7 +194,7 @@ const kpiElements = {
 const kpiDeltaElements = {
   incomeTotal: document.querySelector('[data-kpi-delta="incomeTotal"]'),
   totalSpent: document.querySelector('[data-kpi-delta="totalSpent"]'),
-  assignedAmount: document.querySelector('[data-kpi-delta="assignedAmount"]'),
+  savingsCapacity: document.querySelector('[data-kpi-delta="savingsCapacity"]'),
   remainingBalance: document.querySelector('[data-kpi-delta="remainingBalance"]'),
   savingsAmount: document.querySelector('[data-kpi-delta="savingsAmount"]'),
   dailyAverage: document.querySelector('[data-kpi-delta="dailyAverage"]'),
@@ -203,11 +204,23 @@ const kpiDeltaElements = {
 const kpiCaptionElements = {
   incomeTotal: document.querySelector('[data-kpi-caption="incomeTotal"]'),
   totalSpent: document.querySelector('[data-kpi-caption="totalSpent"]'),
-  assignedAmount: document.querySelector('[data-kpi-caption="assignedAmount"]'),
+  savingsCapacity: document.querySelector('[data-kpi-caption="savingsCapacity"]'),
   remainingBalance: document.querySelector('[data-kpi-caption="remainingBalance"]'),
   savingsAmount: document.querySelector('[data-kpi-caption="savingsAmount"]'),
   dailyAverage: document.querySelector('[data-kpi-caption="dailyAverage"]'),
   goalProgress: document.querySelector('[data-kpi-caption="goalProgress"]'),
+};
+
+const kpiProgressElements = {
+  savingsCapacity: document.querySelector('[data-kpi-progress="savingsCapacity"]'),
+};
+
+const kpiBarElements = {
+  savingsCapacity: document.querySelector('[data-kpi-bar="savingsCapacity"]'),
+};
+
+const kpiCardElements = {
+  savingsCapacity: document.querySelector('[data-kpi-card="savingsCapacity"]'),
 };
 
 const yearSummaryElements = {
@@ -234,7 +247,7 @@ const summaryElements = {
   incomeExtra: document.querySelector('[data-summary="income-extra"]'),
   incomeBalance: document.querySelector('[data-summary="income-balance"]'),
   incomeSavings: document.querySelector('[data-summary="income-savings"]'),
-  incomeAssigned: document.querySelector('[data-summary="income-assigned"]'),
+  incomeCapacityAmount: document.querySelector('[data-summary="income-capacity-amount"]'),
   incomeSpent: document.querySelector('[data-summary="income-spent"]'),
   incomeGoalAmount: document.querySelector('[data-summary="income-goal-amount"]'),
   incomeGoalSaved: document.querySelector('[data-summary="income-goal-saved"]'),
@@ -244,10 +257,9 @@ const summaryElements = {
 const textElements = {
   periodTitle: document.querySelector("[data-period-title]"),
   periodPill: document.querySelector("[data-period-pill]"),
-  sidebarSpendRatio: document.querySelector('[data-summary-text="sidebar-spend-ratio"]'),
+  sidebarSavingsCapacity: document.querySelector('[data-summary-text="sidebar-savings-capacity"]'),
   heroCaption: document.querySelector('[data-summary-text="hero-caption"]'),
   heroStat2Value: document.querySelector('[data-summary-text="hero-stat-2-value"]'),
-  heroRunway: document.querySelector('[data-summary-text="hero-runway"]'),
   miniDailyNote: document.querySelector('[data-summary-text="mini-daily-note"]'),
   miniSecondaryNote: document.querySelector('[data-summary-text="mini-secondary-note"]'),
   miniTertiaryValue: document.querySelector('[data-summary-text="mini-tertiary-value"]'),
@@ -286,8 +298,7 @@ const labelElements = {
 };
 
 const barElements = {
-  sidebarSpendRatio: document.querySelector('[data-summary-bar="sidebar-spend-ratio"]'),
-  heroRunway: document.querySelector('[data-summary-bar="hero-runway"]'),
+  sidebarSavingsCapacity: document.querySelector('[data-summary-bar="sidebar-savings-capacity"]'),
   goalProgress: document.querySelector('[data-summary-bar="goal-progress"]'),
 };
 
@@ -303,6 +314,8 @@ const stackedSegments = document.querySelectorAll(".stacked-bar__segment");
 const uiState = {
   activeView: readPersistedActiveView(),
   latestMetrics: null,
+  categoryLegendItems: [],
+  categoryHighlightIndex: -1,
   modalMode: null,
   activeExpenseId: null,
   lastFocusedElement: null,
@@ -319,6 +332,45 @@ const formatNumber = (value, decimals = 0) => Number(value || 0).toLocaleString(
 const formatPercent = (value, decimals = 1) => `${formatNumber(value, decimals)}%`;
 const formatSignedCurrency = (value) => `${value > 0 ? "+" : value < 0 ? "-" : ""}${formatMoney(Math.abs(value))}`;
 const formatSignedPercent = (value, decimals = 1) => (Number.isFinite(value) ? `${value > 0 ? "+" : value < 0 ? "-" : ""}${formatNumber(Math.abs(value), decimals)}%` : "Sin base");
+const getSavingsCapacityPercent = (remainingBalance, totalIncome) => (totalIncome > 0 ? roundCurrency((remainingBalance / totalIncome) * 100) : 0);
+const getSavingsCapacityState = (percent, totalIncome) => {
+  if (!(totalIncome > 0)) {
+    return "neutral";
+  }
+
+  if (percent > 40) {
+    return "excellent";
+  }
+
+  if (percent >= 20) {
+    return "healthy";
+  }
+
+  return "low";
+};
+const getSavingsCapacityStateLabel = (state) => SAVINGS_CAPACITY_STATES[state]?.label || SAVINGS_CAPACITY_STATES.low.label;
+const getSavingsCapacityHeadline = (metrics) => {
+  if (!metrics.totalIncome) {
+    return "Todavia no hay ingreso cargado";
+  }
+
+  if (metrics.remainingBalance < 0) {
+    return `${getSavingsCapacityStateLabel(metrics.savingsCapacityState)}: vas ${formatPercent(Math.abs(metrics.savingsCapacityPercent), 1)} por encima del ingreso`;
+  }
+
+  return `${getSavingsCapacityStateLabel(metrics.savingsCapacityState)}: ${formatPercent(metrics.savingsCapacityPercent, 1)} del ingreso sigue disponible`;
+};
+const getSavingsCapacityInsight = (metrics) => {
+  if (!metrics.totalIncome) {
+    return "Carga el ingreso del mes para calcular tu capacidad de ahorro.";
+  }
+
+  if (metrics.remainingBalance < 0) {
+    return `Bajo: ya consumiste ${formatPercent(Math.abs(metrics.savingsCapacityPercent), 1)} por encima del ingreso mensual.`;
+  }
+
+  return `${getSavingsCapacityStateLabel(metrics.savingsCapacityState)}: estas ahorrando el ${formatPercent(metrics.savingsCapacityPercent, 1)} de tu ingreso mensual.`;
+};
 const readDecimals = (element) => Number(element?.dataset.decimals || 0);
 const isValidMonthKey = (value) => MONTH_KEY_PATTERN.test(String(value || "").trim());
 const getExpenseDate = (expense) => {
@@ -432,7 +484,7 @@ const summarizeMonth = (expenses, incomeTotal, monthKey) => {
   const elapsedDays = getElapsedDaysForMonth(monthKey, expenses);
   const dailyAverage = roundCurrency(totalSpent / Math.max(elapsedDays, 1));
   const spentRatio = incomeTotal > 0 ? (totalSpent / incomeTotal) * 100 : 0;
-  const savingsRate = incomeTotal > 0 ? (savingsAmount / incomeTotal) * 100 : 0;
+  const savingsRate = incomeTotal > 0 ? (remainingBalance / incomeTotal) * 100 : 0;
   const largestExpense = expenses.reduce((largest, expense) => {
     if (!largest || Number(expense.amount || 0) > Number(largest.amount || 0)) {
       return expense;
@@ -526,6 +578,8 @@ const computeMetrics = (state) => {
   const goalRemainingAmount = goalAmount > 0 && currentMonth.investedThisMonth < goalAmount ? roundCurrency(goalAmount - currentMonth.investedThisMonth) : 0;
   const goalExceededAmount = goalAmount > 0 && currentMonth.investedThisMonth >= goalAmount ? roundCurrency(currentMonth.investedThisMonth - goalAmount) : 0;
   const isGoalMet = goalAmount > 0 && currentMonth.investedThisMonth >= goalAmount;
+  const savingsCapacityPercent = getSavingsCapacityPercent(currentMonth.remainingBalance, totalIncome);
+  const savingsCapacityState = getSavingsCapacityState(savingsCapacityPercent, totalIncome);
 
   return {
     ...currentMonth,
@@ -537,8 +591,10 @@ const computeMetrics = (state) => {
     incomeBase: Number(state.incomeBase || 0),
     incomeExtra: Number(state.incomeExtra || 0),
     totalIncome,
-    assignedAmount: currentMonth.totalSpent,
-    assignedPercent: currentMonth.spentRatio,
+    savingsCapacityAmount: currentMonth.remainingBalance,
+    savingsCapacityPercent,
+    savingsCapacityBarPercent: clamp(savingsCapacityPercent, 0, 100),
+    savingsCapacityState,
     goalAmount,
     goalLabel,
     goalProgressPercent,
@@ -674,6 +730,12 @@ const applyStatusPill = (element, label, tone = "neutral") => {
   element.textContent = label;
   element.classList.remove(...STATUS_PILL_CLASSES);
   element.classList.add(`status-pill--${tone}`);
+};
+
+const applyCapacityState = (element, state) => {
+  if (element) {
+    element.dataset.capacityState = state;
+  }
 };
 
 const getTrendTone = (difference, { lowerIsBetter = false } = {}) => {
@@ -849,8 +911,8 @@ const renderTopbar = (metrics) => {
 const renderSidebar = (metrics, animate) => {
   animateValue(summaryElements.sidebarFreeCash, metrics.remainingBalance, { animate });
   animateValue(summaryElements.sidebarSavings, metrics.savingsAmount, { animate });
-  setTextValue(textElements.sidebarSpendRatio, formatPercent(metrics.spentRatio, 1));
-  setBarWidth(barElements.sidebarSpendRatio, metrics.spentRatio);
+  setTextValue(textElements.sidebarSavingsCapacity, metrics.totalIncome ? formatPercent(metrics.savingsCapacityPercent, 1) : "0%");
+  setBarWidth(barElements.sidebarSavingsCapacity, metrics.savingsCapacityBarPercent);
 
   if (!metrics.totalIncome) {
     applyStatusPill(statusElements.sidebar, "Cargar ingreso", "neutral");
@@ -904,8 +966,6 @@ const renderHero = (metrics, animate) => {
   setTextValue(labelElements.heroStat1, "Invertido este mes");
   setTextValue(labelElements.heroStat2, "Progreso de inversion");
   setTextValue(textElements.heroStat2Value, metrics.goalAmount > 0 ? formatPercent(metrics.goalProgressPercent, 1) : "Sin meta");
-  setTextValue(textElements.heroRunway, formatPercent(metrics.spentRatio, 1));
-  setBarWidth(barElements.heroRunway, metrics.spentRatio);
   animateValue(summaryElements.miniDailyAverage, metrics.dailyAverage, { animate });
   animateValue(summaryElements.miniSecondaryValue, goalGapValue, { animate });
   setTextValue(textElements.miniDailyNote, metrics.transactionCount ? `${metrics.elapsedDays} dia(s) tomados para el promedio.` : "Sin salidas en el mes activo");
@@ -1028,7 +1088,7 @@ const renderSplitCard = (metrics, animate) => {
 const renderKpis = (metrics, animate) => {
   animateValue(kpiElements.incomeTotal, metrics.totalIncome, { animate });
   animateValue(kpiElements.totalSpent, metrics.totalSpent, { animate });
-  animateValue(kpiElements.assignedAmount, metrics.assignedAmount, { animate });
+  animateValue(kpiElements.savingsCapacity, metrics.savingsCapacityAmount, { animate });
   animateValue(kpiElements.remainingBalance, metrics.remainingBalance, { animate });
   animateValue(kpiElements.savingsAmount, metrics.savingsAmount, { animate });
   animateValue(kpiElements.dailyAverage, metrics.dailyAverage, { animate });
@@ -1036,8 +1096,11 @@ const renderKpis = (metrics, animate) => {
 
   setTextValue(kpiDeltaElements.incomeTotal, metrics.totalIncome ? `${formatMoney(metrics.incomeBase)} base + ${formatMoney(metrics.incomeExtra)} extra` : "Editable");
   setTextValue(kpiCaptionElements.incomeTotal, metrics.totalIncome ? "La suma del ingreso base y el ingreso extra del mes." : "Carga el ingreso del mes para activar el tablero completo.");
-  setTextValue(kpiDeltaElements.assignedAmount, metrics.totalIncome ? formatPercent(metrics.assignedPercent, 1) : "Sin ingreso");
-  setTextValue(kpiCaptionElements.assignedAmount, "Parte del ingreso que ya fue utilizada en salidas e inversion.");
+  setTextValue(kpiDeltaElements.savingsCapacity, getSavingsCapacityStateLabel(metrics.savingsCapacityState));
+  setTextValue(kpiCaptionElements.savingsCapacity, getSavingsCapacityInsight(metrics));
+  setTextValue(kpiProgressElements.savingsCapacity, metrics.totalIncome ? formatPercent(metrics.savingsCapacityPercent, 1) : "0%");
+  setBarWidth(kpiBarElements.savingsCapacity, metrics.savingsCapacityBarPercent);
+  applyCapacityState(kpiCardElements.savingsCapacity, metrics.savingsCapacityState);
 
   if (metrics.hasPreviousData) {
     setTextValue(kpiDeltaElements.totalSpent, formatSignedPercent(metrics.comparisons.totalSpent.percent));
@@ -1084,7 +1147,7 @@ const renderIncomeCard = (metrics, animate) => {
   animateValue(summaryElements.incomeExtra, metrics.incomeExtra, { animate });
   animateValue(summaryElements.incomeBalance, metrics.remainingBalance, { animate });
   animateValue(summaryElements.incomeSavings, metrics.savingsAmount, { animate });
-  animateValue(summaryElements.incomeAssigned, metrics.assignedAmount, { animate });
+  animateValue(summaryElements.incomeCapacityAmount, metrics.savingsCapacityAmount, { animate });
   animateValue(summaryElements.incomeSpent, metrics.totalSpent, { animate });
   animateValue(summaryElements.incomeGoalAmount, metrics.goalAmount, { animate });
   animateValue(summaryElements.incomeGoalSaved, metrics.investedThisMonth, { animate });
@@ -1098,22 +1161,20 @@ const renderIncomeCard = (metrics, animate) => {
   setTextValue(
     textElements.incomeUsageCopy,
     metrics.totalIncome
-      ? "Cada gasto o aporte registrado pasa a dinero asignado y reduce el saldo disponible del mes."
-      : "Cuando cargues ingreso y movimientos vas a ver cuanto del mes ya esta comprometido."
+      ? "Capacidad de ahorro = saldo disponible / ingreso total. Cada gasto o inversion reduce este margen al instante."
+      : "Cuando cargues ingreso y movimientos vas a ver cuanta capacidad de ahorro real te queda."
   );
   setTextValue(textElements.incomeGoalLabel, metrics.goalLabel);
   setTextValue(textElements.incomeGoalGapLabel, incomeGoalGapLabel);
   setTextValue(
     textElements.incomeGoalCopy,
     metrics.goalAmount > 0
-      ? `Ingreso, meta y aportes se coordinan desde aqui para que el cierre del mes sea coherente.`
-      : "Carga ingreso y define una meta mensual para convertir esta vista en tu centro de control."
+      ? "Ajusta tus ingresos y metas para mantener coherencia mensual."
+      : "Carga ingreso y define una meta mensual para ordenar el plan del mes desde aqui."
   );
   setTextValue(
     textElements.incomeUsageLabel,
-    metrics.totalIncome
-      ? `${formatPercent(metrics.assignedPercent, 1)} del ingreso ya fue asignado`
-      : "Todavia no hay ingreso cargado"
+    getSavingsCapacityHeadline(metrics)
   );
   setTextValue(
     textElements.incomeResultCopy,
@@ -1123,13 +1184,78 @@ const renderIncomeCard = (metrics, animate) => {
   );
 
   if (stackedSegments.length >= 2) {
-    stackedSegments[0].style.width = `${clamp(metrics.spentRatio, 0, 100)}%`;
-    stackedSegments[1].style.width = `${clamp(100 - metrics.spentRatio, 0, 100)}%`;
+    stackedSegments[0].style.width = `${metrics.savingsCapacityBarPercent}%`;
+    stackedSegments[1].style.width = `${clamp(100 - metrics.savingsCapacityBarPercent, 0, 100)}%`;
   }
 
   if (incomeTotalPreview && uiState.modalMode !== "income") {
     animateValue(incomeTotalPreview, metrics.totalIncome, { animate: false });
   }
+};
+
+const getCategoryMixStopColor = (swatchColor, index, highlightedIndex) => {
+  if (highlightedIndex < 0) {
+    return swatchColor;
+  }
+
+  if (highlightedIndex === index) {
+    return `color-mix(in srgb, ${swatchColor} 76%, white)`;
+  }
+
+  return `color-mix(in srgb, ${swatchColor} 34%, #0c1219)`;
+};
+
+const buildCategoryMixGradient = (legendItems, highlightedIndex = -1) => {
+  let cursor = 0;
+  const stops = legendItems.map((item, index) => {
+    const swatch = CATEGORY_SWATCHES[index % CATEGORY_SWATCHES.length];
+    const start = cursor;
+    cursor += item.share;
+    return `${getCategoryMixStopColor(swatch.color, index, highlightedIndex)} ${start}% ${cursor}%`;
+  });
+
+  if (cursor < 100) {
+    stops.push(`rgba(255,255,255,0.05) ${cursor}% 100%`);
+  }
+
+  return `conic-gradient(from -90deg, ${stops.join(", ")})`;
+};
+
+const setCategoryMixHighlight = (nextIndex = -1) => {
+  if (uiState.categoryHighlightIndex === nextIndex) {
+    return;
+  }
+
+  uiState.categoryHighlightIndex = nextIndex;
+  applyCategoryMixHighlight();
+};
+
+const applyCategoryMixHighlight = () => {
+  if (!donutChart) {
+    return;
+  }
+
+  const legendItems = uiState.categoryLegendItems || [];
+  const highlightedIndex = Number.isInteger(uiState.categoryHighlightIndex) && uiState.categoryHighlightIndex >= 0 && uiState.categoryHighlightIndex < legendItems.length
+    ? uiState.categoryHighlightIndex
+    : -1;
+
+  donutChart.style.background = legendItems.length
+    ? buildCategoryMixGradient(legendItems, highlightedIndex)
+    : "conic-gradient(from -90deg, rgba(255,255,255,0.08) 0 100%)";
+  donutChart.classList.toggle("is-highlighted", highlightedIndex >= 0);
+
+  if (!categoryLegend) {
+    return;
+  }
+
+  categoryLegend.querySelectorAll(".legend-item").forEach((item, index) => {
+    const isActive = highlightedIndex === index;
+    const isDimmed = highlightedIndex >= 0 && !isActive;
+
+    item.classList.toggle("is-active", isActive);
+    item.classList.toggle("is-dimmed", isDimmed);
+  });
 };
 
 const renderCategoryMix = (metrics, animate) => {
@@ -1141,18 +1267,25 @@ const renderCategoryMix = (metrics, animate) => {
   }
 
   if (!metrics.categoryBreakdown.length) {
+    uiState.categoryLegendItems = [];
+    uiState.categoryHighlightIndex = -1;
     categoryLegend.innerHTML = '<div class="expense-list__empty"><strong>Sin categorias</strong><p>Carga salidas para ver la mezcla del mes.</p></div>';
     if (donutChart) {
-      donutChart.style.background = "conic-gradient(rgba(255,255,255,0.08) 0 100%)";
+      donutChart.style.background = "conic-gradient(from -90deg, rgba(255,255,255,0.08) 0 100%)";
+      donutChart.classList.remove("is-highlighted");
     }
     return;
   }
 
   const legendItems = buildLegendCategories(metrics.categoryBreakdown);
+  uiState.categoryLegendItems = legendItems;
+  if (uiState.categoryHighlightIndex >= legendItems.length) {
+    uiState.categoryHighlightIndex = -1;
+  }
   categoryLegend.innerHTML = legendItems
     .map((item, index) => {
       const swatch = CATEGORY_SWATCHES[index % CATEGORY_SWATCHES.length];
-      return `<div class="legend-item"><div class="legend-item__title"><span class="legend-swatch legend-swatch--${swatch.className}"></span><span>${escapeHtml(item.category)}</span></div><div class="legend-item__value"><strong>${escapeHtml(formatPercent(item.share, item.share < 10 ? 1 : 0))}</strong><span>${escapeHtml(formatMoney(item.total))}</span></div></div>`;
+      return `<div class="legend-item" data-legend-index="${index}" tabindex="0" style="--legend-accent:${swatch.color};"><div class="legend-item__title"><span class="legend-swatch" aria-hidden="true"></span><span>${escapeHtml(item.category)}</span></div><div class="legend-item__value"><strong>${escapeHtml(formatPercent(item.share, item.share < 10 ? 1 : 0))}</strong><span>${escapeHtml(formatMoney(item.total))}</span></div></div>`;
     })
     .join("");
 
@@ -1160,19 +1293,7 @@ const renderCategoryMix = (metrics, animate) => {
     return;
   }
 
-  let cursor = 0;
-  const stops = legendItems.map((item, index) => {
-    const swatch = CATEGORY_SWATCHES[index % CATEGORY_SWATCHES.length];
-    const start = cursor;
-    cursor += item.share;
-    return `${swatch.color} ${start}% ${cursor}%`;
-  });
-
-  if (cursor < 100) {
-    stops.push(`rgba(255,255,255,0.05) ${cursor}% 100%`);
-  }
-
-  donutChart.style.background = `conic-gradient(${stops.join(", ")})`;
+  applyCategoryMixHighlight();
 };
 
 const renderLineChart = (metrics) => {
@@ -1226,75 +1347,105 @@ const renderLineChart = (metrics) => {
   );
 };
 
-const createInsight = (flag, tone, title, body, meta, options = {}) => ({
-  flag,
+const createInsight = (label, tone, value, copy) => ({
+  label,
   tone,
-  title,
-  body,
-  meta,
-  primary: Boolean(options.primary),
+  value,
+  copy,
 });
 
 const generateInsights = (metrics) => {
-  if (!metrics.transactionCount) {
-    return [
-      createInsight(
-        "Flujo",
-        "blue",
-        "Sin salidas registradas",
-        `Todavia no hay movimientos en ${metrics.monthLabelLong}.`,
-        metrics.totalIncome ? `Ingreso actual: ${formatMoney(metrics.totalIncome)}.` : "Carga el ingreso para leer el flujo.",
-        { primary: true }
-      ),
-      createInsight(
-        "Meta",
-        "mint",
-        "Meta mensual",
-        metrics.goalAmount ? `${formatMoney(metrics.goalAmount)} para ${metrics.goalLabel}.` : "Sin meta mensual cargada.",
-        "Solo avanza con Inversion."
-      ),
-    ];
-  }
-
   const isSpendingOverIncome = metrics.totalIncome > 0 && metrics.projectedMonthlySpend > metrics.totalIncome;
   const spendingTone = isSpendingOverIncome ? "rose" : metrics.totalIncome > 0 && metrics.spentRatio <= 70 ? "mint" : "blue";
-  const topCategoryInsight = metrics.topCategory
-    ? createInsight(
-        metrics.topCategory.category,
-        "blue",
-        "Categoria principal",
-        `${metrics.topCategory.category}: ${formatPercent(metrics.topCategory.share, 1)} del total.`,
-        `${formatMoney(metrics.topCategory.total)} en el mes.`
-      )
-    : createInsight("Categoria", "blue", "Categoria principal", "Sin categoria dominante.", "Sin datos.");
+  const capacityTone = metrics.totalIncome > 0
+    ? metrics.savingsCapacityState === "low"
+      ? "rose"
+      : metrics.savingsCapacityState === "excellent"
+        ? "mint"
+        : "blue"
+    : "slate";
+  const dailyAverageTone = metrics.transactionCount
+    ? metrics.hasPreviousData
+      ? metrics.comparisons.dailyAverage.difference < 0
+        ? "mint"
+        : metrics.comparisons.dailyAverage.difference > 0
+          ? "rose"
+          : "blue"
+      : "blue"
+    : "slate";
+  const projectionTone = metrics.totalIncome > 0
+    ? metrics.projectedMonthlySpend > metrics.totalIncome
+      ? "rose"
+      : "mint"
+    : metrics.transactionCount
+      ? "blue"
+      : "slate";
+  const dominantCategoryValue = metrics.topCategory ? metrics.topCategory.category : "Sin categoria";
+  const investedIncomePercent = metrics.totalIncome > 0 ? roundCurrency((metrics.investedThisMonth / metrics.totalIncome) * 100) : 0;
+  const investmentTone = metrics.investedThisMonth > 0 ? "amber" : "slate";
+  const dominantCategoryDetails = metrics.topCategory
+    ? `${formatPercent(metrics.topCategory.share, 1)} del total - ${formatMoney(metrics.topCategory.total)}.`
+    : "Todavia no hay una categoria dominante.";
 
   return [
     createInsight(
-      "Uso",
+      "Uso del ingreso",
       spendingTone,
-      metrics.totalIncome > 0 ? `Estas usando ${formatPercent(metrics.spentRatio, 1)} de tu ingreso` : "Salidas del mes registradas",
+      metrics.totalIncome > 0 ? formatPercent(metrics.spentRatio, 1) : "Sin ingreso",
       metrics.totalIncome > 0
         ? isSpendingOverIncome
-          ? "El ritmo actual supera tu ingreso mensual."
-          : `${formatMoney(metrics.assignedAmount)} ya fueron a salidas e inversion.`
-        : `${formatMoney(metrics.totalSpent)} cargados hasta ahora.`,
-      `Proyeccion de cierre: ${formatMoney(metrics.projectedMonthlySpend)}.`,
-      { primary: true }
+          ? "Ya estas por encima de tu ingreso mensual."
+          : `Estas usando ${formatPercent(metrics.spentRatio, 1)} de tu ingreso.`
+        : metrics.transactionCount
+          ? "Carga el ingreso para medir este porcentaje."
+          : "Todavia no hay salidas registradas."
     ),
     createInsight(
-      "Ritmo",
-      metrics.hasPreviousData
-        ? metrics.comparisons.dailyAverage.difference < 0
-          ? "mint"
-          : metrics.comparisons.dailyAverage.difference > 0
-            ? "rose"
-            : "blue"
-        : "blue",
-      "Promedio diario",
-      `${formatMoney(metrics.dailyAverage)} por dia.`,
-      metrics.hasPreviousData ? `${formatSignedPercent(metrics.comparisons.dailyAverage.percent)} vs ${metrics.previousMonthLabel}.` : "Sin base del mes anterior."
+      "Capacidad de ahorro",
+      capacityTone,
+      metrics.totalIncome > 0 ? formatPercent(metrics.savingsCapacityPercent, 1) : "Sin ingreso",
+      metrics.totalIncome > 0
+        ? metrics.remainingBalance >= 0
+          ? `${formatMoney(metrics.savingsCapacityAmount)} siguen disponibles este mes.`
+          : `Vas ${formatMoney(Math.abs(metrics.remainingBalance))} por encima del ingreso.`
+        : "Se calcula con saldo disponible / ingreso total."
     ),
-    topCategoryInsight,
+    createInsight(
+      "Ritmo de gasto",
+      dailyAverageTone,
+      formatMoney(metrics.dailyAverage),
+      metrics.transactionCount
+        ? `Promedio diario sobre ${formatNumber(metrics.elapsedDays)} dia(s) del mes.`
+        : "Se activara cuando registres movimientos."
+    ),
+    createInsight(
+      "Proyeccion de cierre",
+      projectionTone,
+      formatMoney(metrics.projectedMonthlySpend),
+      metrics.transactionCount
+        ? metrics.totalIncome > 0
+          ? metrics.projectedMonthlySpend > metrics.totalIncome
+            ? `Si seguis asi, cerrarias ${formatMoney(metrics.projectedMonthlySpend - metrics.totalIncome)} arriba del ingreso.`
+            : `Si seguis asi, te quedarian ${formatMoney(metrics.totalIncome - metrics.projectedMonthlySpend)} dentro del ingreso.`
+          : "Manteniendo el ritmo actual del mes."
+        : "Sin movimientos todavia para proyectar el cierre."
+    ),
+    createInsight(
+      "Categoria dominante",
+      metrics.topCategory ? "blue" : "slate",
+      dominantCategoryValue,
+      dominantCategoryDetails
+    ),
+    createInsight(
+      "Inversion",
+      investmentTone,
+      formatMoney(metrics.investedThisMonth),
+      metrics.investedThisMonth > 0
+        ? metrics.totalIncome > 0
+          ? `${formatPercent(investedIncomePercent, 1)} del ingreso en ${formatNumber(metrics.investmentTransactionsCount)} aporte(s).`
+          : `${formatNumber(metrics.investmentTransactionsCount)} aporte(s) registrados este mes.`
+        : "Todavia no registraste aportes en Inversion."
+    ),
   ];
 };
 
@@ -1304,7 +1455,7 @@ const renderInsights = (metrics) => {
   }
 
   insightList.innerHTML = generateInsights(metrics)
-    .map((insight) => `<article class="insight${insight.primary ? " insight--primary" : ""}"><div class="insight__flag ${INSIGHT_FLAG_TONES[insight.tone] || INSIGHT_FLAG_TONES.blue}">${escapeHtml(insight.flag)}</div><div class="insight__content"><strong>${escapeHtml(insight.title)}</strong><p>${escapeHtml(insight.body)}</p><span class="insight__meta">${escapeHtml(insight.meta)}</span></div></article>`)
+    .map((insight) => `<article class="insight insight--${escapeHtml(insight.tone || "blue")}"><div class="insight__content"><span class="insight__label">${escapeHtml(insight.label)}</span><strong class="insight__value">${escapeHtml(insight.value)}</strong><span class="insight__copy">${escapeHtml(insight.copy)}</span></div></article>`)
     .join("");
 };
 
@@ -2104,6 +2255,30 @@ const initializeInteractions = () => {
 
     setActiveMonth(monthTrigger.dataset.calendarMonth, true);
   });
+  categoryLegend?.addEventListener("mouseover", (event) => {
+    const legendItem = event.target.closest("[data-legend-index]");
+    if (!legendItem || !categoryLegend.contains(legendItem)) {
+      return;
+    }
+
+    setCategoryMixHighlight(Number(legendItem.dataset.legendIndex));
+  });
+  categoryLegend?.addEventListener("mouseleave", () => setCategoryMixHighlight(-1));
+  categoryLegend?.addEventListener("focusin", (event) => {
+    const legendItem = event.target.closest("[data-legend-index]");
+    if (!legendItem || !categoryLegend.contains(legendItem)) {
+      return;
+    }
+
+    setCategoryMixHighlight(Number(legendItem.dataset.legendIndex));
+  });
+  categoryLegend?.addEventListener("focusout", (event) => {
+    if (categoryLegend.contains(event.relatedTarget)) {
+      return;
+    }
+
+    setCategoryMixHighlight(-1);
+  });
 
   menuToggle?.addEventListener("click", () => body.classList.toggle("sidebar-open"));
   backdrop?.addEventListener("click", () => body.classList.remove("sidebar-open"));
@@ -2128,3 +2303,4 @@ const initializeInteractions = () => {
 };
 
 initializeInteractions();
+
