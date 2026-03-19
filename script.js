@@ -233,7 +233,16 @@ const yearSummaryElements = {
 const summaryElements = {
   sidebarFreeCash: document.querySelector('[data-summary="sidebar-free-cash"]'),
   sidebarAvailableToSave: document.querySelector('[data-summary="sidebar-available-to-save"]'),
-  heroSavingsCapacity: document.querySelector('[data-summary="hero-savings-capacity"]'),
+  heroLiquidityFinal: document.querySelector('[data-summary="hero-liquidity-final"]'),
+  heroIncome: document.querySelector('[data-summary="hero-income"]'),
+  heroSpent: document.querySelector('[data-summary="hero-spent"]'),
+  heroInvested: document.querySelector('[data-summary="hero-invested"]'),
+  flowIncome: document.querySelector('[data-summary="flow-income"]'),
+  flowSpent: document.querySelector('[data-summary="flow-spent"]'),
+  flowAvailable: document.querySelector('[data-summary="flow-available"]'),
+  flowInvested: document.querySelector('[data-summary="flow-invested"]'),
+  flowLiquidityFinal: document.querySelector('[data-summary="flow-liquidity-final"]'),
+  kpiAvailableBeforeInvesting: document.querySelector('[data-summary="kpi-available-before-investing"]'),
   chartTotalSpent: document.querySelector('[data-summary="chart-total-spent"]'),
   goalAmount: document.querySelector('[data-summary="goal-amount"]'),
   goalSaved: document.querySelector('[data-summary="goal-saved"]'),
@@ -255,7 +264,7 @@ const textElements = {
   periodTitle: document.querySelector("[data-period-title]"),
   periodPill: document.querySelector("[data-period-pill]"),
   sidebarSavingsCapacity: document.querySelector('[data-summary-text="sidebar-savings-capacity"]'),
-  heroAvailableToSave: document.querySelector('[data-summary-text="hero-available-to-save"]'),
+  heroLiquidityCopy: document.querySelector('[data-summary-text="hero-liquidity-copy"]'),
   heroBalanceNote: document.querySelector('[data-summary-text="hero-balance-note"]'),
   heroCaption: document.querySelector('[data-summary-text="hero-caption"]'),
   categoryCountPill: document.querySelector('[data-summary-text="category-count-pill"]'),
@@ -509,6 +518,7 @@ const summarizeMonth = (expenses, incomeTotal, monthKey) => {
   const investmentTransactionsCount = investmentTransactions.length;
   const expenseTransactionCount = spendingTransactions.length;
   const remainingBalance = roundCurrency(incomeTotal - totalSpent);
+  const liquidityFinal = roundCurrency(remainingBalance - investedThisMonth);
   const savingsCapacityAmount = roundCurrency(Math.max(remainingBalance, 0));
   const daysInMonth = getDaysInMonth(monthKey);
   const elapsedDays = getElapsedDaysForMonth(monthKey, expenses);
@@ -543,6 +553,7 @@ const summarizeMonth = (expenses, incomeTotal, monthKey) => {
     investedThisMonth,
     investmentTransactionsCount,
     remainingBalance,
+    liquidityFinal,
     savingsCapacityAmount,
     dailyAverage,
     spentRatio,
@@ -964,20 +975,54 @@ const renderSidebar = (metrics, animate) => {
 };
 
 const renderHero = (metrics, animate) => {
-  animateValue(summaryElements.heroSavingsCapacity, metrics.savingsCapacityPercent, {
-    animate,
-    decimals: 0,
-    suffix: "%",
-  });
-  setTextValue(textElements.heroAvailableToSave, getSavingsCapacitySecondaryCopy(metrics));
-  setTextValue(textElements.heroBalanceNote, `Saldo disponible despues de gastos: ${formatMoney(metrics.remainingBalance)}`);
-  setTextValue(textElements.heroCaption, getSavingsCapacityInsight(metrics));
-  applyCapacityState(heroCardElement, metrics.savingsCapacityState);
+  const liquidityFinalPercent = metrics.totalIncome > 0 ? roundCurrency((metrics.liquidityFinal / metrics.totalIncome) * 100) : 0;
+  const liquidityFinalState = getSavingsCapacityState(liquidityFinalPercent, metrics.totalIncome);
+  let liquidityStatusLabel = "Sin ingreso";
+  let liquidityStatusTone = "neutral";
+
+  if (metrics.totalIncome > 0) {
+    if (liquidityFinalPercent > 40) {
+      liquidityStatusLabel = "Sobrado";
+      liquidityStatusTone = "positive";
+    } else if (liquidityFinalPercent >= 20) {
+      liquidityStatusLabel = "Controlado";
+      liquidityStatusTone = "neutral";
+    } else if (liquidityFinalPercent >= 10) {
+      liquidityStatusLabel = "Ajustado";
+      liquidityStatusTone = "neutral";
+    } else {
+      liquidityStatusLabel = "En riesgo";
+      liquidityStatusTone = "negative";
+    }
+  }
+
+  animateValue(summaryElements.heroLiquidityFinal, metrics.liquidityFinal, { animate });
+  animateValue(summaryElements.heroIncome, metrics.totalIncome, { animate });
+  animateValue(summaryElements.heroSpent, metrics.totalSpent, { animate });
+  animateValue(summaryElements.heroInvested, metrics.investedThisMonth, { animate });
+  setTextValue(textElements.heroLiquidityCopy, "Esto es lo que te queda para vivir hasta el proximo ingreso");
+  setTextValue(textElements.heroBalanceNote, `Disponible antes de invertir: ${formatMoney(metrics.remainingBalance)}`);
+  setTextValue(
+    textElements.heroCaption,
+    metrics.totalIncome
+      ? "Liquidez final = disponible antes de invertir - inversion del mes."
+      : "Carga el ingreso del mes para ver tu liquidez real."
+  );
+  applyCapacityState(heroCardElement, liquidityFinalState);
   applyStatusPill(
     statusElements.hero,
-    getSavingsCapacityBadgeCopy(metrics),
-    getSavingsCapacityTone(metrics.savingsCapacityState)
+    liquidityStatusLabel,
+    liquidityStatusTone
   );
+};
+
+const renderFinancialFlow = (metrics, animate) => {
+  animateValue(summaryElements.kpiAvailableBeforeInvesting, metrics.remainingBalance, { animate });
+  animateValue(summaryElements.flowIncome, metrics.totalIncome, { animate });
+  animateValue(summaryElements.flowSpent, metrics.totalSpent, { animate });
+  animateValue(summaryElements.flowAvailable, metrics.remainingBalance, { animate });
+  animateValue(summaryElements.flowInvested, metrics.investedThisMonth, { animate });
+  animateValue(summaryElements.flowLiquidityFinal, metrics.liquidityFinal, { animate });
 };
 
 const renderSplitCard = (metrics, animate) => {
@@ -992,9 +1037,9 @@ const renderSplitCard = (metrics, animate) => {
   setTextValue(
     textElements.goalNote,
     metrics.investmentTransactionsCount
-      ? `${formatNumber(metrics.investmentTransactionsCount)} aporte(s) registrados en Inversion por ${formatMoney(metrics.investedThisMonth)}. Tu saldo disponible despues de gastos sigue aparte en ${formatMoney(metrics.remainingBalance)}.`
+      ? `${formatNumber(metrics.investmentTransactionsCount)} aporte(s) registrados en Inversion por ${formatMoney(metrics.investedThisMonth)}. Tu disponible antes de invertir sigue aparte en ${formatMoney(metrics.remainingBalance)}.`
       : metrics.transactionCount
-        ? `Todavia no registraste aportes en la categoria Inversion. Tienes ${formatMoney(metrics.remainingBalance)} de saldo disponible despues de gastos, pero la meta no sube hasta cargar un aporte.`
+        ? `Todavia no registraste aportes en la categoria Inversion. Tienes ${formatMoney(metrics.remainingBalance)} disponible antes de invertir, pero la meta no sube hasta cargar un aporte.`
         : "La meta solo suma movimientos en la categoria Inversion. Usa \"Registrar inversion\" cuando hagas un aporte real."
   );
 
@@ -1019,7 +1064,7 @@ const renderSplitCard = (metrics, animate) => {
   }
 
   if (!metrics.hasPreviousData) {
-    setTextValue(textElements.comparisonNote, `No hay movimientos en ${getMonthLabel(metrics.previousMonthKey)} para comparar salidas, saldo disponible despues de gastos e inversion registrada.`);
+    setTextValue(textElements.comparisonNote, `No hay movimientos en ${getMonthLabel(metrics.previousMonthKey)} para comparar gastos, disponible antes de invertir e inversion registrada.`);
     setTextValue(comparisonElements.totalSpentCopy, "Sin base para comparar");
     setTextValue(comparisonElements.totalSpentValue, formatMoney(metrics.totalSpent));
     setTextValue(comparisonElements.remainingBalanceCopy, "Sin base para comparar");
@@ -1031,7 +1076,7 @@ const renderSplitCard = (metrics, animate) => {
     return;
   }
 
-  setTextValue(textElements.comparisonNote, `Comparacion directa contra ${metrics.previousMonth.monthLabelLong} con foco en salidas, saldo disponible despues de gastos e inversion ejecutada.`);
+  setTextValue(textElements.comparisonNote, `Comparacion directa contra ${metrics.previousMonth.monthLabelLong} con foco en gastos, disponible antes de invertir e inversion ejecutada.`);
   setTextValue(comparisonElements.totalSpentCopy, `${formatSignedCurrency(metrics.comparisons.totalSpent.difference)} vs ${metrics.previousMonthLabel}`);
   setTextValue(comparisonElements.totalSpentValue, formatMoney(metrics.totalSpent));
   setTextValue(comparisonElements.remainingBalanceCopy, `${formatSignedCurrency(metrics.comparisons.remainingBalance.difference)} vs ${metrics.previousMonthLabel}`);
@@ -1094,7 +1139,7 @@ const renderKpis = (metrics, animate) => {
       : "Sin meta"
   );
 
-  setTextValue(kpiCaptionElements.totalSpent, "Solo gastos reales del mes activo. La inversion se mide aparte.");
+  setTextValue(kpiCaptionElements.totalSpent, "Solo gastos de vida del mes activo. La inversion se muestra aparte.");
   setTextValue(kpiCaptionElements.investedThisMonth, "Suma de los movimientos cargados en la categoria Inversion.");
   setTextValue(kpiCaptionElements.dailyAverage, "Promedio diario usando los dias cargados o transcurridos.");
   setTextValue(kpiCaptionElements.goalProgress, "Porcentaje de tu meta mensual cubierto con movimientos en Inversion.");
@@ -1603,6 +1648,7 @@ const renderDashboard = (animate = false) => {
   renderFloatingAction(metrics);
   renderSidebar(metrics, animate);
   renderHero(metrics, animate);
+  renderFinancialFlow(metrics, animate);
   renderSplitCard(metrics, animate);
   renderKpis(metrics, animate);
   renderIncomeCard(metrics, animate);
