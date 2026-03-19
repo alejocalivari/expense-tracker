@@ -21,6 +21,8 @@
   };
 
   const DEFAULT_INVESTMENT_PROFILE = "balanced";
+  const VALID_INVESTMENT_PROFILES = ["conservative", "balanced", "aggressive"];
+  const MONTH_FILTER_PATTERN = /^\d{4}-\d{2}$/;
 
   const STORAGE_STATE_KEYS = ["income", "expenses", "filters", "selectedInvestmentProfile"];
 
@@ -171,15 +173,34 @@
     selectedInvestmentProfile: DEFAULT_INVESTMENT_PROFILE,
   });
 
+  const normalizeMonthFilter = (value) => {
+    const normalizedValue = String(value || "").trim();
+    return MONTH_FILTER_PATTERN.test(normalizedValue) ? normalizedValue : DEFAULT_FILTERS.month;
+  };
+
+  const normalizeCategoryFilter = (value) => {
+    const normalizedValue = String(value || "").trim();
+    return normalizedValue || DEFAULT_FILTERS.category;
+  };
+
+  const normalizeSearchFilter = (value) => String(value || "").trim();
+
+  const normalizeFilters = (filters = {}) => ({
+    month: normalizeMonthFilter(filters.month),
+    category: normalizeCategoryFilter(filters.category),
+    search: normalizeSearchFilter(filters.search),
+  });
+
   const normalizeState = (state = {}) => ({
     income: Number.isFinite(Number(state.income)) ? Number(state.income) : 0,
     expenses: Array.isArray(state.expenses) ? state.expenses.map((expense) => normalizeExpense(expense)) : [],
-    filters: {
+    filters: normalizeFilters({
       ...DEFAULT_FILTERS,
       ...(state.filters || {}),
-    },
+    }),
     selectedInvestmentProfile:
-      typeof state.selectedInvestmentProfile === "string" && state.selectedInvestmentProfile
+      typeof state.selectedInvestmentProfile === "string" &&
+      VALID_INVESTMENT_PROFILES.includes(state.selectedInvestmentProfile)
         ? state.selectedInvestmentProfile
         : DEFAULT_INVESTMENT_PROFILE,
   });
@@ -238,11 +259,18 @@
         STORAGE_STATE_KEYS.some((key) => Object.prototype.hasOwnProperty.call(parsedState, key));
 
       if (!hasKnownKeys) {
+        window.localStorage.removeItem(STORAGE_KEY);
         return null;
       }
 
       return normalizeState(parsedState);
     } catch (error) {
+      try {
+        window.localStorage.removeItem(STORAGE_KEY);
+      } catch (storageError) {
+        return null;
+      }
+
       return null;
     }
   };
@@ -260,6 +288,8 @@
   };
 
   let appState = initializeState();
+
+  const getDemoState = () => normalizeState(createInitialState());
 
   const getState = () => cloneValue(appState);
 
@@ -281,6 +311,7 @@
   };
 
   window.aleclvFinanceState = {
+    getDemoState,
     getState,
     setState,
     updateState,

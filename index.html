@@ -125,10 +125,10 @@
               <circle cx="11" cy="11" r="5.5" />
               <path d="m15.5 15.5 4 4" />
             </svg>
-            <input type="text" placeholder="Search merchants, categories, or notes">
+            <input type="text" placeholder="Search merchants, methods, categories, or notes" data-search-input>
           </label>
-          <button class="pill pill--quiet" type="button" data-period-pill>Mar 2026</button>
-          <button class="button button--ghost" type="button" data-empty-toggle aria-pressed="false">Preview empty state</button>
+          <button class="pill pill--quiet" type="button" data-period-pill data-open-filters aria-haspopup="dialog">Mar 2026</button>
+          <button class="button button--ghost" type="button" data-open-income aria-haspopup="dialog">Edit income</button>
         </div>
       </header>
       <main class="dashboard">
@@ -286,10 +286,10 @@
             <article class="panel kpi-card kpi-card--income">
               <div class="kpi-card__header">
                 <span>Monthly income</span>
-                <span class="kpi-card__delta" data-kpi-delta="income">+4.8%</span>
+                <span class="kpi-card__delta" data-kpi-delta="income">Editable baseline</span>
               </div>
               <strong class="kpi-card__value countup" data-kpi="income" data-countup="8450" data-prefix="$">$8,450</strong>
-              <p class="kpi-card__caption" data-kpi-caption="income">Salary plus freelance retainer landed on schedule.</p>
+              <p class="kpi-card__caption" data-kpi-caption="income">Monthly income baseline driving balance, savings, and investing projections.</p>
               <div class="sparkline">
                 <span style="height: 32%;"></span>
                 <span style="height: 46%;"></span>
@@ -529,8 +529,8 @@
                 <h3>Expenses</h3>
               </div>
               <div class="inline-actions">
-                <button class="button button--ghost button--small" type="button">Filters</button>
-                <button class="button button--ghost button--small" type="button">Export</button>
+                <button class="button button--ghost button--small" type="button" data-open-filters aria-haspopup="dialog">Filters</button>
+                <button class="button button--ghost button--small" type="button" data-open-export aria-haspopup="dialog">Export</button>
               </div>
             </div>
 
@@ -733,7 +733,7 @@
                 <span class="pill pill--quiet">Auto generated</span>
               </div>
 
-              <div class="insight-list">
+              <div class="insight-list" data-insight-list>
                 <article class="insight">
                   <div class="insight__flag insight__flag--rose">Food</div>
                   <div>
@@ -774,7 +774,7 @@
                 <strong class="countup" data-summary="investable-amount" data-countup="1280" data-prefix="$">$1,280</strong>
               </div>
 
-              <p class="invest-card__caption">Based on current cashflow, upcoming bills, and reserve targets already accounted for.</p>
+              <p class="invest-card__caption" data-summary-text="invest-caption">Based on current cashflow, upcoming bills, and reserve targets already accounted for.</p>
 
               <div class="risk-toggle" role="group" aria-label="Projection profile">
                 <button class="risk-toggle__option" type="button" data-risk-option data-profile="conservative" data-rate="6">Conservative</button>
@@ -823,37 +823,6 @@
           </div>
         </section>
 
-        <section class="dashboard-state dashboard-state--empty">
-          <article class="panel empty-panel">
-            <div class="empty-panel__visual" aria-hidden="true">
-              <span class="empty-orb empty-orb--large"></span>
-              <span class="empty-orb empty-orb--small"></span>
-              <div class="empty-card empty-card--wide"></div>
-              <div class="empty-card empty-card--tall"></div>
-              <div class="empty-card empty-card--mini"></div>
-            </div>
-
-            <p class="eyebrow">No spending history yet</p>
-            <h3>Start tracking your spending to unlock insights and investment potential.</h3>
-            <p class="empty-panel__copy">Once activity starts flowing in, aleclv finance will show where cash is leaking, what can be redirected, and how much is safe to invest each month.</p>
-
-            <div class="empty-panel__actions">
-              <button class="button button--accent" type="button" data-restore>Load sample activity</button>
-              <button class="button button--ghost" type="button" data-restore>Back to dashboard</button>
-            </div>
-
-            <div class="empty-panel__foot">
-              <div>
-                <span>First step</span>
-                <strong>Add your first expense</strong>
-              </div>
-              <div>
-                <span>What you'll unlock</span>
-                <strong>Insights + investable cash</strong>
-              </div>
-            </div>
-          </article>
-        </section>
       </main>
     </div>
     <button class="fab" type="button" aria-label="Add expense">
@@ -929,6 +898,32 @@
           </form>
         </section>
 
+        <section class="modal-section" data-modal-panel="income" hidden>
+          <div class="panel__header panel__header--stack">
+            <div>
+              <p class="eyebrow">Income baseline</p>
+              <h3>Edit monthly income</h3>
+            </div>
+            <p class="panel-note">This monthly deposit baseline drives remaining balance, savings rate, and investable surplus across the dashboard.</p>
+          </div>
+
+          <form class="expense-form" data-income-form novalidate>
+            <div class="expense-form__grid">
+              <label class="field field--full">
+                <span class="field__label">Monthly income</span>
+                <input class="field__control" type="number" name="income" min="0" step="0.01" placeholder="0.00" data-income-input required>
+              </label>
+            </div>
+
+            <p class="form-feedback" data-income-feedback role="alert"></p>
+
+            <div class="modal-actions">
+              <button class="button button--ghost" type="button" data-modal-close>Cancel</button>
+              <button class="button button--accent" type="submit">Save income</button>
+            </div>
+          </form>
+        </section>
+
         <section class="modal-section" data-modal-panel="confirm" hidden>
           <div class="panel__header panel__header--stack">
             <div>
@@ -950,8 +945,103 @@
             <button class="button button--accent button--danger" type="button" data-confirm-delete>Delete expense</button>
           </div>
         </section>
+
+        <section class="modal-section" data-modal-panel="filters" hidden>
+          <div class="panel__header panel__header--stack">
+            <div>
+              <p class="eyebrow">View controls</p>
+              <h3>Filters</h3>
+            </div>
+            <p class="panel-note">Month updates the full dashboard context. Category narrows the visible activity list and exports.</p>
+          </div>
+
+          <form class="expense-form" data-filter-form>
+            <div class="expense-form__grid">
+              <label class="field">
+                <span class="field__label">Month</span>
+                <input class="field__control" type="month" name="month" data-filter-month>
+              </label>
+              <label class="field">
+                <span class="field__label">Category</span>
+                <select class="field__control field__control--select" name="category" data-filter-category>
+                  <option value="all">All categories</option>
+                  <option value="Food">Food</option>
+                  <option value="Transport">Transport</option>
+                  <option value="Housing">Housing</option>
+                  <option value="Utilities">Utilities</option>
+                  <option value="Subscriptions">Subscriptions</option>
+                  <option value="Software">Software</option>
+                  <option value="Lifestyle">Lifestyle</option>
+                  <option value="Leisure">Leisure</option>
+                  <option value="Travel">Travel</option>
+                  <option value="Other">Other</option>
+                </select>
+              </label>
+            </div>
+
+            <div class="confirm-card">
+              <strong>Current search</strong>
+              <span data-filter-search-preview>No search applied</span>
+              <p data-filter-results-copy>Visible expenses update live as filters change.</p>
+            </div>
+
+            <div class="modal-actions modal-actions--spread">
+              <button class="button button--ghost" type="button" data-clear-filters>Clear filters</button>
+              <div class="modal-actions__cluster">
+                <button class="button button--ghost" type="button" data-modal-restore-demo>Restore demo data</button>
+                <button class="button button--accent" type="button" data-modal-close>Done</button>
+              </div>
+            </div>
+          </form>
+        </section>
+
+        <section class="modal-section" data-modal-panel="export" hidden>
+          <div class="panel__header panel__header--stack">
+            <div>
+              <p class="eyebrow">Data export</p>
+              <h3>Export visible activity</h3>
+            </div>
+            <p class="panel-note">Exports always respect the current month, category, and search context shown in the dashboard.</p>
+          </div>
+
+          <div class="confirm-card">
+            <strong data-export-summary>0 expenses ready</strong>
+            <span data-export-filename>aleclv-finance-2026-03.csv</span>
+            <p data-export-copy>Adjust filters if you want a different dataset before downloading.</p>
+          </div>
+
+          <div class="modal-actions modal-actions--spread">
+            <button class="button button--ghost" type="button" data-modal-close>Close</button>
+            <div class="modal-actions__cluster">
+              <button class="button button--ghost" type="button" data-export-json>Export JSON</button>
+              <button class="button button--accent" type="button" data-export-csv>Export CSV</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="modal-section" data-modal-panel="reset" hidden>
+          <div class="panel__header panel__header--stack">
+            <div>
+              <p class="eyebrow">Restore workspace</p>
+              <h3>Replace current data with demo activity?</h3>
+            </div>
+            <p class="panel-note">This restores the premium sample dataset and overwrites the current local workspace on this device.</p>
+          </div>
+
+          <div class="confirm-card">
+            <strong>Demo workspace</strong>
+            <span>Income, expenses, insights, and investment projections will reset to the seeded sample state.</span>
+            <p>Use this when you want to get back to a polished showcase view without manually rebuilding activity.</p>
+          </div>
+
+          <div class="modal-actions">
+            <button class="button button--ghost" type="button" data-modal-close>Cancel</button>
+            <button class="button button--accent" type="button" data-confirm-restore>Restore demo data</button>
+          </div>
+        </section>
       </div>
     </div>
+    <div class="toast" data-toast hidden role="status" aria-live="polite"></div>
     <nav class="mobile-nav" aria-label="Mobile">
       <button class="mobile-nav__item is-active" type="button" data-nav-item="dashboard">
         <span class="mobile-nav__icon"></span>

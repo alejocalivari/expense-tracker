@@ -65,7 +65,9 @@ svg {
 }
 
 button,
-input {
+input,
+select,
+textarea {
   font: inherit;
 }
 
@@ -525,6 +527,12 @@ body.sidebar-open .mobile-backdrop {
   font-size: 0.88rem;
 }
 
+.button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+  transform: none;
+}
+
 .icon-button {
   width: 44px;
   height: 44px;
@@ -557,8 +565,7 @@ body.sidebar-open .mobile-backdrop {
   padding: 18px 18px 0;
 }
 
-.dashboard-state--content,
-.dashboard-state--empty {
+.dashboard-state--content {
   animation: rise 520ms ease both;
 }
 
@@ -580,7 +587,6 @@ body.sidebar-open .mobile-backdrop {
 .expenses-card,
 .insights-card,
 .invest-card,
-.empty-panel,
 .kpi-card {
   padding: 22px;
 }
@@ -1111,6 +1117,13 @@ body.sidebar-open .mobile-backdrop {
   line-height: 1.6;
 }
 
+.expense-list__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 4px;
+}
+
 .badge {
   min-height: 30px;
   padding: 0 11px;
@@ -1370,109 +1383,6 @@ body.sidebar-open .mobile-backdrop {
   background: rgba(117, 229, 192, 0.09);
 }
 
-.empty-panel {
-  min-height: clamp(520px, 68vh, 700px);
-  display: grid;
-  align-content: center;
-  justify-items: center;
-  gap: 20px;
-  text-align: center;
-}
-
-.empty-panel__visual {
-  position: relative;
-  width: min(84vw, 420px);
-  height: 220px;
-  margin-bottom: 8px;
-}
-
-.empty-orb {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(8px);
-}
-
-.empty-orb--large {
-  width: 132px;
-  height: 132px;
-  top: 18px;
-  left: 36px;
-  background: rgba(117, 229, 192, 0.14);
-}
-
-.empty-orb--small {
-  width: 92px;
-  height: 92px;
-  right: 48px;
-  bottom: 12px;
-  background: rgba(132, 166, 255, 0.14);
-}
-
-.empty-card {
-  position: absolute;
-  border-radius: 22px;
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.015));
-  box-shadow: var(--shadow-sm);
-}
-
-.empty-card--wide {
-  inset: 40px 56px 72px 24px;
-}
-
-.empty-card--tall {
-  width: 124px;
-  height: 148px;
-  right: 18px;
-  top: 30px;
-}
-
-.empty-card--mini {
-  width: 152px;
-  height: 64px;
-  left: 84px;
-  bottom: 18px;
-}
-
-.empty-panel h3 {
-  font-size: clamp(1.7rem, 4vw, 2.6rem);
-  max-width: 14ch;
-}
-
-.empty-panel__copy {
-  max-width: 56ch;
-  color: var(--text-muted);
-  line-height: 1.7;
-}
-
-.empty-panel__actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 12px;
-}
-
-.empty-panel__foot {
-  display: grid;
-  gap: 12px;
-  width: min(100%, 520px);
-}
-
-.empty-panel__foot div {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 14px;
-  padding: 14px 16px;
-  border-radius: 18px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  background: rgba(255, 255, 255, 0.025);
-}
-
-.empty-panel__foot span {
-  color: var(--text-muted);
-}
-
 .fab {
   position: fixed;
   right: 18px;
@@ -1641,6 +1551,18 @@ body.modal-open {
   flex-wrap: wrap;
 }
 
+.modal-actions--spread {
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-actions__cluster {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
 .confirm-card {
   display: grid;
   gap: 8px;
@@ -1662,6 +1584,41 @@ body.modal-open {
 .confirm-card__amount {
   color: #ffb8c5;
   font-size: 1.2rem;
+}
+
+.toast[hidden] {
+  display: none;
+}
+
+.toast {
+  position: fixed;
+  right: 18px;
+  bottom: 162px;
+  z-index: 85;
+  max-width: min(calc(100vw - 36px), 360px);
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(117, 229, 192, 0.18);
+  background:
+    linear-gradient(180deg, rgba(117, 229, 192, 0.12), rgba(117, 229, 192, 0.06)),
+    rgba(10, 16, 23, 0.96);
+  color: var(--text);
+  box-shadow: var(--shadow-lg);
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity var(--transition), transform var(--transition);
+}
+
+.toast.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.toast--error {
+  border-color: rgba(232, 141, 158, 0.2);
+  background:
+    linear-gradient(180deg, rgba(232, 141, 158, 0.14), rgba(232, 141, 158, 0.06)),
+    rgba(10, 16, 23, 0.96);
 }
 
 .countup,
@@ -1694,12 +1651,6 @@ body.is-ready .line-chart__area {
 body.is-ready .line-chart__points circle {
   opacity: 1;
   transform: scale(1);
-}
-
-body.show-empty .fab {
-  opacity: 0;
-  transform: translateY(12px);
-  pointer-events: none;
 }
 
 .mobile-nav {
@@ -1751,22 +1702,8 @@ body.is-loading .dashboard-skeleton {
   gap: 18px;
 }
 
-body.is-loading .dashboard-state--content,
-body.is-loading .dashboard-state--empty {
+body.is-loading .dashboard-state--content {
   display: none;
-}
-
-body.show-empty .dashboard-state--content {
-  display: none;
-}
-
-.dashboard-state--empty {
-  display: none;
-  margin-top: 20px;
-}
-
-body.show-empty .dashboard-state--empty {
-  display: block;
 }
 
 .skeleton-grid,
@@ -1819,7 +1756,6 @@ body.show-empty .dashboard-state--empty {
   .expenses-card,
   .insights-card,
   .invest-card,
-  .empty-panel,
   .kpi-card {
     padding: 24px;
   }
@@ -1828,8 +1764,7 @@ body.show-empty .dashboard-state--empty {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .projection-grid,
-  .empty-panel__foot {
+  .projection-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -1969,9 +1904,24 @@ body.show-empty .dashboard-state--empty {
     font-size: 0.72rem;
   }
 
-  .empty-panel__foot div {
-    flex-direction: column;
-    align-items: flex-start;
+  .modal-actions--spread,
+  .modal-actions__cluster {
+    width: 100%;
+  }
+
+  .modal-actions--spread {
+    justify-content: stretch;
+  }
+
+  .modal-actions--spread > * {
+    width: 100%;
+  }
+
+  .toast {
+    right: 14px;
+    left: 14px;
+    bottom: 92px;
+    max-width: none;
   }
 }
 
