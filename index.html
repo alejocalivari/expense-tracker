@@ -23,11 +23,11 @@
       </div>
 
       <nav class="sidebar__nav">
-        <button class="nav-item is-active" type="button" data-nav-item="dashboard"><span class="nav-item__icon"><svg viewBox="0 0 24 24" fill="none"><path d="M4 13.5h6.5V20H4v-6.5Zm9.5-9.5H20v16h-6.5V4ZM4 4h6.5v6.5H4V4Zm9.5 8.5H20v5h-6.5v-5Z" /></svg></span><span>Resumen</span></button>
-        <button class="nav-item" type="button" data-nav-item="cashflow"><span class="nav-item__icon"><svg viewBox="0 0 24 24" fill="none"><path d="M4 16.5 9 11l3.4 3.4L20 6.8" /><path d="M15 6.8H20V12" /></svg></span><span>Flujo</span></button>
-        <button class="nav-item" type="button" data-nav-item="income"><span class="nav-item__icon"><svg viewBox="0 0 24 24" fill="none"><path d="M6 18.5h12" /><path d="M8.5 18.5V10" /><path d="M12 18.5V5.5" /><path d="M15.5 18.5v-7" /></svg></span><span>Ingreso</span></button>
-        <button class="nav-item" type="button" data-nav-item="activity"><span class="nav-item__icon"><svg viewBox="0 0 24 24" fill="none"><path d="M4 7.5h16" /><path d="M4 12h12" /><path d="M4 16.5h9" /></svg></span><span>Actividad</span></button>
-        <button class="nav-item" type="button" data-nav-item="calendar"><span class="nav-item__icon"><svg viewBox="0 0 24 24" fill="none"><rect x="4" y="6.5" width="16" height="13.5" rx="2" /><path d="M8 4.5v4" /><path d="M16 4.5v4" /><path d="M4 10h16" /></svg></span><span>Calendario</span></button>
+        <button class="nav-item is-active" type="button" data-nav-item="resumen"><span class="nav-item__icon"><svg viewBox="0 0 24 24" fill="none"><path d="M4 13.5h6.5V20H4v-6.5Zm9.5-9.5H20v16h-6.5V4ZM4 4h6.5v6.5H4V4Zm9.5 8.5H20v5h-6.5v-5Z" /></svg></span><span>Resumen</span></button>
+        <button class="nav-item" type="button" data-nav-item="flujo"><span class="nav-item__icon"><svg viewBox="0 0 24 24" fill="none"><path d="M4 16.5 9 11l3.4 3.4L20 6.8" /><path d="M15 6.8H20V12" /></svg></span><span>Flujo</span></button>
+        <button class="nav-item" type="button" data-nav-item="ingreso"><span class="nav-item__icon"><svg viewBox="0 0 24 24" fill="none"><path d="M6 18.5h12" /><path d="M8.5 18.5V10" /><path d="M12 18.5V5.5" /><path d="M15.5 18.5v-7" /></svg></span><span>Ingreso</span></button>
+        <button class="nav-item" type="button" data-nav-item="actividad"><span class="nav-item__icon"><svg viewBox="0 0 24 24" fill="none"><path d="M4 7.5h16" /><path d="M4 12h12" /><path d="M4 16.5h9" /></svg></span><span>Actividad</span></button>
+        <button class="nav-item" type="button" data-nav-item="calendario"><span class="nav-item__icon"><svg viewBox="0 0 24 24" fill="none"><rect x="4" y="6.5" width="16" height="13.5" rx="2" /><path d="M8 4.5v4" /><path d="M16 4.5v4" /><path d="M4 10h16" /></svg></span><span>Calendario</span></button>
       </nav>
 
       <section class="sidebar__rail panel panel--soft">
@@ -53,16 +53,16 @@
       <header class="topbar">
         <div class="topbar__leading">
           <button class="icon-button topbar__menu" type="button" aria-label="Abrir menu" data-menu-toggle><svg viewBox="0 0 24 24" fill="none"><path d="M4 7.5h16" /><path d="M4 12h16" /><path d="M4 16.5h16" /></svg></button>
-          <div><p class="eyebrow">plan mensual del ingreso</p><h2 data-period-title>marzo 2026 - resumen mensual del salario</h2></div>
+          <div><p class="eyebrow" data-topbar-eyebrow>plan mensual del ingreso</p><h2 data-period-title>marzo de 2026 - resumen mensual del salario</h2></div>
         </div>
-        <div class="topbar__actions">
-          <label class="search-shell" aria-label="Buscar"><svg viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="5.5" /><path d="m15.5 15.5 4 4" /></svg><input type="text" placeholder="Buscar descripcion, categoria, medio de pago o nota" data-search-input></label>
-          <button class="pill pill--quiet" type="button" data-period-pill data-open-filters aria-haspopup="dialog">mar 2026</button>
-          <button class="button button--ghost" type="button" data-open-income aria-haspopup="dialog">Editar ingreso</button>
+        <div class="topbar__actions" data-topbar-actions>
+          <label class="search-shell" aria-label="Buscar" data-topbar-search><svg viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="5.5" /><path d="m15.5 15.5 4 4" /></svg><input type="text" placeholder="Buscar descripcion, categoria, medio de pago o nota" data-search-input></label>
+          <button class="pill pill--quiet" type="button" data-period-pill data-open-filters data-topbar-filters aria-haspopup="dialog" hidden>mar 2026</button>
+          <button class="button button--ghost" type="button" data-open-income data-topbar-income aria-haspopup="dialog">Editar ingreso</button>
         </div>
       </header>
 
-      <main class="dashboard">
+      <main class="dashboard" data-dashboard-main tabindex="-1">
         <section class="dashboard-skeleton" aria-hidden="true">
           <div class="skeleton-grid skeleton-grid--hero"><div class="skeleton-block skeleton-block--hero"></div><div class="skeleton-block skeleton-block--rail"></div></div>
           <div class="skeleton-grid skeleton-grid--kpi"><div class="skeleton-block skeleton-block--kpi"></div><div class="skeleton-block skeleton-block--kpi"></div><div class="skeleton-block skeleton-block--kpi"></div><div class="skeleton-block skeleton-block--kpi"></div><div class="skeleton-block skeleton-block--kpi"></div><div class="skeleton-block skeleton-block--kpi"></div></div>
@@ -70,7 +70,8 @@
           <div class="skeleton-grid skeleton-grid--content"><div class="skeleton-block skeleton-block--list"></div><div class="skeleton-stack"><div class="skeleton-block skeleton-block--stack"></div><div class="skeleton-block skeleton-block--stack"></div></div></div>
         </section>
 
-        <section class="dashboard-state dashboard-state--content">
+        <section class="dashboard-state dashboard-state--content dashboard-views">
+          <section class="dashboard-view view-resumen is-active" data-view="resumen">
           <section class="hero-grid">
             <article class="panel hero-card">
               <div class="panel__header"><div><p class="eyebrow">Saldo disponible</p><h3>Saldo disponible despues de gastos e inversion</h3></div><span class="status-pill status-pill--neutral" data-summary-status="hero">Sin meta</span></div>
@@ -122,7 +123,9 @@
             <article class="panel kpi-card kpi-card--daily"><div class="kpi-card__header"><span>Promedio diario</span><span class="kpi-card__delta" data-kpi-delta="dailyAverage">Promedio actual</span></div><strong class="kpi-card__value countup" data-kpi="dailyAverage" data-countup="0" data-prefix="$">$0</strong><p class="kpi-card__caption" data-kpi-caption="dailyAverage">Promedio real por dia con salidas registradas dentro del mes.</p><div class="sparkline"><span style="height: 82%;"></span><span style="height: 72%;"></span><span style="height: 66%;"></span><span style="height: 58%;"></span><span style="height: 51%;"></span><span style="height: 47%;"></span></div></article>
             <article class="panel kpi-card kpi-card--savings"><div class="kpi-card__header"><span>Progreso de inversion</span><span class="kpi-card__delta" data-kpi-delta="goalProgress">0%</span></div><strong class="kpi-card__value countup" data-kpi="goalProgress" data-countup="0" data-suffix="%" data-decimals="1">0%</strong><p class="kpi-card__caption" data-kpi-caption="goalProgress">Que porcentaje de tu meta mensual ya cubriste con movimientos en Inversion.</p><div class="kpi-card__actions"><button class="button button--ghost button--small" type="button" data-open-investment>Cargar aporte</button></div><div class="sparkline"><span style="height: 26%;"></span><span style="height: 40%;"></span><span style="height: 44%;"></span><span style="height: 52%;"></span><span style="height: 70%;"></span><span style="height: 80%;"></span></div></article>
           </section>
+          </section>
 
+          <section class="dashboard-view view-flujo is-hidden" data-view="flujo" hidden>
           <section class="charts-grid">
             <article class="panel chart-card"><div class="panel__header"><div><p class="eyebrow">Categorias</p><h3>Salidas por categoria</h3></div><span class="pill pill--quiet" data-summary-text="category-count-pill">0 categorias activas</span></div><div class="chart-card__content chart-card__content--split"><div class="donut-wrap"><div class="donut-chart" data-donut-chart><div class="donut-chart__hole"><span>Salidas totales</span><strong class="countup" data-summary="chart-total-spent" data-countup="0" data-prefix="$">$0</strong></div></div></div><div class="legend-list" data-category-legend></div></div></article>
             <article class="panel chart-card chart-card--line">
@@ -131,7 +134,33 @@
               <div class="line-chart"><svg viewBox="0 0 640 280" role="img" aria-label="Salidas acumuladas del mes"><defs><linearGradient id="areaGradient" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="#75e5c0" stop-opacity="0.34"></stop><stop offset="100%" stop-color="#75e5c0" stop-opacity="0"></stop></linearGradient></defs><g class="line-chart__grid"><line x1="40" y1="40" x2="600" y2="40"></line><line x1="40" y1="95" x2="600" y2="95"></line><line x1="40" y1="150" x2="600" y2="150"></line><line x1="40" y1="205" x2="600" y2="205"></line><line x1="40" y1="260" x2="600" y2="260"></line></g><path class="line-chart__target" data-line-target d="M40 260 L600 260"></path><path class="line-chart__area" data-line-area d="M40 260 L600 260 L600 260 L40 260 Z"></path><path class="line-chart__line" data-line-actual d="M40 260 L600 260"></path><g class="line-chart__points" data-line-points></g></svg><div class="line-chart__axis" data-line-axis><span>1 mar</span><span>6 mar</span><span>11 mar</span><span>16 mar</span><span>21 mar</span><span>26 mar</span><span>31 mar</span></div></div>
             </article>
           </section>
+          <article class="panel insights-card"><div class="panel__header"><div><p class="eyebrow">Senales utiles</p><h3>Que seguir este mes</h3></div><span class="pill pill--quiet">Automatico</span></div><div class="insight-list" data-insight-list></div></article>
+          </section>
 
+          <section class="dashboard-view view-ingreso is-hidden" data-view="ingreso" hidden>
+            <section class="content-grid content-grid--income">
+              <article class="panel income-card">
+                <div class="panel__header"><div><p class="eyebrow">Ingreso mensual</p><h3>Base para todo el mes</h3></div></div>
+                <div class="income-card__amount"><span>Ingreso total calculado</span><strong class="countup" data-summary="income-total" data-countup="0" data-prefix="$">$0</strong></div>
+                <p class="income-card__caption" data-summary-text="income-caption">Editar ingreso base o extra actualiza salidas, inversion y saldo libre al instante.</p>
+                <div class="projection-grid projection-grid--triple"><div class="projection-tile"><span>Ingreso base</span><strong class="countup" data-summary="income-base" data-countup="0" data-prefix="$">$0</strong></div><div class="projection-tile"><span>Ingreso extra</span><strong class="countup" data-summary="income-extra" data-countup="0" data-prefix="$">$0</strong></div><div class="projection-tile projection-tile--feature"><span>Saldo disponible</span><strong class="countup" data-summary="income-balance" data-countup="0" data-prefix="$">$0</strong></div></div>
+                <div class="allocation-note"><div class="allocation-note__header"><span>Uso del ingreso</span><strong data-income-usage-label>0% del ingreso ya asignado</strong></div><div class="stacked-bar"><span class="stacked-bar__segment stacked-bar__segment--mint" style="width: 50%;"></span><span class="stacked-bar__segment stacked-bar__segment--slate" style="width: 50%;"></span></div><div class="allocation-note__stats"><div class="allocation-stat"><span>Tasa de ahorro</span><strong class="countup" data-summary="income-savings-rate" data-countup="0" data-suffix="%" data-decimals="1">0%</strong></div><div class="allocation-stat"><span>Saldo libre</span><strong data-summary-text="income-savings-amount">$0</strong></div></div></div>
+                <button class="button button--accent" type="button" data-open-income>Editar ingreso mensual</button>
+              </article>
+              <article class="panel income-actions-card">
+                <div class="panel__header"><div><p class="eyebrow">Meta e ingreso</p><h3>Gestion del mes</h3></div></div>
+                <p class="panel-note" data-summary-text="income-goal-copy">Ajusta ingreso y meta mensual desde un solo lugar.</p>
+                <div class="projection-grid projection-grid--triple">
+                  <div class="projection-tile"><span data-summary-text="income-goal-label">Meta mensual de inversion</span><strong class="countup" data-summary="income-goal-amount" data-countup="0" data-prefix="$">$0</strong></div>
+                  <div class="projection-tile"><span>Invertido este mes</span><strong class="countup" data-summary="income-goal-saved" data-countup="0" data-prefix="$">$0</strong></div>
+                  <div class="projection-tile projection-tile--feature"><span>Saldo disponible</span><strong class="countup" data-summary="income-goal-balance" data-countup="0" data-prefix="$">$0</strong></div>
+                </div>
+                <div class="panel-actions"><button class="button button--accent" type="button" data-open-income>Editar ingreso mensual</button><button class="button button--ghost" type="button" data-open-goal>Editar meta mensual</button><button class="button button--ghost" type="button" data-open-investment>Registrar inversion</button></div>
+              </article>
+            </section>
+          </section>
+
+          <section class="dashboard-view view-calendario is-hidden" data-view="calendario" hidden>
           <section class="calendar-card panel">
             <div class="panel__header">
               <div><p class="eyebrow">Calendario</p><h3>Plan anual por mes</h3></div>
@@ -147,20 +176,10 @@
             <p class="panel-note" data-calendar-summary-note>Referencia anual simple usando el ingreso mensual actual y los meses con movimientos cargados.</p>
             <div class="calendar-grid" data-calendar-grid></div>
           </section>
+          </section>
 
-          <section class="content-grid">
+          <section class="dashboard-view view-actividad is-hidden" data-view="actividad" hidden>
             <article class="panel expenses-card"><div class="panel__header"><div><p class="eyebrow">Actividad reciente</p><h3>Transacciones recientes</h3></div><div class="inline-actions"><span class="pill pill--quiet" data-expense-results>0 visibles</span><button class="button button--ghost button--small" type="button" data-open-filters aria-haspopup="dialog">Filtros</button><button class="button button--ghost button--small" type="button" data-open-export aria-haspopup="dialog">Exportar</button></div></div><div class="expense-list" data-expense-list></div></article>
-            <div class="side-stack">
-              <article class="panel insights-card"><div class="panel__header"><div><p class="eyebrow">Senales utiles</p><h3>Que seguir este mes</h3></div><span class="pill pill--quiet">Automatico</span></div><div class="insight-list" data-insight-list></div></article>
-              <article class="panel income-card">
-                <div class="panel__header"><div><p class="eyebrow">Ingreso mensual</p><h3>Base para todo el mes</h3></div></div>
-                <div class="income-card__amount"><span>Ingreso total calculado</span><strong class="countup" data-summary="income-total" data-countup="0" data-prefix="$">$0</strong></div>
-                <p class="income-card__caption" data-summary-text="income-caption">Editar ingreso base o extra actualiza salidas, inversion y saldo libre al instante.</p>
-                <div class="projection-grid projection-grid--triple"><div class="projection-tile"><span>Ingreso base</span><strong class="countup" data-summary="income-base" data-countup="0" data-prefix="$">$0</strong></div><div class="projection-tile"><span>Ingreso extra</span><strong class="countup" data-summary="income-extra" data-countup="0" data-prefix="$">$0</strong></div><div class="projection-tile projection-tile--feature"><span>Saldo disponible</span><strong class="countup" data-summary="income-balance" data-countup="0" data-prefix="$">$0</strong></div></div>
-                <div class="allocation-note"><div class="allocation-note__header"><span>Uso del ingreso</span><strong data-income-usage-label>0% del ingreso ya asignado</strong></div><div class="stacked-bar"><span class="stacked-bar__segment stacked-bar__segment--mint" style="width: 50%;"></span><span class="stacked-bar__segment stacked-bar__segment--slate" style="width: 50%;"></span></div><div class="allocation-note__stats"><div class="allocation-stat"><span>Tasa de ahorro</span><strong class="countup" data-summary="income-savings-rate" data-countup="0" data-suffix="%" data-decimals="1">0%</strong></div><div class="allocation-stat"><span>Saldo libre</span><strong data-summary-text="income-savings-amount">$0</strong></div></div></div>
-                <button class="button button--accent" type="button" data-open-income>Editar ingreso mensual</button>
-              </article>
-            </div>
           </section>
         </section>
       </main>
@@ -237,11 +256,11 @@
     <div class="toast" data-toast hidden role="status" aria-live="polite"></div>
 
     <nav class="mobile-nav" aria-label="Movil">
-      <button class="mobile-nav__item is-active" type="button" data-nav-item="dashboard"><span class="mobile-nav__icon"></span><span>Inicio</span></button>
-      <button class="mobile-nav__item" type="button" data-nav-item="cashflow"><span class="mobile-nav__icon"></span><span>Flujo</span></button>
-      <button class="mobile-nav__item" type="button" data-nav-item="income"><span class="mobile-nav__icon"></span><span>Ingreso</span></button>
-      <button class="mobile-nav__item" type="button" data-nav-item="activity"><span class="mobile-nav__icon"></span><span>Actividad</span></button>
-      <button class="mobile-nav__item" type="button" data-nav-item="calendar"><span class="mobile-nav__icon"></span><span>Calendario</span></button>
+      <button class="mobile-nav__item is-active" type="button" data-nav-item="resumen"><span class="mobile-nav__icon"></span><span>Resumen</span></button>
+      <button class="mobile-nav__item" type="button" data-nav-item="flujo"><span class="mobile-nav__icon"></span><span>Flujo</span></button>
+      <button class="mobile-nav__item" type="button" data-nav-item="ingreso"><span class="mobile-nav__icon"></span><span>Ingreso</span></button>
+      <button class="mobile-nav__item" type="button" data-nav-item="actividad"><span class="mobile-nav__icon"></span><span>Actividad</span></button>
+      <button class="mobile-nav__item" type="button" data-nav-item="calendario"><span class="mobile-nav__icon"></span><span>Calendario</span></button>
     </nav>
   </div>
 

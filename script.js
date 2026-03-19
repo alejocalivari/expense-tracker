@@ -3,7 +3,45 @@ const { formatCurrency, formatDate, generateId } = window.aleclvExpenseTrackerUt
 
 const TOAST_TIMEOUT_MS = 2600;
 const MONTH_KEY_PATTERN = /^\d{4}-\d{2}$/;
-const NAV_SCROLL_OFFSET = 20;
+const DEFAULT_VIEW = "resumen";
+const ACTIVE_VIEW_STORAGE_KEY = `${window.aleclvExpenseTrackerStorage?.STORAGE_KEY || "aleclv-salary-planner-state"}:active-view`;
+const VIEW_TOPBAR_CONFIG = {
+  resumen: {
+    eyebrow: "plan mensual del ingreso",
+    getTitle: (metrics) => `${metrics.monthLabelLong} - resumen mensual del salario`,
+    showSearch: false,
+    showFilters: false,
+    showIncomeAction: true,
+  },
+  flujo: {
+    eyebrow: "seguimiento del mes",
+    getTitle: () => "flujo del mes",
+    showSearch: false,
+    showFilters: false,
+    showIncomeAction: false,
+  },
+  ingreso: {
+    eyebrow: "gestion del ingreso",
+    getTitle: () => "plan de ingreso del mes",
+    showSearch: false,
+    showFilters: false,
+    showIncomeAction: true,
+  },
+  actividad: {
+    eyebrow: "registro y filtros",
+    getTitle: () => "movimientos del mes",
+    showSearch: true,
+    showFilters: true,
+    showIncomeAction: false,
+  },
+  calendario: {
+    eyebrow: "navegacion anual",
+    getTitle: () => "plan anual por mes",
+    showSearch: false,
+    showFilters: false,
+    showIncomeAction: false,
+  },
+};
 const CATEGORY_SWATCHES = [
   { className: "mint", color: "var(--accent)" },
   { className: "blue", color: "var(--accent-blue)" },
@@ -31,10 +69,17 @@ const navItems = document.querySelectorAll("[data-nav-item]");
 const openFilterButtons = document.querySelectorAll("[data-open-filters]");
 const openExportButtons = document.querySelectorAll("[data-open-export]");
 const searchInput = document.querySelector("[data-search-input]");
+const topbarActions = document.querySelector("[data-topbar-actions]");
+const topbarEyebrow = document.querySelector("[data-topbar-eyebrow]");
+const topbarSearch = document.querySelector("[data-topbar-search]");
+const topbarFilters = document.querySelector("[data-topbar-filters]");
+const topbarIncomeButton = document.querySelector("[data-topbar-income]");
+const dashboardMain = document.querySelector("[data-dashboard-main]");
 const expenseList = document.querySelector("[data-expense-list]");
 const expenseResults = document.querySelector("[data-expense-results]");
 const insightList = document.querySelector("[data-insight-list]");
 const fab = document.querySelector(".fab");
+const fabLabel = document.querySelector(".fab__label");
 const modal = document.querySelector("[data-modal]");
 const modalPanels = document.querySelectorAll("[data-modal-panel]");
 const modalCloseButton = document.querySelector(".app-modal__close");
@@ -91,13 +136,47 @@ const calendarCopy = document.querySelector("[data-calendar-copy]");
 const calendarSummaryNote = document.querySelector("[data-calendar-summary-note]");
 const calendarShiftButtons = document.querySelectorAll("[data-calendar-shift]");
 
-const sections = {
-  dashboard: document.querySelector(".hero-grid"),
-  cashflow: document.querySelector(".kpi-grid"),
-  calendar: document.querySelector(".calendar-card"),
-  income: document.querySelector(".income-card"),
-  activity: document.querySelector(".expenses-card"),
-  insights: document.querySelector(".insights-card"),
+const viewSections = {
+  resumen: document.querySelector('[data-view="resumen"]'),
+  flujo: document.querySelector('[data-view="flujo"]'),
+  ingreso: document.querySelector('[data-view="ingreso"]'),
+  actividad: document.querySelector('[data-view="actividad"]'),
+  calendario: document.querySelector('[data-view="calendario"]'),
+};
+
+const canUseLocalStorage = () => {
+  try {
+    return typeof window.localStorage !== "undefined";
+  } catch (error) {
+    return false;
+  }
+};
+
+const isKnownView = (viewName) => Boolean(viewName && Object.prototype.hasOwnProperty.call(viewSections, viewName) && viewSections[viewName]);
+
+const readPersistedActiveView = () => {
+  if (!canUseLocalStorage()) {
+    return DEFAULT_VIEW;
+  }
+
+  try {
+    const persistedView = window.localStorage.getItem(ACTIVE_VIEW_STORAGE_KEY);
+    return isKnownView(persistedView) ? persistedView : DEFAULT_VIEW;
+  } catch (error) {
+    return DEFAULT_VIEW;
+  }
+};
+
+const persistActiveView = (viewName) => {
+  if (!canUseLocalStorage()) {
+    return;
+  }
+
+  try {
+    window.localStorage.setItem(ACTIVE_VIEW_STORAGE_KEY, isKnownView(viewName) ? viewName : DEFAULT_VIEW);
+  } catch (error) {
+    return;
+  }
 };
 
 const kpiElements = {
@@ -154,6 +233,9 @@ const summaryElements = {
   incomeExtra: document.querySelector('[data-summary="income-extra"]'),
   incomeBalance: document.querySelector('[data-summary="income-balance"]'),
   incomeSavingsRate: document.querySelector('[data-summary="income-savings-rate"]'),
+  incomeGoalAmount: document.querySelector('[data-summary="income-goal-amount"]'),
+  incomeGoalSaved: document.querySelector('[data-summary="income-goal-saved"]'),
+  incomeGoalBalance: document.querySelector('[data-summary="income-goal-balance"]'),
 };
 
 const textElements = {
@@ -175,6 +257,8 @@ const textElements = {
   incomeCaption: document.querySelector('[data-summary-text="income-caption"]'),
   incomeSavingsAmount: document.querySelector('[data-summary-text="income-savings-amount"]'),
   incomeUsageLabel: document.querySelector("[data-income-usage-label]"),
+  incomeGoalLabel: document.querySelector('[data-summary-text="income-goal-label"]'),
+  incomeGoalCopy: document.querySelector('[data-summary-text="income-goal-copy"]'),
 };
 
 const comparisonElements = {
@@ -212,6 +296,8 @@ const statusElements = {
 const stackedSegments = document.querySelectorAll(".stacked-bar__segment");
 
 const uiState = {
+  activeView: readPersistedActiveView(),
+  latestMetrics: null,
   modalMode: null,
   activeExpenseId: null,
   lastFocusedElement: null,
@@ -695,11 +781,73 @@ const getMovementCopy = (category = "") => {
   };
 };
 
-const renderPeriod = (metrics) => {
-  setTextValue(textElements.periodTitle, `${metrics.monthLabelLong} - resumen mensual del salario`);
+const getFloatingActionConfig = (metrics) => {
+  const hasInvestmentContext = metrics.goalAmount > 0 || metrics.investmentTransactionsCount > 0;
+  const activeView = uiState.activeView || DEFAULT_VIEW;
+
+  if (activeView === "actividad") {
+    return {
+      visible: true,
+      label: "Registrar salida",
+      action: "expense",
+    };
+  }
+
+  if (activeView === "ingreso" && hasInvestmentContext) {
+    return {
+      visible: true,
+      label: "Registrar inversion",
+      action: "investment",
+    };
+  }
+
+  return {
+    visible: false,
+    label: "Registrar salida",
+    action: "expense",
+  };
+};
+
+const renderFloatingAction = (metrics) => {
+  if (!fab) {
+    return;
+  }
+
+  const config = getFloatingActionConfig(metrics);
+
+  fab.hidden = !config.visible;
+  fab.classList.toggle("is-hidden", !config.visible);
+  fab.classList.toggle("is-investment", config.visible && config.action === "investment");
+  fab.dataset.fabAction = config.visible ? config.action : "";
+  fab.setAttribute("aria-label", config.label);
+  setTextValue(fabLabel, config.label);
+};
+
+const renderTopbar = (metrics) => {
+  const activeView = uiState.activeView || DEFAULT_VIEW;
+  const config = VIEW_TOPBAR_CONFIG[activeView] || VIEW_TOPBAR_CONFIG[DEFAULT_VIEW];
+
+  setTextValue(topbarEyebrow, config.eyebrow);
+  setTextValue(textElements.periodTitle, config.getTitle(metrics));
   setTextValue(textElements.periodPill, metrics.monthLabelShortYear);
   setTextValue(incomeMonthLabel, `Se usa como base para ${metrics.monthLabelLong}.`);
   setTextValue(goalLabelPreview, metrics.goalLabel);
+
+  if (topbarSearch) {
+    topbarSearch.hidden = !config.showSearch;
+  }
+
+  if (topbarFilters) {
+    topbarFilters.hidden = !config.showFilters;
+  }
+
+  if (topbarIncomeButton) {
+    topbarIncomeButton.hidden = !config.showIncomeAction;
+  }
+
+  if (topbarActions) {
+    topbarActions.hidden = !config.showSearch && !config.showFilters && !config.showIncomeAction;
+  }
 };
 
 const renderSidebar = (metrics, animate) => {
@@ -933,6 +1081,9 @@ const renderIncomeCard = (metrics, animate) => {
   animateValue(summaryElements.incomeExtra, metrics.incomeExtra, { animate });
   animateValue(summaryElements.incomeBalance, metrics.remainingBalance, { animate });
   animateValue(summaryElements.incomeSavingsRate, metrics.savingsRate, { animate, decimals: 1, suffix: "%" });
+  animateValue(summaryElements.incomeGoalAmount, metrics.goalAmount, { animate });
+  animateValue(summaryElements.incomeGoalSaved, metrics.investedThisMonth, { animate });
+  animateValue(summaryElements.incomeGoalBalance, metrics.remainingBalance, { animate });
   setTextValue(
     textElements.incomeCaption,
     metrics.totalIncome
@@ -940,6 +1091,15 @@ const renderIncomeCard = (metrics, animate) => {
       : "Define un ingreso base y otro extra para saber que margen real tienes antes de invertir."
   );
   setTextValue(textElements.incomeSavingsAmount, formatMoney(metrics.savingsAmount));
+  setTextValue(textElements.incomeGoalLabel, metrics.goalLabel);
+  setTextValue(
+    textElements.incomeGoalCopy,
+    metrics.goalAmount > 0
+      ? metrics.investmentTransactionsCount
+        ? `${formatPercent(metrics.goalProgressPercent, 1)} de "${metrics.goalLabel}" ya esta cubierto con aportes reales.`
+        : `Tu objetivo mensual sigue en ${formatMoney(metrics.goalAmount)} y todavia no tiene aportes registrados.`
+      : "Ajusta ingreso y meta mensual desde un solo lugar."
+  );
   setTextValue(
     textElements.incomeUsageLabel,
     metrics.totalIncome
@@ -1274,8 +1434,10 @@ const renderDashboard = (animate = false) => {
   const state = getState();
   const metrics = computeMetrics(state);
   const context = getVisibleExpensesContext(state, metrics);
+  uiState.latestMetrics = metrics;
 
-  renderPeriod(metrics);
+  renderTopbar(metrics);
+  renderFloatingAction(metrics);
   renderSidebar(metrics, animate);
   renderHero(metrics, animate);
   renderSplitCard(metrics, animate);
@@ -1718,36 +1880,72 @@ const restoreSampleData = () => {
   setState(getSampleState());
   closeModal();
   renderDashboard(true);
-  scrollToSection("dashboard");
+  setActiveView(DEFAULT_VIEW, { instant: true });
   showToast("Muestra restaurada.");
 };
 
 const setActiveNavItem = (target) => {
-  navItems.forEach((item) => item.classList.toggle("is-active", item.dataset.navItem === target));
+  navItems.forEach((item) => {
+    const isActive = item.dataset.navItem === target;
+    item.classList.toggle("is-active", isActive);
+    if (isActive) {
+      item.setAttribute("aria-current", "page");
+    } else {
+      item.removeAttribute("aria-current");
+    }
+  });
 };
 
-const scrollToSection = (target) => {
-  const section = sections[target] || sections.dashboard;
+const setActiveView = (target, options = {}) => {
+  const nextView = Object.prototype.hasOwnProperty.call(viewSections, target) ? target : DEFAULT_VIEW;
+  const metrics = uiState.latestMetrics || computeMetrics(getState());
+  const shouldFocusMain = options.focusMain !== false && !options.instant;
 
-  if (!section) {
-    return;
-  }
-
+  uiState.activeView = nextView;
+  body.dataset.activeView = nextView;
   body.classList.remove("sidebar-open");
-  setActiveNavItem(target);
+  persistActiveView(nextView);
+  setActiveNavItem(nextView);
+  Object.entries(viewSections).forEach(([viewName, section]) => {
+    if (!section) {
+      return;
+    }
+
+    const isActive = viewName === nextView;
+    section.hidden = !isActive;
+    section.classList.toggle("is-hidden", !isActive);
+    section.classList.toggle("is-active", isActive);
+    section.inert = !isActive;
+    section.setAttribute("aria-hidden", isActive ? "false" : "true");
+  });
+  renderTopbar(metrics);
+  renderFloatingAction(metrics);
+
   window.requestAnimationFrame(() => {
     window.scrollTo({
-      top: Math.max(0, window.scrollY + section.getBoundingClientRect().top - ((topbar?.offsetHeight || 0) + NAV_SCROLL_OFFSET)),
-      behavior: getScrollBehavior(),
+      top: 0,
+      behavior: options.instant ? "auto" : getScrollBehavior(),
     });
+
+    if (shouldFocusMain && dashboardMain instanceof HTMLElement) {
+      dashboardMain.focus({ preventScroll: true });
+    }
   });
 };
 
 const initializeInteractions = () => {
   renderDashboard(false);
+  setActiveView(uiState.activeView, { instant: true });
 
   if (fab) {
-    fab.addEventListener("click", () => openExpenseModal("add"));
+    fab.addEventListener("click", () => {
+      if (fab.dataset.fabAction === "investment") {
+        openInvestmentModal();
+        return;
+      }
+
+      openExpenseModal("add");
+    });
   }
 
   openIncomeButtons.forEach((button) => button.addEventListener("click", openIncomeModal));
@@ -1860,7 +2058,7 @@ const initializeInteractions = () => {
 
   menuToggle?.addEventListener("click", () => body.classList.toggle("sidebar-open"));
   backdrop?.addEventListener("click", () => body.classList.remove("sidebar-open"));
-  navItems.forEach((item) => item.addEventListener("click", () => scrollToSection(item.dataset.navItem)));
+  navItems.forEach((item) => item.addEventListener("click", () => setActiveView(item.dataset.navItem)));
   window.addEventListener("resize", () => {
     if (window.innerWidth >= 1120) {
       body.classList.remove("sidebar-open");
