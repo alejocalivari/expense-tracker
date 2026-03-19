@@ -600,6 +600,19 @@ body.sidebar-open .mobile-backdrop {
   animation: viewEnter 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+.flow-view {
+  gap: 24px;
+}
+
+.flow-section {
+  display: grid;
+  gap: 18px;
+}
+
+.flow-section--insights {
+  padding-top: 4px;
+}
+
 .topbar__actions[hidden] {
   display: none !important;
 }
@@ -609,6 +622,11 @@ body.sidebar-open .mobile-backdrop {
 .content-grid {
   display: grid;
   gap: 18px;
+}
+
+.content-grid--income {
+  gap: 16px;
+  align-items: start;
 }
 
 .hero-card,
@@ -633,10 +651,16 @@ body.sidebar-open .mobile-backdrop {
 
 .hero-card__headline {
   display: flex;
-  align-items: flex-end;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 18px;
   flex-wrap: wrap;
+}
+
+.hero-card__content {
+  display: grid;
+  gap: 16px;
+  max-width: 42rem;
 }
 
 .hero-card__amount {
@@ -646,10 +670,12 @@ body.sidebar-open .mobile-backdrop {
 }
 
 .hero-card__caption {
-  max-width: 42rem;
-  margin-top: 10px;
   color: var(--text-muted);
   line-height: 1.65;
+}
+
+.hero-card__actions {
+  margin-top: 4px;
 }
 
 .hero-stat-cluster {
@@ -899,6 +925,10 @@ body.sidebar-open .mobile-backdrop {
 .chart-card {
   display: grid;
   gap: 22px;
+}
+
+.chart-card--line {
+  align-content: start;
 }
 
 .chart-card__content--split {
@@ -1431,18 +1461,22 @@ body.sidebar-open .mobile-backdrop {
 .insights-card,
 .income-card {
   display: grid;
-  gap: 18px;
+  gap: 14px;
+}
+
+.insights-card--flow {
+  gap: 20px;
 }
 
 .income-actions-card {
   display: grid;
-  gap: 18px;
+  gap: 16px;
   align-content: start;
 }
 
 .insight-list {
   display: grid;
-  gap: 12px;
+  gap: 14px;
 }
 
 .insight {
@@ -1450,6 +1484,25 @@ body.sidebar-open .mobile-backdrop {
   grid-template-columns: auto 1fr;
   gap: 14px;
   padding: 16px;
+  align-items: start;
+}
+
+.insight__content {
+  display: grid;
+  gap: 6px;
+}
+
+.insight--primary {
+  background:
+    radial-gradient(circle at top right, rgba(117, 229, 192, 0.12), transparent 38%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02)),
+    rgba(255, 255, 255, 0.03);
+  border-color: rgba(117, 229, 192, 0.14);
+}
+
+.insight--primary strong {
+  font-size: 1.08rem;
+  line-height: 1.35;
 }
 
 .insight__flag {
@@ -1483,17 +1536,15 @@ body.sidebar-open .mobile-backdrop {
 }
 
 .insight p {
-  margin-top: 6px;
   color: var(--text-muted);
-  line-height: 1.55;
+  line-height: 1.45;
 }
 
 .insight__meta {
   display: block;
-  margin-top: 10px;
   color: var(--text-soft);
   font-size: 0.84rem;
-  line-height: 1.55;
+  line-height: 1.45;
 }
 
 .income-card {
@@ -1501,6 +1552,15 @@ body.sidebar-open .mobile-backdrop {
     radial-gradient(circle at top right, rgba(132, 166, 255, 0.08), transparent 34%),
     linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 55%),
     var(--surface-2);
+}
+
+.income-block {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.028);
 }
 
 .income-card__amount {
@@ -1579,6 +1639,29 @@ body.sidebar-open .mobile-backdrop {
 
 .allocation-stat span {
   color: var(--text-muted);
+}
+
+.income-helper-list {
+  display: grid;
+  gap: 10px;
+}
+
+.income-helper-item {
+  display: grid;
+  gap: 4px;
+  padding: 14px 15px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.income-helper-item strong {
+  font-size: 0.95rem;
+}
+
+.income-helper-item span {
+  color: var(--text-muted);
+  line-height: 1.5;
 }
 
 .income-summary strong {
@@ -2127,6 +2210,18 @@ body.is-loading .dashboard-state--content {
 
   .content-grid {
     grid-template-columns: minmax(0, 1.42fr) minmax(320px, 0.92fr);
+  }
+
+  .content-grid--income {
+    grid-template-columns: minmax(0, 1.28fr) minmax(320px, 0.9fr);
+  }
+
+  .insight-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .insight--primary {
+    grid-column: 1 / -1;
   }
 
   .skeleton-grid--hero {

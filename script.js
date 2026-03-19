@@ -7,35 +7,35 @@ const DEFAULT_VIEW = "resumen";
 const ACTIVE_VIEW_STORAGE_KEY = `${window.aleclvExpenseTrackerStorage?.STORAGE_KEY || "aleclv-salary-planner-state"}:active-view`;
 const VIEW_TOPBAR_CONFIG = {
   resumen: {
-    eyebrow: "plan mensual del ingreso",
+    eyebrow: "vision general",
     getTitle: (metrics) => `${metrics.monthLabelLong} - resumen mensual del salario`,
     showSearch: false,
     showFilters: false,
-    showIncomeAction: true,
+    showIncomeAction: false,
   },
   flujo: {
-    eyebrow: "seguimiento del mes",
+    eyebrow: "analisis del mes",
     getTitle: () => "flujo del mes",
     showSearch: false,
     showFilters: false,
     showIncomeAction: false,
   },
   ingreso: {
-    eyebrow: "gestion del ingreso",
+    eyebrow: "control del mes",
     getTitle: () => "plan de ingreso del mes",
     showSearch: false,
     showFilters: false,
     showIncomeAction: true,
   },
   actividad: {
-    eyebrow: "registro y filtros",
+    eyebrow: "operaciones del mes",
     getTitle: () => "movimientos del mes",
     showSearch: true,
     showFilters: true,
     showIncomeAction: false,
   },
   calendario: {
-    eyebrow: "navegacion anual",
+    eyebrow: "planificacion anual",
     getTitle: () => "plan anual por mes",
     showSearch: false,
     showFilters: false,
@@ -62,6 +62,7 @@ const topbar = document.querySelector(".topbar");
 const openIncomeButtons = document.querySelectorAll("[data-open-income]");
 const openGoalButtons = document.querySelectorAll("[data-open-goal]");
 const openInvestmentButtons = document.querySelectorAll("[data-open-investment]");
+const openExpenseButtons = document.querySelectorAll("[data-open-expense]");
 const modalRestoreButtons = document.querySelectorAll("[data-modal-restore-sample]");
 const menuToggle = document.querySelector("[data-menu-toggle]");
 const backdrop = document.querySelector("[data-backdrop]");
@@ -232,10 +233,12 @@ const summaryElements = {
   incomeBase: document.querySelector('[data-summary="income-base"]'),
   incomeExtra: document.querySelector('[data-summary="income-extra"]'),
   incomeBalance: document.querySelector('[data-summary="income-balance"]'),
-  incomeSavingsRate: document.querySelector('[data-summary="income-savings-rate"]'),
+  incomeSavings: document.querySelector('[data-summary="income-savings"]'),
+  incomeAssigned: document.querySelector('[data-summary="income-assigned"]'),
+  incomeSpent: document.querySelector('[data-summary="income-spent"]'),
   incomeGoalAmount: document.querySelector('[data-summary="income-goal-amount"]'),
   incomeGoalSaved: document.querySelector('[data-summary="income-goal-saved"]'),
-  incomeGoalBalance: document.querySelector('[data-summary="income-goal-balance"]'),
+  incomeGoalGap: document.querySelector('[data-summary="income-goal-gap"]'),
 };
 
 const textElements = {
@@ -255,10 +258,12 @@ const textElements = {
   goalProgressText: document.querySelector('[data-summary-text="goal-progress-text"]'),
   comparisonNote: document.querySelector('[data-summary-text="comparison-note"]'),
   incomeCaption: document.querySelector('[data-summary-text="income-caption"]'),
-  incomeSavingsAmount: document.querySelector('[data-summary-text="income-savings-amount"]'),
   incomeUsageLabel: document.querySelector("[data-income-usage-label]"),
+  incomeUsageCopy: document.querySelector('[data-summary-text="income-usage-copy"]'),
   incomeGoalLabel: document.querySelector('[data-summary-text="income-goal-label"]'),
+  incomeGoalGapLabel: document.querySelector('[data-summary-text="income-goal-gap-label"]'),
   incomeGoalCopy: document.querySelector('[data-summary-text="income-goal-copy"]'),
+  incomeResultCopy: document.querySelector('[data-summary-text="income-result-copy"]'),
 };
 
 const comparisonElements = {
@@ -768,42 +773,33 @@ const getMovementCopy = (category = "") => {
   const isInvestment = isInvestmentCategory(category);
 
   return {
-    noun: isInvestment ? "aporte" : "salida",
-    nounCapitalized: isInvestment ? "Aporte" : "Salida",
-    editLabel: isInvestment ? "Editar aporte" : "Editar salida",
-    duplicateLabel: isInvestment ? "Duplicar aporte" : "Duplicar salida",
-    deleteLabel: isInvestment ? "Eliminar aporte" : "Eliminar salida",
-    registeredToast: isInvestment ? "Aporte registrado." : "Salida registrada.",
-    updatedToast: isInvestment ? "Aporte actualizado." : "Salida actualizada.",
-    deletedToast: isInvestment ? "Aporte eliminado." : "Salida eliminada.",
-    duplicatedToast: isInvestment ? "Aporte duplicado." : "Salida duplicada.",
-    deleteCopy: isInvestment ? "Vas a eliminar este aporte del registro mensual." : "Vas a eliminar esta salida del registro mensual.",
+    noun: isInvestment ? "aporte" : "gasto",
+    nounCapitalized: isInvestment ? "Aporte" : "Gasto",
+    editLabel: isInvestment ? "Editar aporte" : "Editar gasto",
+    duplicateLabel: isInvestment ? "Duplicar aporte" : "Duplicar gasto",
+    deleteLabel: isInvestment ? "Eliminar aporte" : "Eliminar gasto",
+    registeredToast: isInvestment ? "Aporte registrado." : "Gasto registrado.",
+    updatedToast: isInvestment ? "Aporte actualizado." : "Gasto actualizado.",
+    deletedToast: isInvestment ? "Aporte eliminado." : "Gasto eliminado.",
+    duplicatedToast: isInvestment ? "Aporte duplicado." : "Gasto duplicado.",
+    deleteCopy: isInvestment ? "Vas a eliminar este aporte del registro mensual." : "Vas a eliminar este gasto del registro mensual.",
   };
 };
 
 const getFloatingActionConfig = (metrics) => {
-  const hasInvestmentContext = metrics.goalAmount > 0 || metrics.investmentTransactionsCount > 0;
   const activeView = uiState.activeView || DEFAULT_VIEW;
 
   if (activeView === "actividad") {
     return {
       visible: true,
-      label: "Registrar salida",
+      label: "Registrar gasto",
       action: "expense",
-    };
-  }
-
-  if (activeView === "ingreso" && hasInvestmentContext) {
-    return {
-      visible: true,
-      label: "Registrar inversion",
-      action: "investment",
     };
   }
 
   return {
     visible: false,
-    label: "Registrar salida",
+    label: "Registrar gasto",
     action: "expense",
   };
 };
@@ -894,7 +890,7 @@ const renderHero = (metrics, animate) => {
   setTextValue(
     textElements.heroCaption,
     !metrics.goalAmount
-      ? "Define una meta mensual para medir si tus aportes en Inversion siguen el plan que marcaste para este mes."
+      ? "Usa Registrar gasto para cargar tus salidas reales del mes y define una meta de inversion para medir el avance del plan."
       : metrics.isGoalMet
       ? hasGoalExceeded
         ? `Ya registraste ${formatMoney(metrics.investedThisMonth)} en Inversion para "${metrics.goalLabel}" y superaste la meta por ${formatMoney(metrics.goalExceededAmount)}.`
@@ -902,8 +898,8 @@ const renderHero = (metrics, animate) => {
       : metrics.investmentTransactionsCount
         ? `Saldo disponible: ${formatMoney(metrics.remainingBalance)}. Llevas ${formatMoney(metrics.investedThisMonth)} invertidos para "${metrics.goalLabel}" y te falta invertir ${formatMoney(metrics.goalRemainingAmount)}.`
         : metrics.transactionCount
-          ? `Saldo disponible: ${formatMoney(metrics.remainingBalance)}. Todavia no registraste aportes en la categoria Inversion para avanzar sobre "${metrics.goalLabel}".`
-          : "Carga tus movimientos del mes y usa \"Registrar inversion\" cuando hagas un aporte real en la categoria Inversion."
+          ? `Saldo disponible: ${formatMoney(metrics.remainingBalance)}. Ya registraste gastos del mes, pero todavia no cargaste aportes en Inversion para avanzar sobre "${metrics.goalLabel}".`
+          : "Empieza por registrar un gasto real del mes y usa \"Registrar inversion\" cuando hagas un aporte en la categoria Inversion."
   );
   setTextValue(labelElements.heroStat1, "Invertido este mes");
   setTextValue(labelElements.heroStat2, "Progreso de inversion");
@@ -1076,35 +1072,54 @@ const renderKpis = (metrics, animate) => {
 };
 
 const renderIncomeCard = (metrics, animate) => {
+  const incomeGoalGapValue = metrics.isGoalMet ? metrics.goalExceededAmount : metrics.goalRemainingAmount;
+  const incomeGoalGapLabel = metrics.isGoalMet
+    ? metrics.goalExceededAmount > 0
+      ? "Excedente sobre la meta"
+      : "Meta cumplida"
+    : "Te falta invertir";
+
   animateValue(summaryElements.incomeTotal, metrics.totalIncome, { animate });
   animateValue(summaryElements.incomeBase, metrics.incomeBase, { animate });
   animateValue(summaryElements.incomeExtra, metrics.incomeExtra, { animate });
   animateValue(summaryElements.incomeBalance, metrics.remainingBalance, { animate });
-  animateValue(summaryElements.incomeSavingsRate, metrics.savingsRate, { animate, decimals: 1, suffix: "%" });
+  animateValue(summaryElements.incomeSavings, metrics.savingsAmount, { animate });
+  animateValue(summaryElements.incomeAssigned, metrics.assignedAmount, { animate });
+  animateValue(summaryElements.incomeSpent, metrics.totalSpent, { animate });
   animateValue(summaryElements.incomeGoalAmount, metrics.goalAmount, { animate });
   animateValue(summaryElements.incomeGoalSaved, metrics.investedThisMonth, { animate });
-  animateValue(summaryElements.incomeGoalBalance, metrics.remainingBalance, { animate });
+  animateValue(summaryElements.incomeGoalGap, incomeGoalGapValue, { animate });
   setTextValue(
     textElements.incomeCaption,
     metrics.totalIncome
-      ? "Editar ingreso base o extra cambia al instante salidas, inversion y saldo libre."
-      : "Define un ingreso base y otro extra para saber que margen real tienes antes de invertir."
+      ? "El ingreso total marca el techo del mes: base y extra actualizan al instante el saldo disponible."
+      : "Define un ingreso base y otro extra para construir el plan real del mes."
   );
-  setTextValue(textElements.incomeSavingsAmount, formatMoney(metrics.savingsAmount));
+  setTextValue(
+    textElements.incomeUsageCopy,
+    metrics.totalIncome
+      ? "Cada gasto o aporte registrado pasa a dinero asignado y reduce el saldo disponible del mes."
+      : "Cuando cargues ingreso y movimientos vas a ver cuanto del mes ya esta comprometido."
+  );
   setTextValue(textElements.incomeGoalLabel, metrics.goalLabel);
+  setTextValue(textElements.incomeGoalGapLabel, incomeGoalGapLabel);
   setTextValue(
     textElements.incomeGoalCopy,
     metrics.goalAmount > 0
-      ? metrics.investmentTransactionsCount
-        ? `${formatPercent(metrics.goalProgressPercent, 1)} de "${metrics.goalLabel}" ya esta cubierto con aportes reales.`
-        : `Tu objetivo mensual sigue en ${formatMoney(metrics.goalAmount)} y todavia no tiene aportes registrados.`
-      : "Ajusta ingreso y meta mensual desde un solo lugar."
+      ? `Ingreso, meta y aportes se coordinan desde aqui para que el cierre del mes sea coherente.`
+      : "Carga ingreso y define una meta mensual para convertir esta vista en tu centro de control."
   );
   setTextValue(
     textElements.incomeUsageLabel,
     metrics.totalIncome
-      ? `${formatPercent(metrics.assignedPercent, 1)} del ingreso ya fue asignado - ${metrics.goalAmount > 0 ? `${formatPercent(metrics.goalProgressPercent, 1)} de meta invertida` : "sin meta de inversion"}`
+      ? `${formatPercent(metrics.assignedPercent, 1)} del ingreso ya fue asignado`
       : "Todavia no hay ingreso cargado"
+  );
+  setTextValue(
+    textElements.incomeResultCopy,
+    metrics.goalAmount > 0
+      ? `Saldo libre: ${formatMoney(metrics.savingsAmount)}. La meta "${metrics.goalLabel}" lleva ${formatPercent(metrics.goalProgressPercent, 1)} cubierto con aportes reales.`
+      : "El saldo libre queda despues de asignar gastos e inversion; define una meta para seguir el avance real."
   );
 
   if (stackedSegments.length >= 2) {
@@ -1119,14 +1134,14 @@ const renderIncomeCard = (metrics, animate) => {
 
 const renderCategoryMix = (metrics, animate) => {
   animateValue(summaryElements.chartTotalSpent, metrics.totalSpent, { animate });
-  setTextValue(textElements.categoryCountPill, `${metrics.activeCategoryCount} categoria(s) activas`);
+  setTextValue(textElements.categoryCountPill, `${metrics.activeCategoryCount} categoria${metrics.activeCategoryCount === 1 ? "" : "s"}`);
 
   if (!categoryLegend) {
     return;
   }
 
   if (!metrics.categoryBreakdown.length) {
-    categoryLegend.innerHTML = '<div class="expense-list__empty"><strong>Sin categorias para mostrar</strong><p>Cuando cargues salidas de este mes vas a ver la mezcla por categoria y cuanto pesa cada una.</p></div>';
+    categoryLegend.innerHTML = '<div class="expense-list__empty"><strong>Sin categorias</strong><p>Carga salidas para ver la mezcla del mes.</p></div>';
     if (donutChart) {
       donutChart.style.background = "conic-gradient(rgba(255,255,255,0.08) 0 100%)";
     }
@@ -1211,42 +1226,75 @@ const renderLineChart = (metrics) => {
   );
 };
 
-const createInsight = (flag, tone, title, body, meta) => ({ flag, tone, title, body, meta });
+const createInsight = (flag, tone, title, body, meta, options = {}) => ({
+  flag,
+  tone,
+  title,
+  body,
+  meta,
+  primary: Boolean(options.primary),
+});
 
 const generateInsights = (metrics) => {
   if (!metrics.transactionCount) {
     return [
-      createInsight("Meta", "blue", "Meta de inversion", `Tu objetivo actual es ${formatMoney(metrics.goalAmount)} para "${metrics.goalLabel}".`, "La meta solo avanza con movimientos guardados en la categoria Inversion."),
-      createInsight("Aporte", "mint", "Primer aporte pendiente", "Usa Registrar inversion cuando hagas un aporte real para empezar a medir el progreso mensual.", metrics.totalIncome ? `Ingreso actual: ${formatMoney(metrics.totalIncome)}.` : "Todavia no hay ingreso mensual cargado."),
+      createInsight(
+        "Flujo",
+        "blue",
+        "Sin salidas registradas",
+        `Todavia no hay movimientos en ${metrics.monthLabelLong}.`,
+        metrics.totalIncome ? `Ingreso actual: ${formatMoney(metrics.totalIncome)}.` : "Carga el ingreso para leer el flujo.",
+        { primary: true }
+      ),
+      createInsight(
+        "Meta",
+        "mint",
+        "Meta mensual",
+        metrics.goalAmount ? `${formatMoney(metrics.goalAmount)} para ${metrics.goalLabel}.` : "Sin meta mensual cargada.",
+        "Solo avanza con Inversion."
+      ),
     ];
   }
 
-  if (!metrics.investmentTransactionsCount) {
-    return [
-      createInsight("Meta", "blue", "Sin aportes registrados", `Todavia no registraste movimientos en Inversion para "${metrics.goalLabel}".`, `Objetivo: ${formatMoney(metrics.goalAmount)}. Saldo disponible actual: ${formatMoney(metrics.remainingBalance)}.`),
-      createInsight("Accion", "mint", "Lo que falta para empezar", "La meta no sube con el saldo restante: solo cuenta cuando cargas un aporte en la categoria Inversion.", "Usa Registrar inversion para guardar el proximo aporte."),
-      createInsight("Gap", "rose", "Monto pendiente", `Te falta invertir ${formatMoney(metrics.goalRemainingAmount)} para llegar a tu objetivo.`, `Invertido este mes: ${formatMoney(metrics.investedThisMonth)}.`),
-      createInsight("Saldo", "blue", "Saldo disponible aparte", `Despues de todas tus salidas te quedan ${formatMoney(metrics.remainingBalance)} disponibles.`, "Ese saldo sigue aparte y no cuenta para la meta hasta registrarlo como Inversion."),
-      createInsight(metrics.topCategory?.category || "Categoria", "blue", "Categoria con mayor salida", metrics.topCategory ? `${metrics.topCategory.category} concentra ${formatPercent(metrics.topCategory.share, 1)} de las salidas del mes.` : "Sin categoria dominante.", metrics.topCategory ? `Total: ${formatMoney(metrics.topCategory.total)}.` : "Sin datos."),
-    ];
-  }
+  const isSpendingOverIncome = metrics.totalIncome > 0 && metrics.projectedMonthlySpend > metrics.totalIncome;
+  const spendingTone = isSpendingOverIncome ? "rose" : metrics.totalIncome > 0 && metrics.spentRatio <= 70 ? "mint" : "blue";
+  const topCategoryInsight = metrics.topCategory
+    ? createInsight(
+        metrics.topCategory.category,
+        "blue",
+        "Categoria principal",
+        `${metrics.topCategory.category}: ${formatPercent(metrics.topCategory.share, 1)} del total.`,
+        `${formatMoney(metrics.topCategory.total)} en el mes.`
+      )
+    : createInsight("Categoria", "blue", "Categoria principal", "Sin categoria dominante.", "Sin datos.");
 
   return [
-    createInsight("Meta", metrics.isGoalMet ? "mint" : "blue", "Progreso de inversion", `Ya registraste ${formatMoney(metrics.investedThisMonth)} en Inversion y cubriste el ${formatPercent(metrics.goalProgressPercent, 1)} de tu meta mensual.`, `${formatNumber(metrics.investmentTransactionsCount)} aporte(s) en Inversion.`),
     createInsight(
-      metrics.isGoalMet ? "Cumplida" : "Faltante",
-      metrics.isGoalMet ? "mint" : "rose",
-      metrics.isGoalMet ? "Meta mensual cumplida" : "Monto pendiente",
-      metrics.isGoalMet
-        ? metrics.goalExceededAmount > 0
-          ? `Ya superaste tu objetivo por ${formatMoney(metrics.goalExceededAmount)}.`
-          : "Ya alcanzaste exactamente tu objetivo mensual."
-        : `Te falta invertir ${formatMoney(metrics.goalRemainingAmount)} para llegar a tu objetivo.`,
-      metrics.goalLabel
+      "Uso",
+      spendingTone,
+      metrics.totalIncome > 0 ? `Estas usando ${formatPercent(metrics.spentRatio, 1)} de tu ingreso` : "Salidas del mes registradas",
+      metrics.totalIncome > 0
+        ? isSpendingOverIncome
+          ? "El ritmo actual supera tu ingreso mensual."
+          : `${formatMoney(metrics.assignedAmount)} ya fueron a salidas e inversion.`
+        : `${formatMoney(metrics.totalSpent)} cargados hasta ahora.`,
+      `Proyeccion de cierre: ${formatMoney(metrics.projectedMonthlySpend)}.`,
+      { primary: true }
     ),
-    createInsight("Ritmo", metrics.projectedInvestmentAmount >= metrics.goalAmount ? "mint" : "rose", "Ritmo de aportes", metrics.projectedInvestmentAmount >= metrics.goalAmount ? "Si mantienes este ritmo de aportes, alcanzarias tu meta." : "Con el ritmo actual de aportes, cerrarias el mes por debajo de tu meta.", `Proyeccion de inversion al cierre: ${formatMoney(metrics.projectedInvestmentAmount)}.`),
-    createInsight("Saldo", "blue", "Saldo disponible", `Despues de todas tus salidas te quedan ${formatMoney(metrics.remainingBalance)} disponibles.`, "Ese saldo no cuenta para la meta hasta registrarlo como Inversion."),
-    createInsight(metrics.topCategory?.category || "Categoria", "blue", "Categoria con mayor salida", metrics.topCategory ? `${metrics.topCategory.category} concentra ${formatPercent(metrics.topCategory.share, 1)} de las salidas del mes.` : "Sin categoria dominante.", metrics.topCategory ? `Total: ${formatMoney(metrics.topCategory.total)}.` : "Sin datos."),
+    createInsight(
+      "Ritmo",
+      metrics.hasPreviousData
+        ? metrics.comparisons.dailyAverage.difference < 0
+          ? "mint"
+          : metrics.comparisons.dailyAverage.difference > 0
+            ? "rose"
+            : "blue"
+        : "blue",
+      "Promedio diario",
+      `${formatMoney(metrics.dailyAverage)} por dia.`,
+      metrics.hasPreviousData ? `${formatSignedPercent(metrics.comparisons.dailyAverage.percent)} vs ${metrics.previousMonthLabel}.` : "Sin base del mes anterior."
+    ),
+    topCategoryInsight,
   ];
 };
 
@@ -1256,13 +1304,13 @@ const renderInsights = (metrics) => {
   }
 
   insightList.innerHTML = generateInsights(metrics)
-    .map((insight) => `<article class="insight"><div class="insight__flag ${INSIGHT_FLAG_TONES[insight.tone] || INSIGHT_FLAG_TONES.blue}">${escapeHtml(insight.flag)}</div><div><strong>${escapeHtml(insight.title)}</strong><p>${escapeHtml(insight.body)}</p><span class="insight__meta">${escapeHtml(insight.meta)}</span></div></article>`)
+    .map((insight) => `<article class="insight${insight.primary ? " insight--primary" : ""}"><div class="insight__flag ${INSIGHT_FLAG_TONES[insight.tone] || INSIGHT_FLAG_TONES.blue}">${escapeHtml(insight.flag)}</div><div class="insight__content"><strong>${escapeHtml(insight.title)}</strong><p>${escapeHtml(insight.body)}</p><span class="insight__meta">${escapeHtml(insight.meta)}</span></div></article>`)
     .join("");
 };
 
 const getEmptyStateMarkup = (state, metrics, context) => {
   if (!context.monthExpenses.length) {
-    return `<div class="expense-list__empty"><strong>No hay salidas en ${escapeHtml(metrics.monthLabelLong)}</strong><p>Empieza cargando una salida real o registra una inversion para medir por separado tu saldo disponible y el avance real de la meta.</p><div class="expense-list__actions"><button class="button button--accent button--small" type="button" data-list-action="open-investment">Registrar inversion</button><button class="button button--ghost button--small" type="button" data-list-action="open-add">Registrar salida</button>${!state.expenses.length ? '<button class="button button--ghost button--small" type="button" data-list-action="restore-sample">Cargar muestra</button>' : ""}</div></div>`;
+    return `<div class="expense-list__empty"><strong>No hay salidas en ${escapeHtml(metrics.monthLabelLong)}</strong><p>Empieza cargando un gasto real o registra una inversion para medir por separado tu saldo disponible y el avance real de la meta.</p><div class="expense-list__actions"><button class="button button--accent button--small" type="button" data-list-action="open-investment">Registrar inversion</button><button class="button button--ghost button--small" type="button" data-list-action="open-add">Registrar gasto</button>${!state.expenses.length ? '<button class="button button--ghost button--small" type="button" data-list-action="restore-sample">Cargar muestra</button>' : ""}</div></div>`;
   }
 
   return `<div class="expense-list__empty"><strong>No hay movimientos con estos filtros</strong><p>Prueba limpiar categoria, medio de pago, tipo de movimiento o la busqueda para volver a ver resultados.</p><div class="expense-list__actions"><button class="button button--ghost button--small" type="button" data-list-action="clear-filters">Limpiar filtros</button><button class="button button--ghost button--small" type="button" data-list-action="open-filters">Ajustar filtros</button></div></div>`;
@@ -1634,10 +1682,10 @@ const openExpenseModal = (mode, expense = null, options = {}) => {
   getFormField("note").value = expense?.note || "";
   getFormField("isFixed").checked = Boolean(expense?.isFixed);
 
-  modalEyebrow.textContent = mode === "edit" ? (isInvestmentEntry ? "Editar inversion" : "Editar movimiento") : isInvestmentMode ? "Registrar inversion" : "Registrar movimiento";
-  modalTitle.textContent = mode === "edit" ? (isInvestmentEntry ? "Editar aporte" : "Editar salida") : isInvestmentMode ? "Registrar inversion" : "Registrar salida";
-  modalCopy.textContent = mode === "edit" ? (isInvestmentEntry ? "Actualiza el aporte y el progreso de la meta se recalcula al instante." : "Actualiza la salida y el resumen del mes se recalcula al instante.") : isInvestmentMode ? "La categoria Inversion ya queda seleccionada para registrar un aporte real del mes." : "Carga una salida real del mes sin salir del planner.";
-  formSubmit.textContent = mode === "edit" ? (isInvestmentEntry ? "Guardar aporte" : "Guardar salida") : isInvestmentMode ? "Guardar aporte" : "Guardar salida";
+  modalEyebrow.textContent = mode === "edit" ? (isInvestmentEntry ? "Editar inversion" : "Editar gasto") : isInvestmentMode ? "Registrar inversion" : "Registrar gasto";
+  modalTitle.textContent = mode === "edit" ? (isInvestmentEntry ? "Editar aporte" : "Editar gasto") : isInvestmentMode ? "Registrar inversion" : "Registrar gasto";
+  modalCopy.textContent = mode === "edit" ? (isInvestmentEntry ? "Actualiza el aporte y el progreso de la meta se recalcula al instante." : "Actualiza el gasto y el resumen del mes se recalcula al instante.") : isInvestmentMode ? "La categoria Inversion ya queda seleccionada para registrar un aporte real del mes." : "Carga un gasto real del mes sin salir del planner.";
+  formSubmit.textContent = mode === "edit" ? (isInvestmentEntry ? "Guardar aporte" : "Guardar gasto") : isInvestmentMode ? "Guardar aporte" : "Guardar gasto";
   openModal(getFormField("title"));
 };
 
@@ -1948,6 +1996,7 @@ const initializeInteractions = () => {
     });
   }
 
+  openExpenseButtons.forEach((button) => button.addEventListener("click", () => openExpenseModal("add")));
   openIncomeButtons.forEach((button) => button.addEventListener("click", openIncomeModal));
   openGoalButtons.forEach((button) => button.addEventListener("click", openGoalModal));
   openInvestmentButtons.forEach((button) => button.addEventListener("click", openInvestmentModal));
