@@ -1,16 +1,28 @@
 (function () {
-  const { generateId } = window.aleclvFinanceUtils;
+  const { generateId } = window.aleclvExpenseTrackerUtils;
 
-  const STORAGE_KEY = "aleclv-finance-state";
-  const SCHEMA_VERSION = 2;
+  const STORAGE_KEY = "aleclv-expense-tracker-state";
+  const COMPAT_STORAGE_KEYS = ["aleclv-finance-state"];
+  const SCHEMA_VERSION = 4;
+  const MONTH_FILTER_PATTERN = /^\d{4}-\d{2}$/;
   const DEFAULT_FILTERS = {
     month: "2026-03",
     category: "all",
+    paymentMethod: "all",
+    expenseType: "all",
+    sort: "newest",
     search: "",
   };
-  const MONTH_FILTER_PATTERN = /^\d{4}-\d{2}$/;
-  const STORAGE_STATE_KEYS = ["schemaVersion", "income", "expenses", "filters"];
-  const LEGACY_CATEGORY_MAP = {
+  const SORT_OPTIONS = new Set(["newest", "oldest", "highest", "lowest"]);
+  const STORAGE_STATE_KEYS = [
+    "schemaVersion",
+    "incomeBase",
+    "incomeExtra",
+    "income",
+    "expenses",
+    "filters",
+  ];
+  const CATEGORY_ALIASES = {
     Food: "Supermercado",
     Transport: "Transporte",
     Housing: "Casa/Servicios",
@@ -21,8 +33,16 @@
     Leisure: "Salidas",
     Travel: "Otros",
     Other: "Otros",
+    "Casa y Servicios": "Casa/Servicios",
+    "Casa / Servicios": "Casa/Servicios",
+    Auto: "Auto/Moto",
+    Moto: "Auto/Moto",
+    Inversion: "Inversion",
+    "Inversión": "Inversion",
+    Otro: "Otros",
+    Otra: "Otros",
   };
-  const LEGACY_TITLE_MAP = {
+  const TITLE_MIGRATIONS = {
     "Whole Foods Market": "Supermercado",
     "Blue Bottle Coffee": "Salida cafe",
     "Chevron Station": "YPF",
@@ -36,26 +56,15 @@
     "Hudson Residential": "Alquiler",
     "Delta Air Lines": "Pasajes",
   };
-  const CATEGORY_ALIASES = {
-    "Casa / Servicios": "Casa/Servicios",
-    "Casa y Servicios": "Casa/Servicios",
-    Auto: "Auto/Moto",
-    Moto: "Auto/Moto",
-    Salud: "Salud",
-    Otro: "Otros",
-    Otra: "Otros",
-  };
   const FIXED_EXPENSE_HINTS = new Set([
     "Casa/Servicios",
     "Gimnasio",
     "Facultad",
     "Suscripciones",
     "Auto/Moto",
-    "Inversión",
+    "Inversion",
   ]);
-  const LEGACY_CATEGORY_NAMES = new Set(Object.keys(LEGACY_CATEGORY_MAP));
-  const LEGACY_TITLES = new Set(Object.keys(LEGACY_TITLE_MAP));
-  const PAYMENT_METHODS = ["Efectivo", "Débito", "Crédito", "Transferencia"];
+  const PAYMENT_METHODS = ["Efectivo", "Debito", "Credito", "Transferencia"];
 
   const cloneValue = (value) => {
     if (typeof structuredClone === "function") {
@@ -65,36 +74,89 @@
     return JSON.parse(JSON.stringify(value));
   };
 
+  const normalizeToken = (value = "") =>
+    String(value)
+      .trim()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "");
+
+  const roundCurrency = (value) =>
+    Math.round((Number(value || 0) + Number.EPSILON) * 100) / 100;
+
+  const normalizeAmount = (value, scaleFactor = 1) => {
+    const amountValue = Number(value);
+    return Number.isFinite(amountValue) ? roundCurrency(amountValue * scaleFactor) : 0;
+  };
+
   const normalizeMonthFilter = (value) => {
     const normalizedValue = String(value || "").trim();
     return MONTH_FILTER_PATTERN.test(normalizedValue) ? normalizedValue : DEFAULT_FILTERS.month;
   };
 
-  const normalizeCategoryFilter = (value) => {
-    const normalizedValue = String(value || "").trim();
-    return normalizedValue || DEFAULT_FILTERS.category;
+  const normalizeCategory = (value) => {
+    const rawCategory = String(value || "").trim();
+    return CATEGORY_ALIASES[rawCategory] || rawCategory || "Otros";
   };
 
-  const normalizeSearchFilter = (value) => String(value || "").trim();
+  const normalizePaymentMethod = (value) => {
+    const rawValue = normalizeToken(value);
+
+    if (!rawValue) {
+      return "Transferencia";
+    }
+
+    if (/efectivo/i.test(rawValue)) {
+      return "Efectivo";
+    }
+
+    if (/deb/i.test(rawValue)) {
+      return "Debito";
+    }
+
+    if (/cred|visa|master|amex/i.test(rawValue)) {
+      return "Credito";
+    }
+
+    if (/transfer|bank|autopay|automatic|auto/i.test(rawValue)) {
+      return "Transferencia";
+    }
+
+    return PAYMENT_METHODS.includes(rawValue) ? rawValue : "Credito";
+  };
+
+  const normalizeExpenseTypeFilter = (value) => {
+    const normalizedValue = String(value || "").trim();
+    return ["all", "fixed", "variable"].includes(normalizedValue)
+      ? normalizedValue
+      : DEFAULT_FILTERS.expenseType;
+  };
+
+  const normalizeSortFilter = (value) => {
+    const normalizedValue = String(value || "").trim();
+    return SORT_OPTIONS.has(normalizedValue) ? normalizedValue : DEFAULT_FILTERS.sort;
+  };
 
   const normalizeFilters = (filters = {}) => ({
     month: normalizeMonthFilter(filters.month),
-    category: normalizeCategoryFilter(filters.category),
-    search: normalizeSearchFilter(filters.search),
+    category: String(filters.category || "").trim() || DEFAULT_FILTERS.category,
+    paymentMethod: String(filters.paymentMethod || "").trim() || DEFAULT_FILTERS.paymentMethod,
+    expenseType: normalizeExpenseTypeFilter(filters.expenseType),
+    sort: normalizeSortFilter(filters.sort),
+    search: String(filters.search || "").trim(),
   });
 
-  const normalizeCategory = (value) => {
-    const rawCategory = String(value || "").trim();
-    const mappedCategory = LEGACY_CATEGORY_MAP[rawCategory] || CATEGORY_ALIASES[rawCategory] || rawCategory;
+  const shouldPromoteIncomeMigration = (expense = {}) => {
+    const amount = Number(expense.amount);
+    const searchableText = normalizeToken(`${expense.title || ""} ${expense.note || ""}`);
 
-    return mappedCategory || "Otros";
+    return Number.isFinite(amount) && amount < 0 && /(freelance|ingreso|extra|reintegro|sueldo)/i.test(searchableText);
   };
 
   const normalizeTitle = (value, category) => {
     const rawTitle = String(value || "").trim();
 
-    if (LEGACY_TITLE_MAP[rawTitle]) {
-      return LEGACY_TITLE_MAP[rawTitle];
+    if (TITLE_MIGRATIONS[rawTitle]) {
+      return TITLE_MIGRATIONS[rawTitle];
     }
 
     if (rawTitle) {
@@ -119,39 +181,13 @@
     }
   };
 
-  const normalizePaymentMethod = (value) => {
-    const rawValue = String(value || "").trim();
-
-    if (!rawValue) {
-      return "Transferencia";
-    }
-
-    if (PAYMENT_METHODS.includes(rawValue)) {
-      return rawValue;
-    }
-
-    if (/efectivo/i.test(rawValue)) {
-      return "Efectivo";
-    }
-
-    if (/deb/i.test(rawValue)) {
-      return "Débito";
-    }
-
-    if (/transfer|bank|autopay|automatic|auto/i.test(rawValue)) {
-      return "Transferencia";
-    }
-
-    return "Crédito";
-  };
-
   const inferFixedExpense = (expense) => {
     if (typeof expense.isFixed === "boolean") {
       return expense.isFixed;
     }
 
     const category = normalizeCategory(expense.category);
-    const title = normalizeTitle(expense.title, category).toLowerCase();
+    const title = normalizeToken(normalizeTitle(expense.title, category));
 
     if (FIXED_EXPENSE_HINTS.has(category)) {
       return true;
@@ -160,19 +196,19 @@
     return /(alquiler|internet|luz|agua|seguro|gym|gimnasio|spotify|netflix|facultad)/i.test(title);
   };
 
-  const isLegacyExpense = (expense = {}) => {
+  const needsCompatMigration = (expense = {}) => {
     const category = String(expense.category || "").trim();
     const title = String(expense.title || "").trim();
     const paymentMethod = String(expense.paymentMethod || "").trim();
 
     return (
-      LEGACY_CATEGORY_NAMES.has(category) ||
-      LEGACY_TITLES.has(title) ||
+      Object.prototype.hasOwnProperty.call(CATEGORY_ALIASES, category) ||
+      Object.prototype.hasOwnProperty.call(TITLE_MIGRATIONS, title) ||
       /Visa ending|Mastercard ending|Apple Pay|Autopay|Bank transfer/i.test(paymentMethod)
     );
   };
 
-  const getLegacyScaleFactor = (expenses = []) => {
+  const getCompatScaleFactor = (expenses = []) => {
     const maxAmount = expenses.reduce((maxValue, expense) => {
       const parsedAmount = Number(expense?.amount);
       return Number.isFinite(parsedAmount) ? Math.max(maxValue, parsedAmount) : maxValue;
@@ -181,17 +217,8 @@
     return maxAmount > 0 && maxAmount < 10000 ? 1000 : 1;
   };
 
-  const normalizeAmount = (value, scaleFactor = 1) => {
-    const amountValue = Number(value);
-    const normalizedAmount = Number.isFinite(amountValue) ? amountValue * scaleFactor : 0;
-    return Math.round((normalizedAmount + Number.EPSILON) * 100) / 100;
-  };
-
   const normalizeExpense = (expense = {}, options = {}) => {
-    const {
-      legacyMode = false,
-      scaleFactor = 1,
-    } = options;
+    const { migrationMode = false, scaleFactor = 1 } = options;
     const parsedDate = expense.date ? new Date(expense.date) : new Date();
     const parsedCreatedAt = expense.createdAt ? new Date(expense.createdAt) : parsedDate;
     const dateValue = Number.isNaN(parsedDate.getTime()) ? new Date() : parsedDate;
@@ -202,7 +229,7 @@
     return {
       id: expense.id || generateId(),
       title,
-      amount: normalizeAmount(expense.amount, legacyMode ? scaleFactor : 1),
+      amount: normalizeAmount(expense.amount, migrationMode ? scaleFactor : 1),
       category,
       date: dateValue.toISOString(),
       paymentMethod: normalizePaymentMethod(expense.paymentMethod),
@@ -218,15 +245,16 @@
 
   const createInitialState = () => ({
     schemaVersion: SCHEMA_VERSION,
-    income: 2350000,
+    incomeBase: 2100000,
+    incomeExtra: 250000,
     expenses: [
       normalizeExpense({
         title: "Supermercado",
         amount: 186450,
         category: "Supermercado",
         date: "2026-03-18T19:10:00",
-        paymentMethod: "Débito",
-        note: "Compra quincenal y artículos de limpieza.",
+        paymentMethod: "Debito",
+        note: "Compra quincenal y articulos de limpieza.",
         createdAt: "2026-03-18T19:10:00",
         isFixed: false,
       }),
@@ -235,7 +263,7 @@
         amount: 58200,
         category: "Transporte",
         date: "2026-03-17T08:05:00",
-        paymentMethod: "Débito",
+        paymentMethod: "Debito",
         note: "Nafta para la semana.",
         createdAt: "2026-03-17T08:05:00",
         isFixed: false,
@@ -245,7 +273,7 @@
         amount: 24850,
         category: "Salud",
         date: "2026-03-16T14:42:00",
-        paymentMethod: "Débito",
+        paymentMethod: "Debito",
         note: "Medicamentos y crema.",
         createdAt: "2026-03-16T14:42:00",
         isFixed: false,
@@ -255,7 +283,7 @@
         amount: 3499,
         category: "Suscripciones",
         date: "2026-03-15T06:00:00",
-        paymentMethod: "Crédito",
+        paymentMethod: "Credito",
         note: "Plan familiar.",
         createdAt: "2026-03-15T06:00:00",
         isFixed: true,
@@ -265,8 +293,8 @@
         amount: 12699,
         category: "Suscripciones",
         date: "2026-03-14T06:10:00",
-        paymentMethod: "Crédito",
-        note: "Suscripción mensual.",
+        paymentMethod: "Credito",
+        note: "Suscripcion mensual.",
         createdAt: "2026-03-14T06:10:00",
         isFixed: true,
       }),
@@ -315,7 +343,7 @@
         amount: 85400,
         category: "Auto/Moto",
         date: "2026-03-09T07:40:00",
-        paymentMethod: "Débito",
+        paymentMethod: "Debito",
         note: "Seguro contra terceros.",
         createdAt: "2026-03-09T07:40:00",
         isFixed: true,
@@ -335,7 +363,7 @@
         amount: 47600,
         category: "Auto/Moto",
         date: "2026-03-07T20:10:00",
-        paymentMethod: "Crédito",
+        paymentMethod: "Credito",
         note: "Carga para viaje corto.",
         createdAt: "2026-03-07T20:10:00",
         isFixed: false,
@@ -345,7 +373,7 @@
         amount: 134500,
         category: "Supermercado",
         date: "2026-03-06T18:24:00",
-        paymentMethod: "Débito",
+        paymentMethod: "Debito",
         note: "Compra semanal.",
         createdAt: "2026-03-06T18:24:00",
         isFixed: false,
@@ -355,15 +383,15 @@
         amount: 36800,
         category: "Salidas",
         date: "2026-03-04T23:10:00",
-        paymentMethod: "Crédito",
-        note: "Salida del sábado.",
+        paymentMethod: "Credito",
+        note: "Salida del sabado.",
         createdAt: "2026-03-04T23:10:00",
         isFixed: false,
       }),
       normalizeExpense({
         title: "Transferencia broker",
         amount: 120000,
-        category: "Inversión",
+        category: "Inversion",
         date: "2026-03-03T13:10:00",
         paymentMethod: "Transferencia",
         note: "Aporte del mes.",
@@ -376,18 +404,35 @@
 
   const normalizeState = (state = {}) => {
     const sourceExpenses = Array.isArray(state.expenses) ? state.expenses : [];
-    const legacyMode = Number(state.schemaVersion) !== SCHEMA_VERSION && sourceExpenses.some((expense) => isLegacyExpense(expense));
-    const legacyScaleFactor = legacyMode ? getLegacyScaleFactor(sourceExpenses) : 1;
+    const migratedIncome = sourceExpenses.reduce(
+      (accumulator, expense) => {
+        if (shouldPromoteIncomeMigration(expense)) {
+          accumulator.incomeExtra += Math.abs(Number(expense.amount) || 0);
+          return accumulator;
+        }
+
+        accumulator.expenses.push(expense);
+        return accumulator;
+      },
+      { incomeExtra: 0, expenses: [] }
+    );
+    const sanitizedExpenses = migratedIncome.expenses;
+    const migrationMode =
+      Number(state.schemaVersion) !== SCHEMA_VERSION &&
+      sanitizedExpenses.some((expense) => needsCompatMigration(expense));
+    const migrationScaleFactor = migrationMode ? getCompatScaleFactor(sanitizedExpenses) : 1;
+    const fallbackIncome = Number.isFinite(Number(state.income)) ? Number(state.income) : 0;
+    const incomeBase = state.incomeBase ?? fallbackIncome;
+    const incomeExtra = (state.incomeExtra ?? 0) + migratedIncome.incomeExtra;
 
     return {
       schemaVersion: SCHEMA_VERSION,
-      income: Number.isFinite(Number(state.income))
-        ? normalizeAmount(state.income, legacyMode ? legacyScaleFactor : 1)
-        : 0,
-      expenses: sourceExpenses.map((expense) =>
+      incomeBase: normalizeAmount(incomeBase, migrationMode ? migrationScaleFactor : 1),
+      incomeExtra: normalizeAmount(incomeExtra, migrationMode ? migrationScaleFactor : 1),
+      expenses: sanitizedExpenses.map((expense) =>
         normalizeExpense(expense, {
-          legacyMode,
-          scaleFactor: legacyScaleFactor,
+          migrationMode,
+          scaleFactor: migrationScaleFactor,
         })
       ),
       filters: normalizeFilters({
@@ -417,6 +462,32 @@
     }
   };
 
+  const readPersistedState = (storageKey) => {
+    const rawState = window.localStorage.getItem(storageKey);
+
+    if (!rawState) {
+      return null;
+    }
+
+    const parsedState = JSON.parse(rawState);
+    const hasKnownKeys =
+      parsedState &&
+      typeof parsedState === "object" &&
+      STORAGE_STATE_KEYS.some((key) => Object.prototype.hasOwnProperty.call(parsedState, key));
+
+    return hasKnownKeys ? parsedState : null;
+  };
+
+  const clearCompatState = () => {
+    COMPAT_STORAGE_KEYS.forEach((storageKey) => {
+      try {
+        window.localStorage.removeItem(storageKey);
+      } catch (error) {
+        return null;
+      }
+    });
+  };
+
   const saveState = (state = appState) => {
     const normalizedState = normalizeState(state);
 
@@ -426,6 +497,7 @@
 
     try {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(normalizedState));
+      clearCompatState();
     } catch (error) {
       return cloneValue(normalizedState);
     }
@@ -439,27 +511,19 @@
     }
 
     try {
-      const rawState = window.localStorage.getItem(STORAGE_KEY);
+      const persistedState =
+        readPersistedState(STORAGE_KEY) ||
+        COMPAT_STORAGE_KEYS.map((storageKey) => readPersistedState(storageKey)).find(Boolean);
 
-      if (!rawState) {
+      if (!persistedState) {
         return null;
       }
 
-      const parsedState = JSON.parse(rawState);
-      const hasKnownKeys =
-        parsedState &&
-        typeof parsedState === "object" &&
-        STORAGE_STATE_KEYS.some((key) => Object.prototype.hasOwnProperty.call(parsedState, key));
-
-      if (!hasKnownKeys) {
-        window.localStorage.removeItem(STORAGE_KEY);
-        return null;
-      }
-
-      return normalizeState(parsedState);
+      return normalizeState(persistedState);
     } catch (error) {
       try {
         window.localStorage.removeItem(STORAGE_KEY);
+        clearCompatState();
       } catch (storageError) {
         return null;
       }
@@ -483,16 +547,13 @@
 
   let appState = initializeState();
 
-  const getDemoState = () => normalizeState(createInitialState());
-
+  const getSampleState = () => normalizeState(createInitialState());
   const getState = () => cloneValue(appState);
-
   const setState = (nextState) => {
     appState = normalizeState(nextState);
     saveState(appState);
     return getState();
   };
-
   const updateState = (updater) => {
     const currentState = getState();
     const patch = typeof updater === "function" ? updater(currentState) : updater;
@@ -504,16 +565,18 @@
     return setState(mergeState(currentState, patch));
   };
 
-  window.aleclvFinanceState = {
-    getDemoState,
+  const stateApi = {
+    getSampleState,
     getState,
     setState,
     updateState,
   };
-
-  window.aleclvFinanceStorage = {
+  const storageApi = {
     STORAGE_KEY,
     saveState,
     loadState,
   };
+
+  window.aleclvExpenseTrackerState = stateApi;
+  window.aleclvExpenseTrackerStorage = storageApi;
 })();

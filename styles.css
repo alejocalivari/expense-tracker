@@ -582,11 +582,11 @@ body.sidebar-open .mobile-backdrop {
 }
 
 .hero-card,
-.planner-card,
+.split-card,
 .chart-card,
 .expenses-card,
 .insights-card,
-.invest-card,
+.income-card,
 .kpi-card {
   padding: 22px;
 }
@@ -701,13 +701,13 @@ body.sidebar-open .mobile-backdrop {
   font-size: 1.12rem;
 }
 
-.planner-card {
+.split-card {
   display: grid;
   gap: 20px;
   align-content: start;
 }
 
-.planner-card__section {
+.split-card__section {
   display: grid;
   gap: 14px;
 }
@@ -725,7 +725,7 @@ body.sidebar-open .mobile-backdrop {
   font-size: 0.93rem;
 }
 
-.planner-card__label {
+.split-card__label {
   color: var(--text-muted);
   font-size: 0.86rem;
   letter-spacing: 0.14em;
@@ -1076,6 +1076,7 @@ body.sidebar-open .mobile-backdrop {
   gap: 4px;
 }
 
+.expense-row__note,
 .expense-row__merchant span,
 .expense-row__method {
   color: var(--text-muted);
@@ -1142,48 +1143,52 @@ body.sidebar-open .mobile-backdrop {
   text-transform: uppercase;
 }
 
-.badge--food {
-  color: var(--accent-blue);
-  background: rgba(132, 166, 255, 0.1);
-  border-color: rgba(132, 166, 255, 0.14);
-}
-
-.badge--transport {
-  color: var(--accent-amber);
-  background: rgba(239, 196, 111, 0.1);
-  border-color: rgba(239, 196, 111, 0.14);
-}
-
-.badge--software {
-  color: var(--accent);
-  background: rgba(117, 229, 192, 0.1);
-  border-color: rgba(117, 229, 192, 0.14);
-}
-
-.badge--lifestyle {
-  color: var(--accent-rose);
-  background: rgba(232, 141, 158, 0.1);
-  border-color: rgba(232, 141, 158, 0.14);
-}
-
-.badge--housing,
-.badge--other {
-  color: #d1d8e5;
-  background: rgba(96, 113, 138, 0.16);
-  border-color: rgba(96, 113, 138, 0.2);
-}
-
-.badge--utilities,
-.badge--subscriptions {
+.badge--mint {
   color: var(--accent);
   background: rgba(117, 229, 192, 0.08);
   border-color: rgba(117, 229, 192, 0.12);
 }
 
-.badge--travel {
+.badge--blue {
   color: var(--accent-blue);
   background: rgba(132, 166, 255, 0.1);
   border-color: rgba(132, 166, 255, 0.14);
+}
+
+.badge--amber {
+  color: var(--accent-amber);
+  background: rgba(239, 196, 111, 0.1);
+  border-color: rgba(239, 196, 111, 0.14);
+}
+
+.badge--rose {
+  color: var(--accent-rose);
+  background: rgba(232, 141, 158, 0.1);
+  border-color: rgba(232, 141, 158, 0.14);
+}
+
+.badge--slate {
+  color: #d1d8e5;
+  background: rgba(96, 113, 138, 0.16);
+  border-color: rgba(96, 113, 138, 0.2);
+}
+
+.badge--method {
+  color: var(--text-soft);
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.badge--fixed {
+  color: var(--accent);
+  background: rgba(117, 229, 192, 0.08);
+  border-color: rgba(117, 229, 192, 0.12);
+}
+
+.badge--variable {
+  color: var(--accent-amber);
+  background: rgba(239, 196, 111, 0.1);
+  border-color: rgba(239, 196, 111, 0.14);
 }
 
 .side-stack {
@@ -1192,7 +1197,7 @@ body.sidebar-open .mobile-backdrop {
 }
 
 .insights-card,
-.invest-card {
+.income-card {
   display: grid;
   gap: 18px;
 }
@@ -1253,30 +1258,30 @@ body.sidebar-open .mobile-backdrop {
   line-height: 1.55;
 }
 
-.invest-card {
+.income-card {
   background:
     radial-gradient(circle at top right, rgba(132, 166, 255, 0.08), transparent 34%),
     linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 55%),
     var(--surface-2);
 }
 
-.invest-card__amount {
+.income-card__amount {
   display: grid;
   gap: 8px;
 }
 
-.invest-card__caption {
+.income-card__caption {
   margin-top: -4px;
   color: var(--text-muted);
   line-height: 1.62;
 }
 
-.invest-card__amount span,
+.income-card__amount span,
 .allocation-note__header span {
   color: var(--text-muted);
 }
 
-.invest-card__amount strong {
+.income-card__amount strong {
   font-size: clamp(2.3rem, 6vw, 3.2rem);
   line-height: 1;
 }
@@ -1338,6 +1343,11 @@ body.sidebar-open .mobile-backdrop {
   color: var(--text-muted);
 }
 
+.income-summary strong {
+  font-size: 1.8rem;
+  line-height: 1;
+}
+
 .stacked-bar {
   height: 14px;
   display: flex;
@@ -1356,36 +1366,6 @@ body.sidebar-open .mobile-backdrop {
 
 .stacked-bar__segment--slate {
   background: #60718a;
-}
-
-.risk-toggle {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.risk-toggle__option {
-  min-height: 38px;
-  padding: 0 14px;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.03);
-  color: var(--text-muted);
-  font-size: 0.86rem;
-  font-weight: 800;
-  transition: background-color var(--transition), border-color var(--transition), color var(--transition), transform var(--transition);
-}
-
-.risk-toggle__option:hover,
-.risk-toggle__option:focus-visible {
-  transform: translateY(-1px);
-  color: var(--text);
-}
-
-.risk-toggle__option.is-active {
-  color: var(--text);
-  border-color: rgba(117, 229, 192, 0.18);
-  background: rgba(117, 229, 192, 0.09);
 }
 
 .fab {
@@ -1704,7 +1684,7 @@ body.modal-open {
 .countup,
 .hero-card__amount,
 .kpi-card__value,
-.invest-card__amount strong,
+.income-card__amount strong,
 .projection-tile strong,
 .allocation-stat strong {
   font-variant-numeric: tabular-nums;
@@ -1831,11 +1811,11 @@ body.is-loading .dashboard-state--content {
   }
 
   .hero-card,
-  .planner-card,
+  .split-card,
   .chart-card,
   .expenses-card,
   .insights-card,
-  .invest-card,
+  .income-card,
   .kpi-card {
     padding: 24px;
   }

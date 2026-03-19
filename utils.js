@@ -42,9 +42,11 @@
     }).format(date);
   };
 
-  window.aleclvFinanceUtils = {
+  const utilsApi = {
     generateId,
     formatCurrency,
     formatDate,
   };
+
+  window.aleclvExpenseTrackerUtils = utilsApi;
 })();
