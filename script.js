@@ -873,6 +873,8 @@ const getCategoryTone = (category) => {
   return "badge--slate";
 };
 
+const getCategoryLabel = (category = "") => (category === "Salidas" ? "Gastos" : category);
+
 const getSortLabel = (sort) => ({
   newest: "Mas recientes",
   oldest: "Mas antiguos",
@@ -1086,8 +1088,8 @@ const renderSplitCard = (metrics, animate) => {
   }
 
   const direction = metrics.topCategoryShift.difference > 0 ? "subio" : "bajo";
-  setTextValue(comparisonElements.categoryShiftCopy, `${metrics.topCategoryShift.category} ${direction} ${formatSignedCurrency(metrics.topCategoryShift.difference)}.`);
-  setTextValue(comparisonElements.categoryShiftValue, metrics.topCategoryShift.category);
+  setTextValue(comparisonElements.categoryShiftCopy, `${getCategoryLabel(metrics.topCategoryShift.category)} ${direction} ${formatSignedCurrency(metrics.topCategoryShift.difference)}.`);
+  setTextValue(comparisonElements.categoryShiftValue, getCategoryLabel(metrics.topCategoryShift.category));
 };
 
 const renderKpis = (metrics, animate) => {
@@ -1291,7 +1293,7 @@ const renderCategoryMix = (metrics, animate) => {
   categoryLegend.innerHTML = legendItems
     .map((item, index) => {
       const swatch = CATEGORY_SWATCHES[index % CATEGORY_SWATCHES.length];
-      return `<div class="legend-item" data-legend-index="${index}" tabindex="0" style="--legend-accent:${swatch.color};"><div class="legend-item__title"><span class="legend-swatch" aria-hidden="true"></span><span>${escapeHtml(item.category)}</span></div><div class="legend-item__value"><strong>${escapeHtml(formatPercent(item.share, item.share < 10 ? 1 : 0))}</strong><span>${escapeHtml(formatMoney(item.total))}</span></div></div>`;
+      return `<div class="legend-item" data-legend-index="${index}" tabindex="0" style="--legend-accent:${swatch.color};"><div class="legend-item__title"><span class="legend-swatch" aria-hidden="true"></span><span>${escapeHtml(getCategoryLabel(item.category))}</span></div><div class="legend-item__value"><strong>${escapeHtml(formatPercent(item.share, item.share < 10 ? 1 : 0))}</strong><span>${escapeHtml(formatMoney(item.total))}</span></div></div>`;
     })
     .join("");
 
@@ -1337,7 +1339,7 @@ const renderLineChart = (metrics) => {
   lineAxis.innerHTML = ticks.map((day) => `<span>${day} ${escapeHtml(metrics.monthLabelShort)}</span>`).join("");
 
   if (!metrics.expenseTransactionCount) {
-    applyStatusPill(statusElements.line, "Sin salidas", "neutral");
+    applyStatusPill(statusElements.line, "Sin gastos", "neutral");
     return;
   }
 
@@ -1386,13 +1388,13 @@ const generateInsights = (metrics) => {
     : metrics.expenseTransactionCount
       ? "blue"
       : "slate";
-  const dominantCategoryValue = metrics.topCategory ? metrics.topCategory.category : "Sin categoria";
+  const dominantCategoryValue = metrics.topCategory ? getCategoryLabel(metrics.topCategory.category) : "Sin categoria";
   const spentRatioValue = metrics.totalIncome > 0 ? formatPercent(metrics.spentRatio, 1) : "Sin ingreso";
   const savingsCapacityValue = metrics.totalIncome > 0 ? formatPercent(metrics.savingsCapacityPercent, 1) : "Sin ingreso";
   const investedIncomePercent = metrics.totalIncome > 0 ? roundCurrency((metrics.investedThisMonth / metrics.totalIncome) * 100) : 0;
   const investmentTone = metrics.investedThisMonth > 0 ? "amber" : "slate";
   const dominantCategoryDetails = metrics.topCategory
-    ? `Tu mayor gasto es ${metrics.topCategory.category} (${formatPercent(metrics.topCategory.share, 1)}).`
+    ? `Tu mayor gasto es ${getCategoryLabel(metrics.topCategory.category)} (${formatPercent(metrics.topCategory.share, 1)}).`
     : "Todavia no hay una categoria dominante.";
 
   return [
@@ -1406,7 +1408,7 @@ const generateInsights = (metrics) => {
           : `Estas usando ${spentRatioValue} de tu ingreso.`
         : metrics.expenseTransactionCount
           ? "Carga el ingreso para medir este porcentaje."
-          : "Todavia no hay salidas registradas."
+          : "Todavia no hay gastos registrados."
     ),
     createInsight(
       "Capacidad de ahorro",
@@ -1465,7 +1467,7 @@ const renderInsights = (metrics) => {
 
 const getEmptyStateMarkup = (state, metrics, context) => {
   if (!context.monthExpenses.length) {
-    return `<div class="expense-list__empty"><strong>No hay salidas en ${escapeHtml(metrics.monthLabelLong)}</strong><p>Empieza cargando un gasto real o registra una inversion para medir por separado tu saldo disponible y el avance real de la meta.</p><div class="expense-list__actions"><button class="button button--accent button--small" type="button" data-list-action="open-investment">Registrar inversion</button><button class="button button--ghost button--small" type="button" data-list-action="open-add">Registrar gasto</button>${!state.expenses.length ? '<button class="button button--ghost button--small" type="button" data-list-action="restore-sample">Cargar muestra</button>' : ""}</div></div>`;
+    return `<div class="expense-list__empty"><strong>No hay gastos en ${escapeHtml(metrics.monthLabelLong)}</strong><p>Empieza cargando un gasto real o registra una inversion para medir por separado tu saldo disponible y el avance real de la meta.</p><div class="expense-list__actions"><button class="button button--accent button--small" type="button" data-list-action="open-investment">Registrar inversion</button><button class="button button--ghost button--small" type="button" data-list-action="open-add">Registrar gasto</button>${!state.expenses.length ? '<button class="button button--ghost button--small" type="button" data-list-action="restore-sample">Cargar muestra</button>' : ""}</div></div>`;
   }
 
   return `<div class="expense-list__empty"><strong>No hay movimientos con estos filtros</strong><p>Prueba limpiar categoria, medio de pago, tipo de movimiento o la busqueda para volver a ver resultados.</p><div class="expense-list__actions"><button class="button button--ghost button--small" type="button" data-list-action="clear-filters">Limpiar filtros</button><button class="button button--ghost button--small" type="button" data-list-action="open-filters">Ajustar filtros</button></div></div>`;
@@ -1492,7 +1494,7 @@ const renderExpenseList = (state, metrics, context) => {
       const investmentBadge = isInvestmentExpense ? '<span class="badge badge--investment">Aporte</span>' : "";
       const amountClass = isInvestmentExpense ? "expense-row__amount expense-row__amount--investment" : "expense-row__amount";
 
-      return `<article class="expense-row${isInvestmentExpense ? " expense-row--investment" : ""}"><div class="expense-row__merchant"><strong>${escapeHtml(expense.title)}</strong>${notePreview || `<span>${escapeHtml(expense.category)} - ${escapeHtml(expense.paymentMethod)}</span>`}</div><div class="expense-row__meta"><span class="badge ${getCategoryTone(expense.category)}">${escapeHtml(expense.category)}</span>${investmentBadge}<span class="badge badge--method">${escapeHtml(expense.paymentMethod)}</span>${fixedBadge}<span class="expense-row__method">${escapeHtml(formatDate(expense.date, { month: "short", day: "numeric", year: "numeric" }).replace(".", ""))}</span></div><div class="expense-row__side"><strong class="${amountClass}">- ${escapeHtml(formatMoney(expense.amount))}</strong><div class="expense-row__actions"><button class="icon-button icon-button--soft" type="button" aria-label="${escapeHtml(movementCopy.editLabel)}" data-expense-action="edit" data-expense-id="${expense.id}"><svg viewBox="0 0 24 24" fill="none"><path d="M4 20h4.5L19 9.5 14.5 5 4 15.5V20Z"></path><path d="m12.5 7 4.5 4.5"></path></svg></button><button class="icon-button icon-button--soft" type="button" aria-label="${escapeHtml(movementCopy.duplicateLabel)}" data-expense-action="duplicate" data-expense-id="${expense.id}"><svg viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M6 15H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v1"></path></svg></button><button class="icon-button icon-button--soft" type="button" aria-label="${escapeHtml(movementCopy.deleteLabel)}" data-expense-action="delete" data-expense-id="${expense.id}"><svg viewBox="0 0 24 24" fill="none"><path d="M4 7.5h16"></path><path d="M9.5 10.5v6"></path><path d="M14.5 10.5v6"></path><path d="M6.5 7.5 7.4 19a2 2 0 0 0 2 1.8h5.2a2 2 0 0 0 2-1.8l.9-11.5"></path><path d="M9 7.5V5.8A1.8 1.8 0 0 1 10.8 4h2.4A1.8 1.8 0 0 1 15 5.8v1.7"></path></svg></button></div></div></article>`;
+      return `<article class="expense-row${isInvestmentExpense ? " expense-row--investment" : ""}"><div class="expense-row__merchant"><strong>${escapeHtml(expense.title)}</strong>${notePreview || `<span>${escapeHtml(getCategoryLabel(expense.category))} - ${escapeHtml(expense.paymentMethod)}</span>`}</div><div class="expense-row__meta"><span class="badge ${getCategoryTone(expense.category)}">${escapeHtml(getCategoryLabel(expense.category))}</span>${investmentBadge}<span class="badge badge--method">${escapeHtml(expense.paymentMethod)}</span>${fixedBadge}<span class="expense-row__method">${escapeHtml(formatDate(expense.date, { month: "short", day: "numeric", year: "numeric" }).replace(".", ""))}</span></div><div class="expense-row__side"><strong class="${amountClass}">- ${escapeHtml(formatMoney(expense.amount))}</strong><div class="expense-row__actions"><button class="icon-button icon-button--soft" type="button" aria-label="${escapeHtml(movementCopy.editLabel)}" data-expense-action="edit" data-expense-id="${expense.id}"><svg viewBox="0 0 24 24" fill="none"><path d="M4 20h4.5L19 9.5 14.5 5 4 15.5V20Z"></path><path d="m12.5 7 4.5 4.5"></path></svg></button><button class="icon-button icon-button--soft" type="button" aria-label="${escapeHtml(movementCopy.duplicateLabel)}" data-expense-action="duplicate" data-expense-id="${expense.id}"><svg viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M6 15H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v1"></path></svg></button><button class="icon-button icon-button--soft" type="button" aria-label="${escapeHtml(movementCopy.deleteLabel)}" data-expense-action="delete" data-expense-id="${expense.id}"><svg viewBox="0 0 24 24" fill="none"><path d="M4 7.5h16"></path><path d="M9.5 10.5v6"></path><path d="M14.5 10.5v6"></path><path d="M6.5 7.5 7.4 19a2 2 0 0 0 2 1.8h5.2a2 2 0 0 0 2-1.8l.9-11.5"></path><path d="M9 7.5V5.8A1.8 1.8 0 0 1 10.8 4h2.4A1.8 1.8 0 0 1 15 5.8v1.7"></path></svg></button></div></div></article>`;
     })
     .join("");
 };
@@ -1569,7 +1571,7 @@ const renderExportState = (metrics, context) => {
   setTextValue(
     exportCopy,
     context.visibleExpenses.length
-      ? `Incluye filtros de ${metrics.monthLabelLong}: ${context.filters.category === "all" ? "todas las categorias" : context.filters.category}, ${context.filters.paymentMethod === "all" ? "todos los medios" : context.filters.paymentMethod}.`
+      ? `Incluye filtros de ${metrics.monthLabelLong}: ${context.filters.category === "all" ? "todas las categorias" : getCategoryLabel(context.filters.category)}, ${context.filters.paymentMethod === "all" ? "todos los medios" : context.filters.paymentMethod}.`
       : "No hay movimientos visibles para exportar con los filtros actuales."
   );
 
@@ -1595,8 +1597,8 @@ const renderCalendar = (state, metrics, animate) => {
   setTextValue(
     calendarSummaryNote,
     yearContext.monthsWithDataCount
-      ? `Promedio calculado sobre ${formatNumber(yearContext.monthsWithDataCount)} mes(es) con movimientos. Las salidas muestran solo gastos reales; la inversion va aparte.`
-      : "Todavia no hay meses con movimientos en este anio. Usa el calendario para navegar y cargar datos cuando los necesites."
+      ? `Promedio calculado sobre ${formatNumber(yearContext.monthsWithDataCount)} mes(es) con movimientos. Los gastos muestran solo gastos reales; la inversion va aparte.`
+      : "Todavia no hay meses con movimientos en este año. Usa el calendario para navegar y cargar datos cuando los necesites."
   );
 
   if (!calendarGrid) {
@@ -1628,7 +1630,7 @@ const renderCalendar = (state, metrics, animate) => {
         .filter(Boolean)
         .join(" ");
 
-      return `<button class="${classes}" type="button" data-calendar-month="${month.monthKey}" ${isDisabled ? "disabled" : ""}><div class="calendar-month__header"><span>${escapeHtml(month.shortLabel)}</span><span class="calendar-month__status">${escapeHtml(stateLabel)}</span></div><strong class="calendar-month__value">${escapeHtml(formatMoney(month.totalSpent))}</strong><div class="calendar-month__meta"><span>Salidas ${escapeHtml(formatMoney(month.totalSpent))}</span><span>Invertido ${escapeHtml(formatMoney(month.investedThisMonth))}</span></div><div class="progress calendar-month__progress"><span style="width: ${month.goalProgressBarPercent}%;"></span></div><small>${escapeHtml(monthCopy)}</small></button>`;
+      return `<button class="${classes}" type="button" data-calendar-month="${month.monthKey}" ${isDisabled ? "disabled" : ""}><div class="calendar-month__header"><span>${escapeHtml(month.shortLabel)}</span><span class="calendar-month__status">${escapeHtml(stateLabel)}</span></div><strong class="calendar-month__value">${escapeHtml(formatMoney(month.totalSpent))}</strong><div class="calendar-month__meta"><span>Gastos ${escapeHtml(formatMoney(month.totalSpent))}</span><span>Invertido ${escapeHtml(formatMoney(month.investedThisMonth))}</span></div><div class="progress calendar-month__progress"><span style="width: ${month.goalProgressBarPercent}%;"></span></div><small>${escapeHtml(monthCopy)}</small></button>`;
     })
     .join("");
 };
