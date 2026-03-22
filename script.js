@@ -51,6 +51,7 @@ const CATEGORY_SWATCHES = [
 ];
 const STATUS_PILL_CLASSES = ["status-pill--positive", "status-pill--neutral", "status-pill--negative"];
 const KPI_FEEDBACK_CLASSES = ["kpi-card--positive", "kpi-card--neutral", "kpi-card--negative"];
+const HERO_DIFFERENCE_STATE_CLASSES = ["hero-card__meta-item--positive", "hero-card__meta-item--neutral", "hero-card__meta-item--negative"];
 const SAVINGS_CAPACITY_STATES = {
   neutral: { label: "Sin ingreso" },
   excellent: { label: "Excelente" },
@@ -264,6 +265,7 @@ const textElements = {
   periodPill: document.querySelector("[data-period-pill]"),
   sidebarSavingsCapacity: document.querySelector('[data-summary-text="sidebar-savings-capacity"]'),
   heroLiquidityCopy: document.querySelector('[data-summary-text="hero-liquidity-copy"]'),
+  heroDifferenceNote: document.querySelector('[data-summary-text="hero-difference-note"]'),
   heroBalanceNote: document.querySelector('[data-summary-text="hero-balance-note"]'),
   heroCaption: document.querySelector('[data-summary-text="hero-caption"]'),
   categoryCountPill: document.querySelector('[data-summary-text="category-count-pill"]'),
@@ -279,6 +281,7 @@ const textElements = {
   incomeGoalCopy: document.querySelector('[data-summary-text="income-goal-copy"]'),
   incomeResultCopy: document.querySelector('[data-summary-text="income-result-copy"]'),
 };
+const heroDifferenceCardElement = summaryElements.heroInvested?.closest(".hero-card__meta-item");
 
 const comparisonElements = {
   totalSpentCopy: document.querySelector('[data-comparison="totalSpent-copy"]'),
@@ -442,6 +445,37 @@ const isFutureMonthKey = (monthKey) => monthKey > getCurrentMonthKey();
 const getDaysInMonth = (monthKey) => {
   const [year, month] = monthKey.split("-").map(Number);
   return new Date(year, month, 0).getDate();
+};
+const getRemainingDaysInMonth = (monthKey) => {
+  if (!isValidMonthKey(monthKey)) {
+    return 0;
+  }
+
+  const currentMonthKey = getCurrentMonthKey();
+
+  if (monthKey < currentMonthKey) {
+    return 0;
+  }
+
+  const daysInMonth = getDaysInMonth(monthKey);
+
+  if (monthKey > currentMonthKey) {
+    return daysInMonth;
+  }
+
+  return Math.max(daysInMonth - new Date().getDate(), 0);
+};
+const getSpendTodayAmount = (liquidityAmount, monthKey) => {
+  const safeLiquidityAmount = Number(liquidityAmount);
+  const normalizedLiquidityAmount = Number.isFinite(safeLiquidityAmount) ? safeLiquidityAmount : 0;
+  const daysRemaining = getRemainingDaysInMonth(monthKey);
+
+  if (daysRemaining <= 0) {
+    return Math.round(normalizedLiquidityAmount);
+  }
+
+  const dailyAmount = normalizedLiquidityAmount / daysRemaining;
+  return Number.isFinite(dailyAmount) ? Math.round(dailyAmount) : 0;
 };
 const getDefaultFilters = (state = getState()) => ({
   month: getLatestMonthKey(state.expenses),
@@ -972,6 +1006,40 @@ const renderSidebar = (metrics, animate) => {
 };
 
 const renderHero = (metrics, animate) => {
+  const activeMonthKey = metrics.activeMonthKey || metrics.monthKey || "";
+  const hasActiveMonth = isValidMonthKey(activeMonthKey);
+  const daysInActiveMonth = hasActiveMonth ? getDaysInMonth(activeMonthKey) : 0;
+  const currentDay = daysInActiveMonth ? clamp(new Date().getDate(), 1, daysInActiveMonth) : 0;
+  const daysElapsed = currentDay;
+  const daysRemaining = Math.max(daysInActiveMonth - currentDay, 0);
+  const totalSpent = Number.isFinite(Number(metrics.totalSpent)) ? Number(metrics.totalSpent) : 0;
+  const totalIncome = Number.isFinite(Number(metrics.totalIncome)) ? Number(metrics.totalIncome) : 0;
+  const investedThisMonth = Number.isFinite(Number(metrics.investedThisMonth)) ? Number(metrics.investedThisMonth) : 0;
+  const liquidityAmount = Number.isFinite(Number(metrics.liquidityFinal)) ? Number(metrics.liquidityFinal) : 0;
+  const availableLiquidity = Math.max(liquidityAmount, 0);
+  const rawDailySpend = daysElapsed > 0 ? totalSpent / daysElapsed : 0;
+  const dailySpend = Number.isFinite(rawDailySpend) ? Math.round(rawDailySpend) : 0;
+  const dailyLimit = hasActiveMonth
+    ? (daysRemaining > 0 ? Math.round(availableLiquidity / daysRemaining) : Math.round(availableLiquidity))
+    : 0;
+  const dailyDifference = Math.round(dailyLimit - dailySpend);
+  const projectedSpendTotal = hasActiveMonth && daysElapsed > 0 && totalIncome > 0 ? rawDailySpend * daysInActiveMonth : 0;
+  const projectedMonthEnd = Number.isFinite(projectedSpendTotal)
+    ? roundCurrency(totalIncome - projectedSpendTotal - investedThisMonth)
+    : 0;
+  const rawDeviationCost = dailyDifference < 0 && daysRemaining > 0 ? Math.abs(dailyDifference) * daysRemaining : 0;
+  const deviationCost = Math.min(rawDeviationCost, Math.max(totalIncome, 0));
+  let differenceTone = "neutral";
+  let differenceLabel = "En equilibrio";
+
+  if (dailyDifference > 0) {
+    differenceTone = "positive";
+    differenceLabel = "Vas bien";
+  } else if (dailyDifference < 0) {
+    differenceTone = "negative";
+    differenceLabel = "Te est\u00e1s pasando";
+  }
+
   const liquidityFinalPercent = metrics.totalIncome > 0 ? roundCurrency((metrics.liquidityFinal / metrics.totalIncome) * 100) : 0;
   const liquidityFinalState = getSavingsCapacityState(liquidityFinalPercent, metrics.totalIncome);
   let liquidityStatusLabel = "Sin ingreso";
@@ -994,17 +1062,22 @@ const renderHero = (metrics, animate) => {
   }
 
   animateValue(summaryElements.heroLiquidityFinal, metrics.liquidityFinal, { animate });
-  animateValue(summaryElements.heroIncome, metrics.totalIncome, { animate });
-  animateValue(summaryElements.heroSpent, metrics.totalSpent, { animate });
-  animateValue(summaryElements.heroInvested, metrics.investedThisMonth, { animate });
+  animateValue(summaryElements.heroIncome, dailySpend, { animate });
+  animateValue(summaryElements.heroSpent, dailyLimit, { animate });
+  animateValue(summaryElements.heroInvested, dailyDifference, { animate });
   setTextValue(textElements.heroLiquidityCopy, "Liquidez hasta pr\u00f3ximo ingreso");
-  setTextValue(textElements.heroBalanceNote, `Disponible antes de invertir: ${formatMoney(metrics.remainingBalance)}`);
+  setTextValue(textElements.heroDifferenceNote, differenceLabel);
   setTextValue(
-    textElements.heroCaption,
-    metrics.totalIncome
-      ? "Liquidez final = disponible antes de invertir - inversion del mes."
-      : "Carga el ingreso del mes para ver tu liquidez real."
+    textElements.heroBalanceNote,
+    projectedMonthEnd < 0
+      ? `Vas a cerrar en negativo (-${formatMoney(Math.abs(projectedMonthEnd), 0)})`
+      : `Cierre estimado: ${formatMoney(projectedMonthEnd, 0)}`
   );
+  setTextValue(textElements.heroCaption, `Costo de desviarte: ${formatMoney(deviationCost, 0)}`);
+  if (heroDifferenceCardElement) {
+    heroDifferenceCardElement.classList.remove(...HERO_DIFFERENCE_STATE_CLASSES);
+    heroDifferenceCardElement.classList.add(`hero-card__meta-item--${differenceTone}`);
+  }
   applyCapacityState(heroCardElement, liquidityFinalState);
   applyStatusPill(
     statusElements.hero,

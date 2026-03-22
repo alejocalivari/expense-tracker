@@ -701,8 +701,9 @@ body.sidebar-open .mobile-backdrop {
 
 .hero-card__meta {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
+  align-items: stretch;
 }
 
 .hero-card__meta-item {
@@ -725,16 +726,39 @@ body.sidebar-open .mobile-backdrop {
   color: var(--text-main);
 }
 
-.hero-card__balance {
+.hero-card__meta-note {
+  margin-top: 8px;
+}
+
+.hero-card__meta-item--positive strong,
+.hero-card__meta-item--positive .hero-card__meta-note {
+  color: var(--accent);
+}
+
+.hero-card__meta-item--neutral strong,
+.hero-card__meta-item--neutral .hero-card__meta-note {
   color: var(--text-soft);
+}
+
+.hero-card__meta-item--negative strong,
+.hero-card__meta-item--negative .hero-card__meta-note {
+  color: var(--accent-rose);
+}
+
+.hero-card__balance {
+  color: var(--text-main);
   font-size: 0.92rem;
   line-height: 1.5;
   font-variant-numeric: tabular-nums;
+  font-weight: 600;
 }
 
 .hero-card__caption {
-  color: var(--text-muted);
+  color: var(--text-soft);
+  font-size: 0.92rem;
   line-height: 1.58;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
 }
 
 .hero-card__actions {
@@ -2870,6 +2894,10 @@ body.is-loading .dashboard-state--content {
 }
 
 @media (max-width: 639px) {
+  .hero-card__meta {
+    grid-template-columns: 1fr;
+  }
+
   .topbar__actions {
     justify-content: stretch;
   }
