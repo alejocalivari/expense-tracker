@@ -678,6 +678,21 @@ body.sidebar-open .mobile-backdrop {
   flex-wrap: wrap;
 }
 
+.hero-card__status {
+  display: grid;
+  justify-items: end;
+  gap: 6px;
+}
+
+.hero-card__status-note {
+  margin: 0;
+  color: var(--text-soft);
+  font-size: 0.78rem;
+  line-height: 1.2;
+  white-space: nowrap;
+  text-align: right;
+}
+
 .hero-card__content {
   display: grid;
   gap: 16px;

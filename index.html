@@ -73,11 +73,11 @@
           <section class="dashboard-view view-resumen is-active" data-view="resumen">
           <section class="hero-grid">
             <article class="panel hero-card hero-card--capacity" data-capacity-card="hero">
-              <div class="panel__header"><div><p class="eyebrow">Liquidez final</p><h3>Liquidez disponible</h3></div><span class="status-pill status-pill--neutral" data-summary-status="hero">Sin ingreso</span></div>
+              <div class="panel__header"><div><p class="eyebrow">Liquidez final</p><h3>Disponible hasta pr&oacute;ximo ingreso</h3></div><div class="hero-card__status"><span class="status-pill status-pill--neutral" data-summary-status="hero">Sin ingreso</span><p class="hero-card__status-note" data-summary-text="hero-risk-reason" hidden></p></div></div>
               <div class="hero-card__headline">
                 <div class="hero-card__content">
                   <p class="hero-card__amount countup" data-summary="hero-liquidity-final" data-countup="0" data-prefix="$">$0</p>
-                  <p class="hero-card__secondary" data-summary-text="hero-liquidity-copy">Liquidez hasta pr&oacute;ximo ingreso</p>
+                  <p class="hero-card__secondary" data-summary-text="hero-liquidity-copy"></p>
                   <div class="hero-card__meta" aria-label="Resumen de liquidez">
                     <div class="hero-card__meta-item">
                       <span>Gasto diario</span>
@@ -309,7 +309,7 @@
           </section>
 
           <section class="dashboard-view view-actividad is-hidden" data-view="actividad" hidden>
-            <article class="panel expenses-card"><div class="panel__header"><div><p class="eyebrow">Operaciones</p><h3>Movimientos del mes</h3></div><div class="inline-actions"><span class="pill pill--quiet" data-expense-results>0 visibles</span><button class="button button--ghost button--small" type="button" data-open-filters aria-haspopup="dialog">Filtros</button><button class="button button--ghost button--small" type="button" data-open-export aria-haspopup="dialog">Exportar</button></div></div><div class="expense-list" data-expense-list></div></article>
+            <article class="panel expenses-card"><div class="panel__header"><div><p class="eyebrow">Operaciones</p><h3>Movimientos del mes</h3></div><div class="inline-actions"><span class="pill pill--quiet" data-expense-results>0 visibles</span><button class="button button--ghost button--small" type="button" data-open-filters aria-haspopup="dialog">Filtros</button><button class="button button--ghost button--small" type="button" data-open-import-json>Importar JSON</button><button class="button button--ghost button--small" type="button" data-open-import-csv>Importar CSV</button><button class="button button--ghost button--small" type="button" data-open-export aria-haspopup="dialog">Exportar</button><input type="file" accept=".json,application/json" data-import-json-input hidden><input type="file" accept=".csv,text/csv" data-import-csv-input hidden></div></div><div class="expense-list" data-expense-list></div></article>
           </section>
         </section>
       </main>

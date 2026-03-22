@@ -71,7 +71,11 @@ const menuToggle = document.querySelector("[data-menu-toggle]");
 const backdrop = document.querySelector("[data-backdrop]");
 const navItems = document.querySelectorAll("[data-nav-item]");
 const openFilterButtons = document.querySelectorAll("[data-open-filters]");
+const openImportJsonButtons = document.querySelectorAll("[data-open-import-json]");
+const openImportCsvButtons = document.querySelectorAll("[data-open-import-csv]");
 const openExportButtons = document.querySelectorAll("[data-open-export]");
+const importJsonInput = document.querySelector("[data-import-json-input]");
+const importCsvInput = document.querySelector("[data-import-csv-input]");
 const searchInput = document.querySelector("[data-search-input]");
 const topbarActions = document.querySelector("[data-topbar-actions]");
 const topbarEyebrow = document.querySelector("[data-topbar-eyebrow]");
@@ -153,6 +157,197 @@ const canUseLocalStorage = () => {
   } catch (error) {
     return false;
   }
+};
+const isValidImportState = (value) => {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return false;
+  }
+
+  if (!Array.isArray(value.expenses)) {
+    return false;
+  }
+
+  if (!value.filters || typeof value.filters !== "object" || Array.isArray(value.filters)) {
+    return false;
+  }
+
+  const hasIncomeData = ["incomeBase", "income", "incomeExtra"].some((key) => Object.prototype.hasOwnProperty.call(value, key));
+  const hasValidExpenses = value.expenses.every((expense) => expense && typeof expense === "object" && !Array.isArray(expense));
+
+  return hasIncomeData && hasValidExpenses;
+};
+const normalizeImportToken = (value = "") =>
+  String(value || "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+const splitCsvLine = (line = "") => {
+  const values = [];
+  let currentValue = "";
+  let insideQuotes = false;
+
+  for (let index = 0; index < line.length; index += 1) {
+    const character = line[index];
+
+    if (character === '"') {
+      if (insideQuotes && line[index + 1] === '"') {
+        currentValue += '"';
+        index += 1;
+      } else {
+        insideQuotes = !insideQuotes;
+      }
+
+      continue;
+    }
+
+    if (character === "," && !insideQuotes) {
+      values.push(currentValue.trim());
+      currentValue = "";
+      continue;
+    }
+
+    currentValue += character;
+  }
+
+  values.push(currentValue.trim());
+  return values;
+};
+const parseImportCsvAmount = (value) => {
+  const rawValue = String(value || "").trim().replace(/\s/g, "").replace(/\$/g, "");
+
+  if (!rawValue) {
+    return null;
+  }
+
+  let normalizedValue = rawValue;
+
+  if (normalizedValue.includes(",") && normalizedValue.includes(".")) {
+    normalizedValue = normalizedValue.lastIndexOf(",") > normalizedValue.lastIndexOf(".")
+      ? normalizedValue.replace(/\./g, "").replace(",", ".")
+      : normalizedValue.replace(/,/g, "");
+  } else if (/^\d{1,3}(\.\d{3})+$/.test(normalizedValue)) {
+    normalizedValue = normalizedValue.replace(/\./g, "");
+  } else if (/^\d{1,3}(,\d{3})+$/.test(normalizedValue)) {
+    normalizedValue = normalizedValue.replace(/,/g, "");
+  } else if (normalizedValue.includes(",")) {
+    normalizedValue = normalizedValue.replace(/\./g, "").replace(",", ".");
+  }
+
+  const parsedAmount = Number(normalizedValue);
+  return Number.isFinite(parsedAmount) ? Math.abs(parsedAmount) : null;
+};
+const parseImportCsvDate = (value) => {
+  const rawValue = String(value || "").trim();
+
+  if (!rawValue) {
+    return null;
+  }
+
+  const yearMonthDayMatch = rawValue.match(/^(\d{4})[/-](\d{1,2})[/-](\d{1,2})$/);
+
+  if (yearMonthDayMatch) {
+    const [, year, month, day] = yearMonthDayMatch;
+    const parsedDate = new Date(`${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}T12:00:00`);
+    return Number.isNaN(parsedDate.getTime()) ? null : parsedDate.toISOString();
+  }
+
+  const dayMonthYearMatch = rawValue.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})$/);
+
+  if (dayMonthYearMatch) {
+    const [, day, month, year] = dayMonthYearMatch;
+    const parsedDate = new Date(`${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}T12:00:00`);
+    return Number.isNaN(parsedDate.getTime()) ? null : parsedDate.toISOString();
+  }
+
+  const parsedDate = new Date(rawValue);
+  return Number.isNaN(parsedDate.getTime()) ? null : parsedDate.toISOString();
+};
+const parseImportCsvFrequency = (value) => {
+  const normalizedValue = normalizeImportToken(value);
+
+  if (!normalizedValue) {
+    return undefined;
+  }
+
+  if (/^fij/.test(normalizedValue)) {
+    return true;
+  }
+
+  if (/^vari/.test(normalizedValue)) {
+    return false;
+  }
+
+  return undefined;
+};
+const buildExpenseFromCsvRow = (row) => {
+  const movementType = normalizeImportToken(row.tipo);
+  const parsedDate = parseImportCsvDate(row.fecha);
+  const parsedAmount = parseImportCsvAmount(row.monto);
+
+  if (!movementType || !parsedDate || parsedAmount === null) {
+    return null;
+  }
+
+  const isIncomeMovement = /ingres/.test(movementType);
+  const isInvestmentMovement = /inver|aport/.test(movementType);
+  const isExpenseMovement = /gast/.test(movementType);
+
+  if (!isIncomeMovement && !isInvestmentMovement && !isExpenseMovement) {
+    return null;
+  }
+
+  const frequency = parseImportCsvFrequency(row.frecuencia);
+  const description = String(row.descripcion || "").trim() || (isIncomeMovement ? "Ingreso importado" : "Movimiento importado");
+
+  return {
+    title: description,
+    amount: isIncomeMovement ? -parsedAmount : parsedAmount,
+    category: isInvestmentMovement ? "Inversion" : String(row.categoria || "").trim() || "Otros",
+    date: parsedDate,
+    paymentMethod: String(row.metodo || "").trim(),
+    note: isIncomeMovement ? "Ingreso importado por CSV" : "",
+    isFixed: typeof frequency === "boolean" ? frequency : undefined,
+  };
+};
+const parseExpensesFromCsv = (contents) => {
+  const lines = String(contents || "")
+    .split(/\r?\n/)
+    .filter((line) => line.trim());
+
+  if (lines.length < 2) {
+    return null;
+  }
+
+  const normalizedHeaders = splitCsvLine(lines[0]).map(normalizeImportToken);
+
+  if (!["fecha", "tipo", "monto"].every((header) => normalizedHeaders.includes(header))) {
+    return null;
+  }
+
+  const getValueByHeader = (values, headerName) => {
+    const headerIndex = normalizedHeaders.indexOf(headerName);
+    return headerIndex >= 0 ? values[headerIndex] || "" : "";
+  };
+
+  return lines.slice(1).reduce((expenses, line) => {
+    const values = splitCsvLine(line);
+    const importedExpense = buildExpenseFromCsvRow({
+      fecha: getValueByHeader(values, "fecha"),
+      tipo: getValueByHeader(values, "tipo"),
+      categoria: getValueByHeader(values, "categoria"),
+      descripcion: getValueByHeader(values, "descripcion"),
+      monto: getValueByHeader(values, "monto"),
+      metodo: getValueByHeader(values, "metodo"),
+      frecuencia: getValueByHeader(values, "frecuencia"),
+    });
+
+    if (importedExpense) {
+      expenses.push(importedExpense);
+    }
+
+    return expenses;
+  }, []);
 };
 
 const isKnownView = (viewName) => Boolean(viewName && Object.prototype.hasOwnProperty.call(viewSections, viewName) && viewSections[viewName]);
@@ -265,6 +460,7 @@ const textElements = {
   periodPill: document.querySelector("[data-period-pill]"),
   sidebarSavingsCapacity: document.querySelector('[data-summary-text="sidebar-savings-capacity"]'),
   heroLiquidityCopy: document.querySelector('[data-summary-text="hero-liquidity-copy"]'),
+  heroRiskReason: document.querySelector('[data-summary-text="hero-risk-reason"]'),
   heroDifferenceNote: document.querySelector('[data-summary-text="hero-difference-note"]'),
   heroBalanceNote: document.querySelector('[data-summary-text="hero-balance-note"]'),
   heroCaption: document.querySelector('[data-summary-text="hero-caption"]'),
@@ -1029,8 +1225,21 @@ const renderHero = (metrics, animate) => {
     : 0;
   const rawDeviationCost = dailyDifference < 0 && daysRemaining > 0 ? Math.abs(dailyDifference) * daysRemaining : 0;
   const deviationCost = Math.min(rawDeviationCost, Math.max(totalIncome, 0));
+  let riskReason = "";
   let differenceTone = "neutral";
   let differenceLabel = "En equilibrio";
+
+  if (liquidityAmount < 0) {
+    riskReason = "Liquidez negativa";
+  } else if (dailyDifference < 0) {
+    riskReason = "Gasto diario superior al límite";
+  } else if (projectedMonthEnd < 0) {
+    riskReason = "Cierre mensual en negativo";
+  }
+
+  if (dailyDifference < 0 && riskReason) {
+    riskReason = "Gasto diario superior al l\u00edmite";
+  }
 
   if (dailyDifference > 0) {
     differenceTone = "positive";
@@ -1065,7 +1274,7 @@ const renderHero = (metrics, animate) => {
   animateValue(summaryElements.heroIncome, dailySpend, { animate });
   animateValue(summaryElements.heroSpent, dailyLimit, { animate });
   animateValue(summaryElements.heroInvested, dailyDifference, { animate });
-  setTextValue(textElements.heroLiquidityCopy, "Liquidez hasta pr\u00f3ximo ingreso");
+  setTextValue(textElements.heroLiquidityCopy, "");
   setTextValue(textElements.heroDifferenceNote, differenceLabel);
   setTextValue(
     textElements.heroBalanceNote,
@@ -1077,6 +1286,10 @@ const renderHero = (metrics, animate) => {
   if (heroDifferenceCardElement) {
     heroDifferenceCardElement.classList.remove(...HERO_DIFFERENCE_STATE_CLASSES);
     heroDifferenceCardElement.classList.add(`hero-card__meta-item--${differenceTone}`);
+  }
+  if (textElements.heroRiskReason) {
+    setTextValue(textElements.heroRiskReason, liquidityStatusTone === "negative" ? riskReason : "");
+    textElements.heroRiskReason.hidden = !(liquidityStatusTone === "negative" && riskReason);
   }
   applyCapacityState(heroCardElement, liquidityFinalState);
   applyStatusPill(
@@ -1563,11 +1776,13 @@ const renderExpenseList = (state, metrics, context) => {
       const isInvestmentExpense = isInvestmentCategory(expense.category);
       const movementCopy = getMovementCopy(expense.category);
       const notePreview = expense.note ? `<p class="expense-row__note">${escapeHtml(expense.note)}</p>` : "";
+      const movementTypeBadge = isInvestmentExpense
+        ? '<span class="badge badge--investment">Inversion</span>'
+        : '<span class="badge badge--slate">Gasto</span>';
       const fixedBadge = expense.isFixed ? '<span class="badge badge--fixed">Fijo</span>' : '<span class="badge badge--variable">Variable</span>';
-      const investmentBadge = isInvestmentExpense ? '<span class="badge badge--investment">Aporte</span>' : "";
       const amountClass = isInvestmentExpense ? "expense-row__amount expense-row__amount--investment" : "expense-row__amount";
 
-      return `<article class="expense-row${isInvestmentExpense ? " expense-row--investment" : ""}"><div class="expense-row__merchant"><strong>${escapeHtml(expense.title)}</strong>${notePreview || `<span>${escapeHtml(getCategoryLabel(expense.category))} - ${escapeHtml(expense.paymentMethod)}</span>`}</div><div class="expense-row__meta"><span class="badge ${getCategoryTone(expense.category)}">${escapeHtml(getCategoryLabel(expense.category))}</span>${investmentBadge}<span class="badge badge--method">${escapeHtml(expense.paymentMethod)}</span>${fixedBadge}<span class="expense-row__method">${escapeHtml(formatDate(expense.date, { month: "short", day: "numeric", year: "numeric" }).replace(".", ""))}</span></div><div class="expense-row__side"><strong class="${amountClass}">- ${escapeHtml(formatMoney(expense.amount))}</strong><div class="expense-row__actions"><button class="icon-button icon-button--soft" type="button" aria-label="${escapeHtml(movementCopy.editLabel)}" data-expense-action="edit" data-expense-id="${expense.id}"><svg viewBox="0 0 24 24" fill="none"><path d="M4 20h4.5L19 9.5 14.5 5 4 15.5V20Z"></path><path d="m12.5 7 4.5 4.5"></path></svg></button><button class="icon-button icon-button--soft" type="button" aria-label="${escapeHtml(movementCopy.duplicateLabel)}" data-expense-action="duplicate" data-expense-id="${expense.id}"><svg viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M6 15H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v1"></path></svg></button><button class="icon-button icon-button--soft" type="button" aria-label="${escapeHtml(movementCopy.deleteLabel)}" data-expense-action="delete" data-expense-id="${expense.id}"><svg viewBox="0 0 24 24" fill="none"><path d="M4 7.5h16"></path><path d="M9.5 10.5v6"></path><path d="M14.5 10.5v6"></path><path d="M6.5 7.5 7.4 19a2 2 0 0 0 2 1.8h5.2a2 2 0 0 0 2-1.8l.9-11.5"></path><path d="M9 7.5V5.8A1.8 1.8 0 0 1 10.8 4h2.4A1.8 1.8 0 0 1 15 5.8v1.7"></path></svg></button></div></div></article>`;
+      return `<article class="expense-row${isInvestmentExpense ? " expense-row--investment" : ""}"><div class="expense-row__merchant"><strong>${escapeHtml(expense.title)}</strong>${notePreview || `<span>${escapeHtml(getCategoryLabel(expense.category))} - ${escapeHtml(expense.paymentMethod)}</span>`}</div><div class="expense-row__meta">${movementTypeBadge}<span class="badge ${getCategoryTone(expense.category)}">${escapeHtml(getCategoryLabel(expense.category))}</span><span class="badge badge--method">${escapeHtml(expense.paymentMethod)}</span>${fixedBadge}<span class="expense-row__method">${escapeHtml(formatDate(expense.date, { month: "short", day: "numeric", year: "numeric" }).replace(".", ""))}</span></div><div class="expense-row__side"><strong class="${amountClass}">- ${escapeHtml(formatMoney(expense.amount))}</strong><div class="expense-row__actions"><button class="icon-button icon-button--soft" type="button" aria-label="${escapeHtml(movementCopy.editLabel)}" data-expense-action="edit" data-expense-id="${expense.id}"><svg viewBox="0 0 24 24" fill="none"><path d="M4 20h4.5L19 9.5 14.5 5 4 15.5V20Z"></path><path d="m12.5 7 4.5 4.5"></path></svg></button><button class="icon-button icon-button--soft" type="button" aria-label="${escapeHtml(movementCopy.duplicateLabel)}" data-expense-action="duplicate" data-expense-id="${expense.id}"><svg viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M6 15H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v1"></path></svg></button><button class="icon-button icon-button--soft" type="button" aria-label="${escapeHtml(movementCopy.deleteLabel)}" data-expense-action="delete" data-expense-id="${expense.id}"><svg viewBox="0 0 24 24" fill="none"><path d="M4 7.5h16"></path><path d="M9.5 10.5v6"></path><path d="M14.5 10.5v6"></path><path d="M6.5 7.5 7.4 19a2 2 0 0 0 2 1.8h5.2a2 2 0 0 0 2-1.8l.9-11.5"></path><path d="M9 7.5V5.8A1.8 1.8 0 0 1 10.8 4h2.4A1.8 1.8 0 0 1 15 5.8v1.7"></path></svg></button></div></div></article>`;
     })
     .join("");
 };
@@ -2155,6 +2370,80 @@ const exportVisibleExpenses = (format) => {
   showToast(`Exportacion ${format.toUpperCase()} lista.`);
 };
 
+const openImportJsonPicker = () => {
+  if (!importJsonInput) {
+    return;
+  }
+
+  importJsonInput.value = "";
+  importJsonInput.click();
+};
+
+const openImportCsvPicker = () => {
+  if (!importCsvInput) {
+    return;
+  }
+
+  importCsvInput.value = "";
+  importCsvInput.click();
+};
+
+const handleImportJsonSelection = async (event) => {
+  const selectedFile = event.target?.files?.[0];
+
+  if (!selectedFile) {
+    return;
+  }
+
+  try {
+    const rawContents = await selectedFile.text();
+    const parsedState = JSON.parse(rawContents);
+
+    if (!isValidImportState(parsedState)) {
+      throw new Error("invalid-import-state");
+    }
+
+    setState(parsedState);
+    renderDashboard(true);
+    showToast("Datos importados correctamente");
+  } catch (error) {
+    showToast("Archivo JSON inválido", "error");
+  } finally {
+    if (importJsonInput) {
+      importJsonInput.value = "";
+    }
+  }
+};
+
+const handleImportCsvSelection = async (event) => {
+  const selectedFile = event.target?.files?.[0];
+
+  if (!selectedFile) {
+    return;
+  }
+
+  try {
+    const rawContents = await selectedFile.text();
+    const importedExpenses = parseExpensesFromCsv(rawContents);
+
+    if (!importedExpenses?.length) {
+      throw new Error("invalid-import-csv");
+    }
+
+    updateState((state) => ({
+      expenses: [...importedExpenses, ...state.expenses],
+    }));
+    renderDashboard(true);
+    showToast("Movimientos importados correctamente");
+  } catch (error) {
+    showToast("Archivo CSV inválido", "error");
+  } finally {
+    if (importCsvInput) {
+      importCsvInput.value = "";
+    }
+  }
+};
+
 const restoreSampleData = () => {
   setState(getSampleState());
   closeModal();
@@ -2232,9 +2521,13 @@ const initializeInteractions = () => {
   openGoalButtons.forEach((button) => button.addEventListener("click", openGoalModal));
   openInvestmentButtons.forEach((button) => button.addEventListener("click", openInvestmentModal));
   openFilterButtons.forEach((button) => button.addEventListener("click", openFiltersModal));
+  openImportJsonButtons.forEach((button) => button.addEventListener("click", openImportJsonPicker));
+  openImportCsvButtons.forEach((button) => button.addEventListener("click", openImportCsvPicker));
   openExportButtons.forEach((button) => button.addEventListener("click", openExportModal));
   modalRestoreButtons.forEach((button) => button.addEventListener("click", openRestoreModal));
   modalCloseTriggers.forEach((trigger) => trigger.addEventListener("click", closeModal));
+  importJsonInput?.addEventListener("change", handleImportJsonSelection);
+  importCsvInput?.addEventListener("change", handleImportCsvSelection);
 
   expenseForm?.addEventListener("submit", handleExpenseSubmit);
   expenseForm?.addEventListener("input", clearFormFeedback);
