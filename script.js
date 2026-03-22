@@ -2229,13 +2229,12 @@ const translateStaticUi = () => {
   setTextValue(languageSwitch?.querySelector(".language-switch__label"), t("income.languageLabel"));
 
   const expensesCard = document.querySelector(".expenses-card");
-  const expensesHeaderButtons = expensesCard?.querySelectorAll(".inline-actions .button");
   setTextValue(expensesCard?.querySelector(".panel__header .eyebrow"), t("activity.eyebrow"));
   setTextValue(expensesCard?.querySelector(".panel__header h3"), t("activity.title"));
-  setTextValue(expensesHeaderButtons?.[0], t("activity.filters"));
-  setTextValue(expensesHeaderButtons?.[1], t("activity.importJson"));
-  setTextValue(expensesHeaderButtons?.[2], t("activity.importCsv"));
-  setTextValue(expensesHeaderButtons?.[3], t("activity.export"));
+  setTextValue(expensesCard?.querySelector("[data-open-filters]"), t("activity.filters"));
+  setTextValue(expensesCard?.querySelector("[data-open-import-json]"), t("activity.importJson"));
+  setTextValue(expensesCard?.querySelector("[data-open-import-csv]"), t("activity.importCsv"));
+  setTextValue(expensesCard?.querySelector("[data-open-export]"), t("activity.export"));
 
   const calendarCard = document.querySelector(".calendar-card");
   const calendarSummaryLabels = calendarCard?.querySelectorAll(".calendar-summary__card > span");

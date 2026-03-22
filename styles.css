@@ -1927,12 +1927,6 @@ body.sidebar-open .mobile-backdrop {
   flex-wrap: wrap;
 }
 
-.income-board__meta {
-  display: grid;
-  justify-items: end;
-  gap: 10px;
-}
-
 .income-board__note {
   margin: 0;
   max-width: 34ch;
@@ -1988,6 +1982,27 @@ body.sidebar-open .mobile-backdrop {
 .language-switch__rate:hover,
 .language-switch__rate:focus-visible {
   color: var(--accent-blue);
+}
+
+.language-switch--toolbar {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.language-switch--toolbar .language-switch__label,
+.language-switch--toolbar .language-switch__rate {
+  display: none;
+}
+
+.language-switch--toolbar .language-switch__actions {
+  gap: 6px;
+}
+
+.language-switch--toolbar .language-switch__button {
+  min-width: 46px;
+  min-height: 38px;
+  padding-inline: 12px;
 }
 
 .income-kpi-grid {
@@ -2803,7 +2818,6 @@ body.is-loading .dashboard-state--content {
 }
 
 @media (max-width: 639px) {
-  .income-board__meta,
   .language-switch {
     justify-items: start;
   }
