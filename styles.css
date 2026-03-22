@@ -1924,11 +1924,70 @@ body.sidebar-open .mobile-backdrop {
 
 .income-board__header {
   align-items: end;
+  flex-wrap: wrap;
+}
+
+.income-board__meta {
+  display: grid;
+  justify-items: end;
+  gap: 10px;
 }
 
 .income-board__note {
   margin: 0;
   max-width: 34ch;
+}
+
+.language-switch {
+  display: grid;
+  justify-items: end;
+  gap: 8px;
+}
+
+.language-switch__label {
+  color: var(--text-muted);
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.language-switch__actions {
+  display: inline-grid;
+  grid-auto-flow: column;
+  gap: 8px;
+}
+
+.language-switch__button {
+  min-width: 54px;
+  transition:
+    border-color 180ms ease,
+    background 180ms ease,
+    color 180ms ease,
+    transform 180ms ease;
+}
+
+.language-switch__button.is-active {
+  color: var(--surface-1);
+  border-color: rgba(117, 229, 192, 0.28);
+  background: var(--accent);
+}
+
+.language-switch__button:not(.is-active):hover,
+.language-switch__button:not(.is-active):focus-visible {
+  border-color: rgba(132, 166, 255, 0.2);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.language-switch__rate {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  text-decoration: none;
+}
+
+.language-switch__rate:hover,
+.language-switch__rate:focus-visible {
+  color: var(--accent-blue);
 }
 
 .income-kpi-grid {
@@ -2740,6 +2799,13 @@ body.is-loading .dashboard-state--content {
 
   .expense-form__grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 639px) {
+  .income-board__meta,
+  .language-switch {
+    justify-items: start;
   }
 }
 
