@@ -1,1345 +1,23 @@
 const { getSampleState, getState, setState, updateState } = window.aleclvExpenseTrackerState;
-const { formatCurrency, formatDate, generateId } = window.aleclvExpenseTrackerUtils;
-
+const { formatCurrency, formatDate, generateId, MONTH_KEY_PATTERN, prefersReducedMotion, clamp, roundCurrency, escapeHtml, normalizeText, toSafeNumber, readDecimals, isValidMonthKey, getExpenseDate, getMonthKey, getCurrentMonthKey, getLatestMonthKey, shiftMonthKey, getYearFromMonthKey, getMonthNumberFromMonthKey, buildMonthKey, isFutureMonthKey, getDaysInMonth, getRemainingDaysInMonth, getSpendTodayAmount } = window.aleclvExpenseTrackerUtils;
+const { t, setLanguage: setI18nLanguage, getCurrentLocale, isSupportedLanguage, DEFAULT_LANGUAGE, DEFAULT_CURRENCY_BY_LANGUAGE } = window.aleclvExpenseTrackerI18n;
 const TOAST_TIMEOUT_MS = 2600;
-const MONTH_KEY_PATTERN = /^\d{4}-\d{2}$/;
 const DEFAULT_VIEW = "resumen";
 const ACTIVE_VIEW_STORAGE_KEY = `${window.aleclvExpenseTrackerStorage?.STORAGE_KEY || "aleclv-salary-planner-state"}:active-view`;
 const LANGUAGE_STORAGE_KEY = "app-language";
 const CURRENCY_STORAGE_KEY = "app-currency";
 const EXCHANGE_RATE_STORAGE_KEY = "exchange-rate-usd-ars";
 const EXCHANGE_RATE_TIMESTAMP_STORAGE_KEY = "exchange-rate-usd-ars-timestamp";
-const DEFAULT_LANGUAGE = "es";
 const DEFAULT_EXCHANGE_RATE_USD_ARS = 1450;
 const EXCHANGE_RATE_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 const EXCHANGE_RATE_API_URL = "https://open.er-api.com/v6/latest/USD";
-const DEFAULT_CURRENCY_BY_LANGUAGE = {
-  es: "ARS",
-  en: "USD",
-};
-const translations = {
-  es: {
-    locale: "es-AR",
-    currency: "ARS",
-  },
-  en: {
-    locale: "en-US",
-    currency: "USD",
-  },
-};
-translations.es.views = {
-  resumen: "Resumen",
-  flujo: "Flujo",
-  ingreso: "Ingreso",
-  actividad: "Actividad",
-  calendario: "Calendario",
-};
-translations.en.views = {
-  resumen: "Summary",
-  flujo: "Flow",
-  ingreso: "Income",
-  actividad: "Activity",
-  calendario: "Calendar",
-};
-
-translations.es.topbar = {
-  resumenEyebrow: "vision general",
-  resumenTitle: "{month} - resumen mensual del salario",
-  flujoEyebrow: "analisis del mes",
-  flujoTitle: "flujo del mes",
-  ingresoEyebrow: "control del mes",
-  ingresoTitle: "plan de ingreso del mes",
-  actividadEyebrow: "operaciones del mes",
-  actividadTitle: "movimientos del mes",
-  calendarioEyebrow: "planificacion anual",
-  calendarioTitle: "plan anual por mes",
-};
-translations.en.topbar = {
-  resumenEyebrow: "monthly overview",
-  resumenTitle: "{month} - salary snapshot",
-  flujoEyebrow: "month analysis",
-  flujoTitle: "monthly flow",
-  ingresoEyebrow: "month control",
-  ingresoTitle: "monthly income plan",
-  actividadEyebrow: "month activity",
-  actividadTitle: "monthly movements",
-  calendarioEyebrow: "annual planning",
-  calendarioTitle: "annual month plan",
-};
-
-translations.es.search = {
-  aria: "Buscar",
-  placeholder: "Buscar descripcion, categoria, medio de pago o nota",
-};
-translations.en.search = {
-  aria: "Search",
-  placeholder: "Search description, category, payment method or note",
-};
-
-translations.es.sidebar = {
-  primaryAria: "Principal",
-  mobileAria: "Movil",
-  brandEyebrow: "plan de dinero mensual",
-  activeMonthEyebrow: "Mes activo",
-  savingsCapacity: "Capacidad de ahorro",
-  availableToSave: "Disponible para ahorrar",
-  profileEyebrow: "Perfil",
-  personalSpace: "Espacio personal",
-};
-translations.en.sidebar = {
-  primaryAria: "Primary",
-  mobileAria: "Mobile",
-  brandEyebrow: "monthly money plan",
-  activeMonthEyebrow: "Active month",
-  savingsCapacity: "Savings capacity",
-  availableToSave: "Available to save",
-  profileEyebrow: "Profile",
-  personalSpace: "Personal space",
-};
-
-translations.es.status = {
-  noData: "Sin datos",
-  noBase: "Sin base",
-  noIncome: "Sin ingreso",
-  atRisk: "En riesgo",
-  comfortable: "Sobrado",
-  controlled: "Controlado",
-  tight: "Ajustado",
-  onTrack: "Vas bien",
-  inBalance: "En equilibrio",
-  overspending: "Te estas pasando",
-  goalMet: "Meta cumplida",
-  onPace: "En ritmo",
-  noContributions: "Sin aportes",
-  stable: "Estable",
-  currentAverage: "Promedio actual",
-  editable: "Editable",
-  noExpenses: "Sin gastos",
-  withMovements: "Con movimientos",
-  future: "Futuro",
-  noGoal: "Sin meta",
-};
-translations.en.status = {
-  noData: "No data",
-  noBase: "No baseline",
-  noIncome: "No income",
-  atRisk: "At risk",
-  comfortable: "Comfortable",
-  controlled: "Controlled",
-  tight: "Tight",
-  onTrack: "You are on track",
-  inBalance: "Balanced",
-  overspending: "You are overspending",
-  goalMet: "Goal met",
-  onPace: "On pace",
-  noContributions: "No contributions",
-  stable: "Stable",
-  currentAverage: "Current average",
-  editable: "Editable",
-  noExpenses: "No expenses",
-  withMovements: "With movements",
-  future: "Future",
-  noGoal: "No goal",
-};
-
-translations.es.savingsCapacityStates = {
-  neutral: "Sin ingreso",
-  excellent: "Excelente",
-  healthy: "Saludable",
-  low: "Bajo",
-};
-translations.en.savingsCapacityStates = {
-  neutral: "No income",
-  excellent: "Excellent",
-  healthy: "Healthy",
-  low: "Low",
-};
-translations.es.hero = {
-  eyebrow: "Liquidez final",
-  title: "Disponible hasta proximo ingreso",
-  ariaLabel: "Resumen de liquidez",
-  dailySpend: "Gasto diario",
-  dailyLimit: "Limite diario",
-  difference: "Diferencia",
-  closingPositive: "Cierre estimado: {amount}",
-  closingNegative: "Vas a cerrar en negativo (-{amount})",
-  deviationCost: "Costo de desviarte: {amount}",
-  registerExpense: "Registrar gasto",
-  riskLiquidity: "Liquidez negativa",
-  riskDaily: "Gasto diario superior al limite",
-  riskClosing: "Cierre mensual en negativo",
-};
-translations.en.hero = {
-  eyebrow: "Final liquidity",
-  title: "Available until next income",
-  ariaLabel: "Liquidity summary",
-  dailySpend: "Daily spend",
-  dailyLimit: "Daily limit",
-  difference: "Difference",
-  closingPositive: "Closing projection: {amount}",
-  closingNegative: "You will close negative (-{amount})",
-  deviationCost: "Cost of drifting: {amount}",
-  registerExpense: "Add expense",
-  riskLiquidity: "Negative liquidity",
-  riskDaily: "Daily spending is above the limit",
-  riskClosing: "Monthly closing is negative",
-};
-
-translations.es.goal = {
-  eyebrow: "Meta mensual",
-  defaultLabel: "Meta mensual de inversion",
-  noteDefault: "La meta solo suma los movimientos cargados en la categoria Inversion.",
-  objective: "Objetivo",
-  investedThisMonth: "Invertido este mes",
-  progress: "Progreso de inversion",
-  toInvest: "Te falta invertir",
-  exceeded: "Excedente sobre la meta",
-  comparisonLabel: "Comparacion con el mes anterior",
-  comparisonSpent: "Gastos",
-  comparisonAvailable: "Disponible antes de invertir",
-  comparisonInvested: "Invertido",
-  comparisonCategoryShift: "Cambio de categoria",
-};
-translations.en.goal = {
-  eyebrow: "Monthly goal",
-  defaultLabel: "Monthly investment goal",
-  noteDefault: "The goal only adds movements recorded in the Investment category.",
-  objective: "Target",
-  investedThisMonth: "Invested this month",
-  progress: "Investment progress",
-  toInvest: "Still to invest",
-  exceeded: "Above target",
-  comparisonLabel: "Comparison with previous month",
-  comparisonSpent: "Expenses",
-  comparisonAvailable: "Available before investing",
-  comparisonInvested: "Invested",
-  comparisonCategoryShift: "Category shift",
-};
-
-translations.es.flow = {
-  ariaLabel: "Flujo financiero del mes",
-  eyebrow: "Flujo mensual",
-  title: "Del ingreso a la liquidez final",
-  note: "Una lectura lineal del mes para entender cuanto entro, cuanto salio, cuanto reservaste y cuanto te queda de verdad.",
-  totalIncome: "Ingreso total",
-  totalIncomeCopy: "Todo lo que entro este mes.",
-  spent: "Gastos",
-  spentCopy: "Tus gastos de vida del periodo.",
-  availableBeforeInvesting: "Disponible antes de invertir",
-  availableBeforeInvestingCopy: "Liquidez previa a cualquier aporte.",
-  investment: "Inversion",
-  investmentCopy: "Decision mensual registrada en la meta.",
-  liquidityFinal: "Liquidez final",
-  liquidityFinalCopy: "Lo que realmente tienes disponible hoy.",
-};
-translations.en.flow = {
-  ariaLabel: "Financial flow of the month",
-  eyebrow: "Monthly flow",
-  title: "From income to final liquidity",
-  note: "A simple month read so you can see what came in, what went out, what you set aside and what is truly left.",
-  totalIncome: "Total income",
-  totalIncomeCopy: "Everything that came in this month.",
-  spent: "Expenses",
-  spentCopy: "Your living expenses for the period.",
-  availableBeforeInvesting: "Available before investing",
-  availableBeforeInvestingCopy: "Liquidity before any contribution.",
-  investment: "Investment",
-  investmentCopy: "Monthly decision recorded in the goal.",
-  liquidityFinal: "Final liquidity",
-  liquidityFinalCopy: "What you truly have available today.",
-};
-
-translations.es.charts = {
-  distributionEyebrow: "Distribucion",
-  distributionTitle: "Gastos por categoria",
-  totalExpenses: "Gastos totales",
-  evolutionEyebrow: "Evolucion",
-  evolutionTitle: "Ritmo del mes",
-  actual: "Actual",
-  projection: "Proyeccion",
-  axisLabel: "Gastos acumulados del mes",
-  readingEyebrow: "Lectura",
-  readingTitle: "Claves del mes",
-  indicators: "{count} indicadores",
-  noCategories: "Sin categorias",
-  noCategoriesCopy: "Carga gastos reales para ver la mezcla del mes.",
-};
-translations.en.charts = {
-  distributionEyebrow: "Distribution",
-  distributionTitle: "Expenses by category",
-  totalExpenses: "Total expenses",
-  evolutionEyebrow: "Trend",
-  evolutionTitle: "Month pace",
-  actual: "Actual",
-  projection: "Projection",
-  axisLabel: "Accumulated monthly expenses",
-  readingEyebrow: "Reading",
-  readingTitle: "Month highlights",
-  indicators: "{count} indicators",
-  noCategories: "No categories",
-  noCategoriesCopy: "Add real expenses to see this month's mix.",
-};
-
-translations.es.insights = {
-  incomeUse: "Uso del ingreso",
-  savingsCapacity: "Capacidad de ahorro",
-  dailyAverage: "Promedio diario",
-  closingProjection: "Proyeccion de cierre",
-  dominantCategory: "Categoria dominante",
-  monthlyInvestment: "Inversion del mes",
-  noCategory: "Sin categoria",
-};
-translations.en.insights = {
-  incomeUse: "Income usage",
-  savingsCapacity: "Savings capacity",
-  dailyAverage: "Daily average",
-  closingProjection: "Closing projection",
-  dominantCategory: "Top category",
-  monthlyInvestment: "Monthly investment",
-  noCategory: "No category",
-};
-
-translations.es.income = {
-  eyebrow: "Plan del ingreso",
-  title: "Centro de control del mes",
-  kpiAria: "Resumen del ingreso",
-  totalIncome: "Ingreso total",
-  basePlusExtra: "Base + extra",
-  balance: "Saldo disponible",
-  afterExpenses: "Despues de gastos",
-  savingsCapacity: "Capacidad de ahorro",
-  currentMargin: "Margen actual",
-  monthUseBase: "Se usa como base para {month}.",
-  compositionEyebrow: "Ingreso",
-  compositionTitle: "Composicion del mes",
-  baseIncome: "Ingreso base",
-  extraIncome: "Ingreso extra",
-  resultEyebrow: "Resultado",
-  resultTitle: "Meta y margen real del mes",
-  availableToSave: "Disponible para ahorrar",
-  investedThisMonth: "Invertido este mes",
-  actionsEyebrow: "Acciones del mes",
-  actionsTitle: "Ajustes y aportes",
-  editIncome: "Editar ingreso mensual",
-  editGoal: "Editar meta mensual",
-  registerInvestment: "Registrar inversion",
-  languageLabel: "Idioma",
-  exchangeNote: "Tipo de cambio USD: ExchangeRate-API",
-};
-translations.en.income = {
-  eyebrow: "Income plan",
-  title: "Month control center",
-  kpiAria: "Income summary",
-  totalIncome: "Total income",
-  basePlusExtra: "Base + extra",
-  balance: "Available balance",
-  afterExpenses: "After expenses",
-  savingsCapacity: "Savings capacity",
-  currentMargin: "Current margin",
-  monthUseBase: "Used as the base for {month}.",
-  compositionEyebrow: "Income",
-  compositionTitle: "Month composition",
-  baseIncome: "Base income",
-  extraIncome: "Extra income",
-  resultEyebrow: "Result",
-  resultTitle: "Goal and real margin this month",
-  availableToSave: "Available to save",
-  investedThisMonth: "Invested this month",
-  actionsEyebrow: "Month actions",
-  actionsTitle: "Adjustments and contributions",
-  editIncome: "Edit monthly income",
-  editGoal: "Edit monthly goal",
-  registerInvestment: "Add investment",
-  languageLabel: "Language",
-  exchangeNote: "USD rate via ExchangeRate-API",
-};
-
-translations.es.activity = {
-  eyebrow: "Operaciones",
-  title: "Movimientos del mes",
-  visibleResults: "{count} visible(s)",
-  filters: "Filtros",
-  importJson: "Importar JSON",
-  importCsv: "Importar CSV",
-  export: "Exportar",
-};
-translations.en.activity = {
-  eyebrow: "Operations",
-  title: "Monthly movements",
-  visibleResults: "{count} visible",
-  filters: "Filters",
-  importJson: "Import JSON",
-  importCsv: "Import CSV",
-  export: "Export",
-};
-
-translations.es.calendar = {
-  eyebrow: "Calendario",
-  title: "Plan anual por mes",
-  previousYear: "Año anterior",
-  nextYear: "Año siguiente",
-  incomeReference: "Ingreso anual de referencia",
-  spentYear: "Gastos del año",
-  investedYear: "Invertido del año",
-  averageAvailable: "Promedio disponible para ahorrar",
-};
-translations.en.calendar = {
-  eyebrow: "Calendar",
-  title: "Annual month plan",
-  previousYear: "Previous year",
-  nextYear: "Next year",
-  incomeReference: "Reference yearly income",
-  spentYear: "Year expenses",
-  investedYear: "Year invested",
-  averageAvailable: "Average available to save",
-};
-translations.es.modal = {
-  closeButton: "Cerrar modal",
-  cancel: "Cancelar",
-  saveExpense: "Guardar gasto",
-  saveContribution: "Guardar aporte",
-  saveIncome: "Guardar ingreso",
-  saveGoal: "Guardar meta",
-  formEyebrow: "Registrar movimiento",
-  expenseTitle: "Registrar gasto",
-  expenseCopy: "Carga un gasto real del mes sin salir del planner.",
-  investmentEyebrow: "Registrar inversion",
-  investmentTitle: "Registrar inversion",
-  investmentCopy: "La categoria Inversion ya queda seleccionada para registrar un aporte real del mes.",
-  editExpenseEyebrow: "Editar gasto",
-  editExpenseTitle: "Editar gasto",
-  editExpenseCopy: "Actualiza el gasto y el resumen del mes se recalcula al instante.",
-  editInvestmentEyebrow: "Editar inversion",
-  editInvestmentTitle: "Editar aporte",
-  editInvestmentCopy: "Actualiza el aporte y el progreso de la meta se recalcula al instante.",
-  description: "Descripcion",
-  amount: "Monto",
-  date: "Fecha",
-  category: "Categoria",
-  categoryPlaceholder: "Elegir categoria",
-  paymentMethod: "Medio de pago",
-  paymentMethodPlaceholder: "Elegir medio de pago",
-  notes: "Notas",
-  notesPlaceholder: "Detalle opcional del movimiento",
-  movementType: "Tipo de movimiento",
-  markFixed: "Marcar como fijo",
-  fixedHelp: "Ideal para servicios, cuotas, suscripciones o pagos mensuales.",
-  incomeEyebrow: "Ingreso mensual",
-  incomeTitle: "Editar ingreso del mes",
-  incomeCopy: "Separa tu ingreso base del extra para entender mejor cuanto margen real te queda.",
-  incomeBase: "Ingreso base",
-  incomeExtra: "Ingreso extra",
-  incomeTotalCalculated: "Ingreso total calculado",
-  incomeTotalEditCopy: "El total se actualiza al instante mientras editas ingreso base y extra.",
-  goalEyebrow: "Meta mensual",
-  goalTitle: "Editar objetivo mensual de inversion",
-  goalCopy: "Define cuanto quieres invertir este mes. La meta solo avanza con movimientos cargados en la categoria Inversion.",
-  goalAmount: "Monto objetivo",
-  goalOptionalLabel: "Etiqueta opcional",
-  goalSummary: "Resumen de meta",
-  goalExample: "Ejemplo realista para este tracker: $740.000 ARS, equivalente aproximado a 500 USD. Solo suma aportes en Inversion.",
-  deleteEyebrow: "Eliminar movimiento",
-  deleteTitle: "Quitar este movimiento?",
-  deleteNote: "El total del mes se actualiza al instante y esta accion no se puede deshacer.",
-  deleteAction: "Eliminar movimiento",
-  filtersEyebrow: "Vista",
-  filtersTitle: "Filtros",
-  filtersCopy: "El mes define el contexto del tablero y el resto de los filtros ajusta la lista visible y las exportaciones.",
-  month: "Mes",
-  expenseType: "Tipo de movimiento",
-  sortBy: "Ordenar por",
-  currentSearch: "Busqueda actual",
-  restoreSample: "Restaurar datos de muestra",
-  done: "Listo",
-  exportEyebrow: "Exportacion",
-  exportTitle: "Exportar movimientos visibles",
-  exportCopy: "La exportacion respeta el mes, la busqueda y todos los filtros activos.",
-  close: "Cerrar",
-  exportJson: "Exportar JSON",
-  exportCsv: "Exportar CSV",
-  resetEyebrow: "Restaurar muestra",
-  resetTitle: "Reemplazar tus datos actuales?",
-  resetCopy: "Esto vuelve a cargar la muestra incluida con el planner y pisa el estado guardado en este navegador.",
-  sampleData: "Datos de muestra",
-  sampleDataCopy: "Se restablecen ingreso, movimientos, categorias, resumenes y filtros para seguir explorando el planner.",
-  sampleDataHint: "Usalo si quieres volver a una base limpia sin perder la estructura realista de la interfaz.",
-  restoreSampleAction: "Restaurar muestra",
-};
-translations.en.modal = {
-  closeButton: "Close modal",
-  cancel: "Cancel",
-  saveExpense: "Save expense",
-  saveContribution: "Save contribution",
-  saveIncome: "Save income",
-  saveGoal: "Save goal",
-  formEyebrow: "Add movement",
-  expenseTitle: "Add expense",
-  expenseCopy: "Record a real expense for the month without leaving the planner.",
-  investmentEyebrow: "Add investment",
-  investmentTitle: "Add investment",
-  investmentCopy: "The Investment category is preselected so you can record a real monthly contribution.",
-  editExpenseEyebrow: "Edit expense",
-  editExpenseTitle: "Edit expense",
-  editExpenseCopy: "Update the expense and the monthly summary recalculates instantly.",
-  editInvestmentEyebrow: "Edit investment",
-  editInvestmentTitle: "Edit contribution",
-  editInvestmentCopy: "Update the contribution and goal progress recalculates instantly.",
-  description: "Description",
-  amount: "Amount",
-  date: "Date",
-  category: "Category",
-  categoryPlaceholder: "Choose category",
-  paymentMethod: "Payment method",
-  paymentMethodPlaceholder: "Choose payment method",
-  notes: "Notes",
-  notesPlaceholder: "Optional movement detail",
-  movementType: "Movement type",
-  markFixed: "Mark as fixed",
-  fixedHelp: "Useful for utilities, installments, subscriptions or monthly payments.",
-  incomeEyebrow: "Monthly income",
-  incomeTitle: "Edit monthly income",
-  incomeCopy: "Separate base and extra income to understand your real margin more clearly.",
-  incomeBase: "Base income",
-  incomeExtra: "Extra income",
-  incomeTotalCalculated: "Calculated total income",
-  incomeTotalEditCopy: "The total updates instantly while you edit base and extra income.",
-  goalEyebrow: "Monthly goal",
-  goalTitle: "Edit monthly investment target",
-  goalCopy: "Define how much you want to invest this month. The goal only moves with transactions recorded in the Investment category.",
-  goalAmount: "Target amount",
-  goalOptionalLabel: "Optional label",
-  goalSummary: "Goal summary",
-  goalExample: "Realistic example for this tracker: ARS 740,000, roughly equal to USD 500. Only real Investment contributions count.",
-  deleteEyebrow: "Delete movement",
-  deleteTitle: "Remove this movement?",
-  deleteNote: "The monthly total updates instantly and this action cannot be undone.",
-  deleteAction: "Delete movement",
-  filtersEyebrow: "View",
-  filtersTitle: "Filters",
-  filtersCopy: "The month defines dashboard context and the rest of the filters adjust the visible list and exports.",
-  month: "Month",
-  expenseType: "Movement type",
-  sortBy: "Sort by",
-  currentSearch: "Current search",
-  restoreSample: "Restore sample data",
-  done: "Done",
-  exportEyebrow: "Export",
-  exportTitle: "Export visible movements",
-  exportCopy: "Export respects the active month, search and every current filter.",
-  close: "Close",
-  exportJson: "Export JSON",
-  exportCsv: "Export CSV",
-  resetEyebrow: "Restore sample",
-  resetTitle: "Replace your current data?",
-  resetCopy: "This reloads the built-in sample and overwrites the state saved in this browser.",
-  sampleData: "Sample data",
-  sampleDataCopy: "Income, movements, categories, summaries and filters are reset so you can keep exploring the planner.",
-  sampleDataHint: "Use it if you want a clean base without losing the realistic interface structure.",
-  restoreSampleAction: "Restore sample",
-};
-
-translations.es.filters = {
-  allCategories: "Todas las categorias",
-  allMethods: "Todos los medios",
-  allMovementTypes: "Fijos y variables",
-  onlyFixed: "Solo fijos",
-  onlyVariable: "Solo variables",
-  newest: "Mas recientes primero",
-  oldest: "Mas antiguos primero",
-  highest: "Monto mas alto",
-  lowest: "Monto mas bajo",
-  noSearch: "Sin busqueda aplicada",
-  searchPreview: "Busqueda: \"{query}\"",
-  resultsCopy: "{count} resultado(s) en {month}. Orden actual: {sort}.",
-  clearFilters: "Limpiar filtros",
-};
-translations.en.filters = {
-  allCategories: "All categories",
-  allMethods: "All methods",
-  allMovementTypes: "Fixed and variable",
-  onlyFixed: "Fixed only",
-  onlyVariable: "Variable only",
-  newest: "Newest first",
-  oldest: "Oldest first",
-  highest: "Highest amount",
-  lowest: "Lowest amount",
-  noSearch: "No active search",
-  searchPreview: "Search: \"{query}\"",
-  resultsCopy: "{count} result(s) in {month}. Current sort: {sort}.",
-  clearFilters: "Clear filters",
-};
-
-translations.es.exportState = {
-  ready: "{count} movimiento(s) listos para exportar",
-  copy: "Incluye filtros de {month}: {category}, {method}.",
-  empty: "No hay movimientos visibles para exportar con los filtros actuales.",
-  allCategories: "todas las categorias",
-  allMethods: "todos los medios",
-};
-translations.en.exportState = {
-  ready: "{count} movement(s) ready to export",
-  copy: "Includes filters for {month}: {category}, {method}.",
-  empty: "There are no visible movements to export with the current filters.",
-  allCategories: "all categories",
-  allMethods: "all payment methods",
-};
-
-translations.es.emptyState = {
-  noExpensesTitle: "No hay gastos en {month}",
-  noExpensesCopy: "Empieza cargando un gasto real o registra una inversion para medir por separado tu saldo disponible y el avance real de la meta.",
-  noFilteredTitle: "No hay movimientos con estos filtros",
-  noFilteredCopy: "Prueba limpiar categoria, medio de pago, tipo de movimiento o la busqueda para volver a ver resultados.",
-  loadSample: "Cargar muestra",
-  adjustFilters: "Ajustar filtros",
-};
-translations.en.emptyState = {
-  noExpensesTitle: "No expenses in {month}",
-  noExpensesCopy: "Start by recording a real expense or add an investment so you can track available balance and real goal progress separately.",
-  noFilteredTitle: "No movements with these filters",
-  noFilteredCopy: "Try clearing category, payment method, movement type or search to see results again.",
-  loadSample: "Load sample",
-  adjustFilters: "Adjust filters",
-};
-translations.es.movement = {
-  expenseNoun: "gasto",
-  expenseNounCap: "Gasto",
-  investmentNoun: "aporte",
-  investmentNounCap: "Aporte",
-  editExpense: "Editar gasto",
-  editInvestment: "Editar aporte",
-  duplicateExpense: "Duplicar gasto",
-  duplicateInvestment: "Duplicar aporte",
-  deleteExpense: "Eliminar gasto",
-  deleteInvestment: "Eliminar aporte",
-  registeredExpense: "Gasto registrado.",
-  registeredInvestment: "Aporte registrado.",
-  updatedExpense: "Gasto actualizado.",
-  updatedInvestment: "Aporte actualizado.",
-  deletedExpense: "Gasto eliminado.",
-  deletedInvestment: "Aporte eliminado.",
-  duplicatedExpense: "Gasto duplicado.",
-  duplicatedInvestment: "Aporte duplicado.",
-  deleteExpenseCopy: "Vas a eliminar este gasto del registro mensual.",
-  deleteInvestmentCopy: "Vas a eliminar este aporte del registro mensual.",
-};
-translations.en.movement = {
-  expenseNoun: "expense",
-  expenseNounCap: "Expense",
-  investmentNoun: "contribution",
-  investmentNounCap: "Contribution",
-  editExpense: "Edit expense",
-  editInvestment: "Edit contribution",
-  duplicateExpense: "Duplicate expense",
-  duplicateInvestment: "Duplicate contribution",
-  deleteExpense: "Delete expense",
-  deleteInvestment: "Delete contribution",
-  registeredExpense: "Expense recorded.",
-  registeredInvestment: "Contribution recorded.",
-  updatedExpense: "Expense updated.",
-  updatedInvestment: "Contribution updated.",
-  deletedExpense: "Expense removed.",
-  deletedInvestment: "Contribution removed.",
-  duplicatedExpense: "Expense duplicated.",
-  duplicatedInvestment: "Contribution duplicated.",
-  deleteExpenseCopy: "You are about to remove this expense from the monthly record.",
-  deleteInvestmentCopy: "You are about to remove this contribution from the monthly record.",
-};
-
-translations.es.validation = {
-  description: "Agrega una descripcion clara.",
-  amount: "Ingresa un monto mayor a cero.",
-  category: "Elegi una categoria.",
-  date: "Selecciona una fecha valida.",
-  paymentMethod: "Elegi un medio de pago.",
-  incomeBase: "Ingresa un monto valido para el ingreso base.",
-  incomeExtra: "Ingresa un monto valido para el ingreso extra.",
-  goalAmount: "Ingresa un objetivo mensual mayor a cero.",
-};
-translations.en.validation = {
-  description: "Add a clear description.",
-  amount: "Enter an amount greater than zero.",
-  category: "Choose a category.",
-  date: "Select a valid date.",
-  paymentMethod: "Choose a payment method.",
-  incomeBase: "Enter a valid amount for base income.",
-  incomeExtra: "Enter a valid amount for extra income.",
-  goalAmount: "Enter a monthly target greater than zero.",
-};
-
-translations.es.toast = {
-  incomeUpdated: "Ingreso mensual actualizado.",
-  goalUpdated: "Meta mensual actualizada.",
-  noVisibleExpenses: "No hay movimientos visibles para exportar.",
-  exportReady: "Exportacion {format} lista.",
-  jsonImported: "Datos importados correctamente",
-  jsonInvalid: "Archivo JSON invalido",
-  csvImported: "Movimientos importados correctamente",
-  csvInvalid: "Archivo CSV invalido",
-  sampleRestored: "Muestra restaurada.",
-  languageChangedEs: "Idioma cambiado a español",
-  languageChangedEn: "Language changed to English",
-};
-translations.en.toast = {
-  incomeUpdated: "Monthly income updated.",
-  goalUpdated: "Monthly goal updated.",
-  noVisibleExpenses: "There are no visible movements to export.",
-  exportReady: "{format} export ready.",
-  jsonImported: "Data imported successfully",
-  jsonInvalid: "Invalid JSON file",
-  csvImported: "Movements imported successfully",
-  csvInvalid: "Invalid CSV file",
-  sampleRestored: "Sample restored.",
-  languageChangedEs: "Idioma cambiado a español",
-  languageChangedEn: "Language changed to English",
-};
-
-translations.es.categories = {
-  Supermercado: "Supermercado",
-  Transporte: "Transporte",
-  "Casa/Servicios": "Casa/Servicios",
-  Gimnasio: "Gimnasio",
-  Facultad: "Facultad",
-  Suscripciones: "Suscripciones",
-  Salidas: "Gastos",
-  Salud: "Salud",
-  "Auto/Moto": "Auto/Moto",
-  Inversion: "Inversion",
-  Otros: "Otros",
-};
-translations.en.categories = {
-  Supermercado: "Groceries",
-  Transporte: "Transport",
-  "Casa/Servicios": "Home/Utilities",
-  Gimnasio: "Gym",
-  Facultad: "Studies",
-  Suscripciones: "Subscriptions",
-  Salidas: "Outings",
-  Salud: "Health",
-  "Auto/Moto": "Car/Bike",
-  Inversion: "Investment",
-  Otros: "Other",
-};
-
-translations.es.paymentMethods = {
-  Efectivo: "Efectivo",
-  Debito: "Debito",
-  Credito: "Credito",
-  Transferencia: "Transferencia",
-};
-translations.en.paymentMethods = {
-  Efectivo: "Cash",
-  Debito: "Debit",
-  Credito: "Credit",
-  Transferencia: "Transfer",
-};
-
-translations.es.frequency = {
-  fixed: "Fijo",
-  variable: "Variable",
-};
-translations.en.frequency = {
-  fixed: "Fixed",
-  variable: "Variable",
-};
-
-translations.es.movementTypes = {
-  expense: "Gasto",
-  investment: "Inversion",
-  income: "Ingreso",
-};
-translations.en.movementTypes = {
-  expense: "Expense",
-  investment: "Investment",
-  income: "Income",
-};
-
-translations.es.sort = {
-  newest: "Mas recientes",
-  oldest: "Mas antiguos",
-  highest: "Monto mas alto",
-  lowest: "Monto mas bajo",
-};
-translations.en.sort = {
-  newest: "Newest",
-  oldest: "Oldest",
-  highest: "Highest amount",
-  lowest: "Lowest amount",
-};
-const VIEW_TOPBAR_CONFIG = {
-  resumen: {
-    eyebrow: "vision general",
-    getTitle: (metrics) => `${metrics.monthLabelLong} - resumen mensual del salario`,
-    showSearch: false,
-    showFilters: false,
-    showIncomeAction: false,
-  },
-  flujo: {
-    eyebrow: "analisis del mes",
-    getTitle: () => "flujo del mes",
-    showSearch: false,
-    showFilters: false,
-    showIncomeAction: false,
-  },
-  ingreso: {
-    eyebrow: "control del mes",
-    getTitle: () => "plan de ingreso del mes",
-    showSearch: false,
-    showFilters: false,
-    showIncomeAction: false,
-  },
-  actividad: {
-    eyebrow: "operaciones del mes",
-    getTitle: () => "movimientos del mes",
-    showSearch: true,
-    showFilters: true,
-    showIncomeAction: false,
-  },
-  calendario: {
-    eyebrow: "planificacion anual",
-    getTitle: () => "plan anual por mes",
-    showSearch: false,
-    showFilters: false,
-    showIncomeAction: false,
-  },
-};
-const CATEGORY_SWATCHES = [
-  { className: "mint", color: "var(--accent)" },
-  { className: "blue", color: "var(--accent-blue)" },
-  { className: "amber", color: "var(--accent-amber)" },
-  { className: "rose", color: "var(--accent-rose)" },
-  { className: "slate", color: "var(--accent-slate)" },
-];
-const STATUS_PILL_CLASSES = ["status-pill--positive", "status-pill--neutral", "status-pill--negative"];
-const KPI_FEEDBACK_CLASSES = ["kpi-card--positive", "kpi-card--neutral", "kpi-card--negative"];
-const HERO_DIFFERENCE_STATE_CLASSES = ["hero-card__meta-item--positive", "hero-card__meta-item--neutral", "hero-card__meta-item--negative"];
-const SAVINGS_CAPACITY_STATES = {
-  neutral: { label: "Sin ingreso" },
-  excellent: { label: "Excelente" },
-  healthy: { label: "Saludable" },
-  low: { label: "Bajo" },
-};
-const DEFAULT_GOAL_LABEL = "Meta mensual de inversion";
-
-const body = document.body;
-const topbar = document.querySelector(".topbar");
-const openIncomeButtons = document.querySelectorAll("[data-open-income]");
-const openGoalButtons = document.querySelectorAll("[data-open-goal]");
-const openInvestmentButtons = document.querySelectorAll("[data-open-investment]");
-const openExpenseButtons = document.querySelectorAll("[data-open-expense]");
-const modalRestoreButtons = document.querySelectorAll("[data-modal-restore-sample]");
-const menuToggle = document.querySelector("[data-menu-toggle]");
-const backdrop = document.querySelector("[data-backdrop]");
-const navItems = document.querySelectorAll("[data-nav-item]");
-const openFilterButtons = document.querySelectorAll("[data-open-filters]");
-const openImportJsonButtons = document.querySelectorAll("[data-open-import-json]");
-const openImportCsvButtons = document.querySelectorAll("[data-open-import-csv]");
-const openExportButtons = document.querySelectorAll("[data-open-export]");
-const importJsonInput = document.querySelector("[data-import-json-input]");
-const importCsvInput = document.querySelector("[data-import-csv-input]");
-const languageSwitch = document.querySelector("[data-language-switch]");
-const languageOptionButtons = document.querySelectorAll("[data-language-option]");
-const exchangeRateNote = document.querySelector("[data-exchange-rate-note]");
-const searchInput = document.querySelector("[data-search-input]");
-const topbarActions = document.querySelector("[data-topbar-actions]");
-const topbarEyebrow = document.querySelector("[data-topbar-eyebrow]");
-const topbarSearch = document.querySelector("[data-topbar-search]");
-const topbarFilters = document.querySelector("[data-topbar-filters]");
-const dashboardMain = document.querySelector("[data-dashboard-main]");
-const expenseList = document.querySelector("[data-expense-list]");
-const expenseResults = document.querySelector("[data-expense-results]");
-const insightList = document.querySelector("[data-insight-list]");
-const fab = document.querySelector(".fab");
-const fabLabel = document.querySelector(".fab__label");
-const modal = document.querySelector("[data-modal]");
-const modalPanels = document.querySelectorAll("[data-modal-panel]");
-const modalCloseButton = document.querySelector(".app-modal__close");
-const modalCloseTriggers = document.querySelectorAll("[data-modal-close]");
-const modalEyebrow = document.querySelector("[data-modal-eyebrow]");
-const modalTitle = document.querySelector("[data-modal-title]");
-const modalCopy = document.querySelector("[data-modal-copy]");
-const expenseForm = document.querySelector("[data-expense-form]");
-const incomeForm = document.querySelector("[data-income-form]");
-const goalForm = document.querySelector("[data-goal-form]");
-const formFeedback = document.querySelector("[data-form-feedback]");
-const incomeFeedback = document.querySelector("[data-income-feedback]");
-const goalFeedback = document.querySelector("[data-goal-feedback]");
-const formSubmit = document.querySelector("[data-form-submit]");
-const incomeBaseInput = document.querySelector("[data-income-base-input]");
-const incomeExtraInput = document.querySelector("[data-income-extra-input]");
-const incomeTotalPreview = document.querySelector("[data-income-total-preview]");
-const incomeMonthLabel = document.querySelector("[data-income-month-label]");
-const goalAmountInput = document.querySelector("[data-goal-amount-input]");
-const goalLabelInput = document.querySelector("[data-goal-label-input]");
-const goalAmountPreview = document.querySelector("[data-goal-amount-preview]");
-const goalLabelPreview = document.querySelector("[data-goal-label-preview]");
-const confirmDeleteButton = document.querySelector("[data-confirm-delete]");
-const confirmTitle = document.querySelector("[data-confirm-title]");
-const confirmDate = document.querySelector("[data-confirm-date]");
-const confirmCopy = document.querySelector("[data-confirm-copy]");
-const confirmAmount = document.querySelector("[data-confirm-amount]");
-const filterForm = document.querySelector("[data-filter-form]");
-const filterMonthInput = document.querySelector("[data-filter-month]");
-const filterCategoryInput = document.querySelector("[data-filter-category]");
-const filterPaymentMethodInput = document.querySelector("[data-filter-payment-method]");
-const filterExpenseTypeInput = document.querySelector("[data-filter-expense-type]");
-const filterSortInput = document.querySelector("[data-filter-sort]");
-const filterSearchPreview = document.querySelector("[data-filter-search-preview]");
-const filterResultsCopy = document.querySelector("[data-filter-results-copy]");
-const clearFiltersButton = document.querySelector("[data-clear-filters]");
-const exportJsonButton = document.querySelector("[data-export-json]");
-const exportCsvButton = document.querySelector("[data-export-csv]");
-const exportSummary = document.querySelector("[data-export-summary]");
-const exportFilename = document.querySelector("[data-export-filename]");
-const exportCopy = document.querySelector("[data-export-copy]");
-const confirmRestoreButton = document.querySelector("[data-confirm-restore]");
-const toast = document.querySelector("[data-toast]");
-const donutChart = document.querySelector("[data-donut-chart]");
-const categoryLegend = document.querySelector("[data-category-legend]");
-const lineActualPath = document.querySelector("[data-line-actual]");
-const lineTargetPath = document.querySelector("[data-line-target]");
-const lineAreaPath = document.querySelector("[data-line-area]");
-const linePoints = document.querySelector("[data-line-points]");
-const lineAxis = document.querySelector("[data-line-axis]");
-const calendarGrid = document.querySelector("[data-calendar-grid]");
-const calendarYearLabel = document.querySelector("[data-calendar-year]");
-const calendarCopy = document.querySelector("[data-calendar-copy]");
-const calendarSummaryNote = document.querySelector("[data-calendar-summary-note]");
-const calendarShiftButtons = document.querySelectorAll("[data-calendar-shift]");
-
-const viewSections = {
-  resumen: document.querySelector('[data-view="resumen"]'),
-  flujo: document.querySelector('[data-view="flujo"]'),
-  ingreso: document.querySelector('[data-view="ingreso"]'),
-  actividad: document.querySelector('[data-view="actividad"]'),
-  calendario: document.querySelector('[data-view="calendario"]'),
-};
-
-const canUseLocalStorage = () => {
-  try {
-    return typeof window.localStorage !== "undefined";
-  } catch (error) {
-    return false;
-  }
-};
-const isSupportedLanguage = (value) => Object.prototype.hasOwnProperty.call(DEFAULT_CURRENCY_BY_LANGUAGE, value);
-const resolveCurrencyFromLanguage = (language) => DEFAULT_CURRENCY_BY_LANGUAGE[language] || DEFAULT_CURRENCY_BY_LANGUAGE[DEFAULT_LANGUAGE];
-const readPersistedLanguage = () => {
-  if (!canUseLocalStorage()) {
-    return DEFAULT_LANGUAGE;
-  }
-
-  try {
-    const persistedLanguage = window.localStorage.getItem(LANGUAGE_STORAGE_KEY);
-    if (isSupportedLanguage(persistedLanguage)) {
-      return persistedLanguage;
-    }
-
-    const persistedCurrency = window.localStorage.getItem(CURRENCY_STORAGE_KEY);
-    return persistedCurrency === "USD" ? "en" : DEFAULT_LANGUAGE;
-  } catch (error) {
-    return DEFAULT_LANGUAGE;
-  }
-};
-const readPersistedCurrency = (language = readPersistedLanguage()) => resolveCurrencyFromLanguage(language);
-const readPersistedExchangeRate = () => {
-  if (!canUseLocalStorage()) {
-    return DEFAULT_EXCHANGE_RATE_USD_ARS;
-  }
-
-  try {
-    const persistedRate = Number(window.localStorage.getItem(EXCHANGE_RATE_STORAGE_KEY));
-    return Number.isFinite(persistedRate) && persistedRate > 0 ? persistedRate : DEFAULT_EXCHANGE_RATE_USD_ARS;
-  } catch (error) {
-    return DEFAULT_EXCHANGE_RATE_USD_ARS;
-  }
-};
-const readPersistedExchangeRateTimestamp = () => {
-  if (!canUseLocalStorage()) {
-    return 0;
-  }
-
-  try {
-    const persistedTimestamp = Number(window.localStorage.getItem(EXCHANGE_RATE_TIMESTAMP_STORAGE_KEY));
-    return Number.isFinite(persistedTimestamp) ? persistedTimestamp : 0;
-  } catch (error) {
-    return 0;
-  }
-};
-const persistLanguageSettings = (language) => {
-  if (!canUseLocalStorage()) {
-    return;
-  }
-
-  try {
-    window.localStorage.setItem(LANGUAGE_STORAGE_KEY, language);
-    window.localStorage.setItem(CURRENCY_STORAGE_KEY, resolveCurrencyFromLanguage(language));
-  } catch (error) {
-    return;
-  }
-};
-const persistExchangeRate = (rate) => {
-  if (!canUseLocalStorage() || !(rate > 0)) {
-    return;
-  }
-
-  try {
-    window.localStorage.setItem(EXCHANGE_RATE_STORAGE_KEY, String(rate));
-    window.localStorage.setItem(EXCHANGE_RATE_TIMESTAMP_STORAGE_KEY, String(Date.now()));
-  } catch (error) {
-    return;
-  }
-};
-const isExchangeRateCacheFresh = (timestamp) => Number.isFinite(timestamp) && Date.now() - timestamp < EXCHANGE_RATE_CACHE_TTL_MS;
-const isValidImportState = (value) => {
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
-    return false;
-  }
-
-  if (!Array.isArray(value.expenses)) {
-    return false;
-  }
-
-  if (!value.filters || typeof value.filters !== "object" || Array.isArray(value.filters)) {
-    return false;
-  }
-
-  const hasIncomeData = ["incomeBase", "income", "incomeExtra"].some((key) => Object.prototype.hasOwnProperty.call(value, key));
-  const hasValidExpenses = value.expenses.every((expense) => expense && typeof expense === "object" && !Array.isArray(expense));
-
-  return hasIncomeData && hasValidExpenses;
-};
-const normalizeImportToken = (value = "") =>
-  String(value || "")
-    .trim()
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
-const splitCsvLine = (line = "") => {
-  const values = [];
-  let currentValue = "";
-  let insideQuotes = false;
-
-  for (let index = 0; index < line.length; index += 1) {
-    const character = line[index];
-
-    if (character === '"') {
-      if (insideQuotes && line[index + 1] === '"') {
-        currentValue += '"';
-        index += 1;
-      } else {
-        insideQuotes = !insideQuotes;
-      }
-
-      continue;
-    }
-
-    if (character === "," && !insideQuotes) {
-      values.push(currentValue.trim());
-      currentValue = "";
-      continue;
-    }
-
-    currentValue += character;
-  }
-
-  values.push(currentValue.trim());
-  return values;
-};
-const parseImportCsvAmount = (value) => {
-  const rawValue = String(value || "").trim().replace(/\s/g, "").replace(/\$/g, "");
-
-  if (!rawValue) {
-    return null;
-  }
-
-  let normalizedValue = rawValue;
-
-  if (normalizedValue.includes(",") && normalizedValue.includes(".")) {
-    normalizedValue = normalizedValue.lastIndexOf(",") > normalizedValue.lastIndexOf(".")
-      ? normalizedValue.replace(/\./g, "").replace(",", ".")
-      : normalizedValue.replace(/,/g, "");
-  } else if (/^\d{1,3}(\.\d{3})+$/.test(normalizedValue)) {
-    normalizedValue = normalizedValue.replace(/\./g, "");
-  } else if (/^\d{1,3}(,\d{3})+$/.test(normalizedValue)) {
-    normalizedValue = normalizedValue.replace(/,/g, "");
-  } else if (normalizedValue.includes(",")) {
-    normalizedValue = normalizedValue.replace(/\./g, "").replace(",", ".");
-  }
-
-  const parsedAmount = Number(normalizedValue);
-  return Number.isFinite(parsedAmount) ? Math.abs(parsedAmount) : null;
-};
-const parseImportCsvDate = (value) => {
-  const rawValue = String(value || "").trim();
-
-  if (!rawValue) {
-    return null;
-  }
-
-  const yearMonthDayMatch = rawValue.match(/^(\d{4})[/-](\d{1,2})[/-](\d{1,2})$/);
-
-  if (yearMonthDayMatch) {
-    const [, year, month, day] = yearMonthDayMatch;
-    const parsedDate = new Date(`${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}T12:00:00`);
-    return Number.isNaN(parsedDate.getTime()) ? null : parsedDate.toISOString();
-  }
-
-  const dayMonthYearMatch = rawValue.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})$/);
-
-  if (dayMonthYearMatch) {
-    const [, day, month, year] = dayMonthYearMatch;
-    const parsedDate = new Date(`${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}T12:00:00`);
-    return Number.isNaN(parsedDate.getTime()) ? null : parsedDate.toISOString();
-  }
-
-  const parsedDate = new Date(rawValue);
-  return Number.isNaN(parsedDate.getTime()) ? null : parsedDate.toISOString();
-};
-const parseImportCsvFrequency = (value) => {
-  const normalizedValue = normalizeImportToken(value);
-
-  if (!normalizedValue) {
-    return undefined;
-  }
-
-  if (/^fij/.test(normalizedValue)) {
-    return true;
-  }
-
-  if (/^vari/.test(normalizedValue)) {
-    return false;
-  }
-
-  return undefined;
-};
-const buildExpenseFromCsvRow = (row) => {
-  const movementType = normalizeImportToken(row.tipo);
-  const parsedDate = parseImportCsvDate(row.fecha);
-  const parsedAmount = parseImportCsvAmount(row.monto);
-
-  if (!movementType || !parsedDate || parsedAmount === null) {
-    return null;
-  }
-
-  const isIncomeMovement = /ingres/.test(movementType);
-  const isInvestmentMovement = /inver|aport/.test(movementType);
-  const isExpenseMovement = /gast/.test(movementType);
-
-  if (!isIncomeMovement && !isInvestmentMovement && !isExpenseMovement) {
-    return null;
-  }
-
-  const frequency = parseImportCsvFrequency(row.frecuencia);
-  const description = String(row.descripcion || "").trim() || (isIncomeMovement ? "Ingreso importado" : "Movimiento importado");
-
-  return {
-    title: description,
-    amount: isIncomeMovement ? -parsedAmount : parsedAmount,
-    category: isInvestmentMovement ? "Inversion" : String(row.categoria || "").trim() || "Otros",
-    date: parsedDate,
-    paymentMethod: String(row.metodo || "").trim(),
-    note: isIncomeMovement ? "Ingreso importado por CSV" : "",
-    isFixed: typeof frequency === "boolean" ? frequency : undefined,
-  };
-};
-const parseExpensesFromCsv = (contents) => {
-  const lines = String(contents || "")
-    .split(/\r?\n/)
-    .filter((line) => line.trim());
-
-  if (lines.length < 2) {
-    return null;
-  }
-
-  const normalizedHeaders = splitCsvLine(lines[0]).map(normalizeImportToken);
-
-  if (!["fecha", "tipo", "monto"].every((header) => normalizedHeaders.includes(header))) {
-    return null;
-  }
-
-  const getValueByHeader = (values, headerName) => {
-    const headerIndex = normalizedHeaders.indexOf(headerName);
-    return headerIndex >= 0 ? values[headerIndex] || "" : "";
-  };
-
-  return lines.slice(1).reduce((expenses, line) => {
-    const values = splitCsvLine(line);
-    const importedExpense = buildExpenseFromCsvRow({
-      fecha: getValueByHeader(values, "fecha"),
-      tipo: getValueByHeader(values, "tipo"),
-      categoria: getValueByHeader(values, "categoria"),
-      descripcion: getValueByHeader(values, "descripcion"),
-      monto: getValueByHeader(values, "monto"),
-      metodo: getValueByHeader(values, "metodo"),
-      frecuencia: getValueByHeader(values, "frecuencia"),
-    });
-
-    if (importedExpense) {
-      expenses.push(importedExpense);
-    }
-
-    return expenses;
-  }, []);
-};
-
-const isKnownView = (viewName) => Boolean(viewName && Object.prototype.hasOwnProperty.call(viewSections, viewName) && viewSections[viewName]);
-
-const readPersistedActiveView = () => {
-  if (!canUseLocalStorage()) {
-    return DEFAULT_VIEW;
-  }
-
-  try {
-    const persistedView = window.localStorage.getItem(ACTIVE_VIEW_STORAGE_KEY);
-    return isKnownView(persistedView) ? persistedView : DEFAULT_VIEW;
-  } catch (error) {
-    return DEFAULT_VIEW;
-  }
-};
-
-const persistActiveView = (viewName) => {
-  if (!canUseLocalStorage()) {
-    return;
-  }
-
-  try {
-    window.localStorage.setItem(ACTIVE_VIEW_STORAGE_KEY, isKnownView(viewName) ? viewName : DEFAULT_VIEW);
-  } catch (error) {
-    return;
-  }
-};
-
-const kpiElements = {
-  incomeTotal: document.querySelector('[data-kpi="incomeTotal"]'),
-  totalSpent: document.querySelector('[data-kpi="totalSpent"]'),
-  investedThisMonth: document.querySelector('[data-kpi="investedThisMonth"]'),
-  savingsCapacity: document.querySelector('[data-kpi="savingsCapacity"]'),
-  dailyAverage: document.querySelector('[data-kpi="dailyAverage"]'),
-  goalProgress: document.querySelector('[data-kpi="goalProgress"]'),
-};
-
-const kpiDeltaElements = {
-  incomeTotal: document.querySelector('[data-kpi-delta="incomeTotal"]'),
-  totalSpent: document.querySelector('[data-kpi-delta="totalSpent"]'),
-  investedThisMonth: document.querySelector('[data-kpi-delta="investedThisMonth"]'),
-  savingsCapacity: document.querySelector('[data-kpi-delta="savingsCapacity"]'),
-  dailyAverage: document.querySelector('[data-kpi-delta="dailyAverage"]'),
-  goalProgress: document.querySelector('[data-kpi-delta="goalProgress"]'),
-};
-
-const kpiCaptionElements = {
-  incomeTotal: document.querySelector('[data-kpi-caption="incomeTotal"]'),
-  totalSpent: document.querySelector('[data-kpi-caption="totalSpent"]'),
-  investedThisMonth: document.querySelector('[data-kpi-caption="investedThisMonth"]'),
-  savingsCapacity: document.querySelector('[data-kpi-caption="savingsCapacity"]'),
-  dailyAverage: document.querySelector('[data-kpi-caption="dailyAverage"]'),
-  goalProgress: document.querySelector('[data-kpi-caption="goalProgress"]'),
-};
-
-const kpiSecondaryElements = {
-  savingsCapacity: document.querySelector('[data-kpi-secondary="savingsCapacity"]'),
-};
-
-const kpiBarElements = {
-  savingsCapacity: document.querySelector('[data-kpi-bar="savingsCapacity"]'),
-};
-
-const kpiCardElements = {
-  savingsCapacity: document.querySelector('[data-kpi-card="savingsCapacity"]'),
-};
-
-const heroCardElement = document.querySelector('[data-capacity-card="hero"]');
-
-const yearSummaryElements = {
-  income: document.querySelector('[data-year-summary="income"]'),
-  spent: document.querySelector('[data-year-summary="spent"]'),
-  invested: document.querySelector('[data-year-summary="invested"]'),
-  average: document.querySelector('[data-year-summary="average"]'),
-};
-
-const summaryElements = {
-  sidebarFreeCash: document.querySelector('[data-summary="sidebar-free-cash"]'),
-  sidebarAvailableToSave: document.querySelector('[data-summary="sidebar-available-to-save"]'),
-  heroLiquidityFinal: document.querySelector('[data-summary="hero-liquidity-final"]'),
-  heroIncome: document.querySelector('[data-summary="hero-income"]'),
-  heroSpent: document.querySelector('[data-summary="hero-spent"]'),
-  heroInvested: document.querySelector('[data-summary="hero-invested"]'),
-  flowIncome: document.querySelector('[data-summary="flow-income"]'),
-  flowSpent: document.querySelector('[data-summary="flow-spent"]'),
-  flowAvailable: document.querySelector('[data-summary="flow-available"]'),
-  flowInvested: document.querySelector('[data-summary="flow-invested"]'),
-  flowLiquidityFinal: document.querySelector('[data-summary="flow-liquidity-final"]'),
-  kpiAvailableBeforeInvesting: document.querySelector('[data-summary="kpi-available-before-investing"]'),
-  chartTotalSpent: document.querySelector('[data-summary="chart-total-spent"]'),
-  goalAmount: document.querySelector('[data-summary="goal-amount"]'),
-  goalSaved: document.querySelector('[data-summary="goal-saved"]'),
-  goalGapValue: document.querySelector('[data-summary="goal-gap-value"]'),
-  goalExceeded: document.querySelector('[data-summary="goal-exceeded"]'),
-  incomeTotal: document.querySelector('[data-summary="income-total"]'),
-  incomeBase: document.querySelector('[data-summary="income-base"]'),
-  incomeExtra: document.querySelector('[data-summary="income-extra"]'),
-  incomeBalance: document.querySelector('[data-summary="income-balance"]'),
-  incomeAvailableToSave: document.querySelector('[data-summary="income-available-to-save"]'),
-  incomeCapacityAmount: document.querySelector('[data-summary="income-capacity-amount"]'),
-  incomeSpent: document.querySelector('[data-summary="income-spent"]'),
-  incomeGoalAmount: document.querySelector('[data-summary="income-goal-amount"]'),
-  incomeGoalSaved: document.querySelector('[data-summary="income-goal-saved"]'),
-  incomeGoalGap: document.querySelector('[data-summary="income-goal-gap"]'),
-};
-
-const textElements = {
-  periodTitle: document.querySelector("[data-period-title]"),
-  periodPill: document.querySelector("[data-period-pill]"),
-  sidebarSavingsCapacity: document.querySelector('[data-summary-text="sidebar-savings-capacity"]'),
-  heroLiquidityCopy: document.querySelector('[data-summary-text="hero-liquidity-copy"]'),
-  heroRiskReason: document.querySelector('[data-summary-text="hero-risk-reason"]'),
-  heroDifferenceNote: document.querySelector('[data-summary-text="hero-difference-note"]'),
-  heroBalanceNote: document.querySelector('[data-summary-text="hero-balance-note"]'),
-  heroCaption: document.querySelector('[data-summary-text="hero-caption"]'),
-  categoryCountPill: document.querySelector('[data-summary-text="category-count-pill"]'),
-  goalHeading: document.querySelector('[data-summary-text="goal-heading"]'),
-  goalNote: document.querySelector('[data-summary-text="goal-note"]'),
-  goalProgressText: document.querySelector('[data-summary-text="goal-progress-text"]'),
-  comparisonNote: document.querySelector('[data-summary-text="comparison-note"]'),
-  incomeCaption: document.querySelector('[data-summary-text="income-caption"]'),
-  incomeUsageLabel: document.querySelector("[data-income-usage-label]"),
-  incomeUsageCopy: document.querySelector('[data-summary-text="income-usage-copy"]'),
-  incomeGoalLabel: document.querySelector('[data-summary-text="income-goal-label"]'),
-  incomeGoalGapLabel: document.querySelector('[data-summary-text="income-goal-gap-label"]'),
-  incomeGoalCopy: document.querySelector('[data-summary-text="income-goal-copy"]'),
-  incomeResultCopy: document.querySelector('[data-summary-text="income-result-copy"]'),
-};
-const heroDifferenceCardElement = summaryElements.heroInvested?.closest(".hero-card__meta-item");
-
-const comparisonElements = {
-  totalSpentCopy: document.querySelector('[data-comparison="totalSpent-copy"]'),
-  totalSpentValue: document.querySelector('[data-comparison="totalSpent-value"]'),
-  remainingBalanceCopy: document.querySelector('[data-comparison="remainingBalance-copy"]'),
-  remainingBalanceValue: document.querySelector('[data-comparison="remainingBalance-value"]'),
-  investedCopy: document.querySelector('[data-comparison="invested-copy"]'),
-  investedValue: document.querySelector('[data-comparison="invested-value"]'),
-  categoryShiftCopy: document.querySelector('[data-comparison="categoryShift-copy"]'),
-  categoryShiftValue: document.querySelector('[data-comparison="categoryShift-value"]'),
-};
-
-const labelElements = {
-  goalGap: document.querySelector('[data-summary-label="goal-gap-label"]'),
-};
-
-const barElements = {
-  sidebarSavingsCapacity: document.querySelector('[data-summary-bar="sidebar-savings-capacity"]'),
-  goalProgress: document.querySelector('[data-summary-bar="goal-progress"]'),
-};
-
 const statusElements = {
   sidebar: document.querySelector('[data-summary-status="sidebar"]'),
   hero: document.querySelector('[data-summary-status="hero"]'),
   goal: document.querySelector('[data-summary-status="goal"]'),
   line: document.querySelector('[data-summary-status="line"]'),
 };
-
 const stackedSegments = document.querySelectorAll(".stacked-bar__segment");
-
 const uiState = {
   activeView: readPersistedActiveView(),
   currentLanguage: readPersistedLanguage(),
@@ -1353,39 +31,17 @@ const uiState = {
   lastFocusedElement: null,
   toastTimer: null,
 };
-
-const prefersReducedMotion = () => window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
-const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
-const roundCurrency = (value) => Math.round((Number(value || 0) + Number.EPSILON) * 100) / 100;
-const escapeHtml = (value = "") => String(value).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#39;");
-const normalizeText = (value = "") => String(value).trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-const getCurrentLanguage = () => (isSupportedLanguage(uiState.currentLanguage) ? uiState.currentLanguage : DEFAULT_LANGUAGE);
+setI18nLanguage(uiState.currentLanguage);
 const getCurrentCurrency = () => (uiState.currentCurrency === "USD" ? "USD" : "ARS");
-const getCurrentLocale = () => translations[getCurrentLanguage()]?.locale || translations[DEFAULT_LANGUAGE].locale;
 const getExchangeRateUsdArs = () => {
   const parsedRate = Number(uiState.exchangeRateUsdArs);
   return Number.isFinite(parsedRate) && parsedRate > 0 ? parsedRate : DEFAULT_EXCHANGE_RATE_USD_ARS;
-};
-const getTranslationValue = (language, key) => key.split(".").reduce((accumulator, segment) => accumulator?.[segment], translations[language]);
-const interpolateText = (template, replacements = {}) =>
-  String(template || "").replace(/\{(\w+)\}/g, (match, token) => (Object.prototype.hasOwnProperty.call(replacements, token) ? replacements[token] : match));
-const t = (key, replacements = {}) => {
-  const language = getCurrentLanguage();
-  const fallbackValue = getTranslationValue(DEFAULT_LANGUAGE, key);
-  const translatedValue = getTranslationValue(language, key);
-  const resolvedValue = typeof translatedValue === "string" ? translatedValue : typeof fallbackValue === "string" ? fallbackValue : key;
-  return interpolateText(resolvedValue, replacements);
-};
-const toSafeNumber = (value) => {
-  const parsedValue = Number(value);
-  return Number.isFinite(parsedValue) ? parsedValue : 0;
 };
 const convertMoneyForDisplay = (value) => {
   const safeValue = toSafeNumber(value);
   if (getCurrentCurrency() !== "USD") {
     return safeValue;
   }
-
   const convertedValue = safeValue / getExchangeRateUsdArs();
   return Number.isFinite(convertedValue) ? convertedValue : 0;
 };
@@ -1394,7 +50,6 @@ const convertMoneyInputToBase = (value) => {
   if (!Number.isFinite(parsedValue)) {
     return Number.NaN;
   }
-
   return roundCurrency(getCurrentCurrency() === "USD" ? parsedValue * getExchangeRateUsdArs() : parsedValue);
 };
 const getDisplayMoneyInputValue = (value) => String(roundCurrency(convertMoneyForDisplay(value)));
@@ -1420,11 +75,9 @@ const formatLocalizedDate = (value, options = {}) => formatDate(value, { locale:
 const getDisplayGoalLabel = (value = "") => {
   const normalizedValue = normalizeText(value);
   const defaultGoalLabels = [normalizeText(DEFAULT_GOAL_LABEL), normalizeText(translations.en.goal?.defaultLabel || ""), normalizeText(translations.es.goal?.defaultLabel || "")];
-
   if (!normalizedValue || defaultGoalLabels.includes(normalizedValue)) {
     return t("goal.defaultLabel");
   }
-
   return String(value).trim();
 };
 const getSavingsCapacityPercent = (remainingBalance, totalIncome) => (totalIncome > 0 ? roundCurrency((remainingBalance / totalIncome) * 100) : 0);
@@ -1432,15 +85,12 @@ const getSavingsCapacityState = (percent, totalIncome) => {
   if (!(totalIncome > 0)) {
     return "neutral";
   }
-
   if (percent > 40) {
     return "excellent";
   }
-
   if (percent >= 20) {
     return "healthy";
   }
-
   return "low";
 };
 const getSavingsCapacityStateLabel = (state) => t(`savingsCapacityStates.${state}`, { }) || t("savingsCapacityStates.low");
@@ -1448,34 +98,28 @@ const getSavingsCapacityTone = (state) => {
   if (state === "excellent") {
     return "positive";
   }
-
   if (state === "low") {
     return "negative";
   }
-
   return "neutral";
 };
 const getSavingsCapacityHeadline = (metrics) => {
   if (!metrics.totalIncome) {
     return getCurrentLanguage() === "en" ? "There is no recorded income yet." : "Todavia no hay ingreso cargado";
   }
-
   if (metrics.remainingBalance < 0) {
     return getCurrentLanguage() === "en"
       ? `${getSavingsCapacityStateLabel(metrics.savingsCapacityState)}: you have nothing left to save.`
       : `${getSavingsCapacityStateLabel(metrics.savingsCapacityState)}: no tienes disponible para ahorrar`;
   }
-
   if (metrics.savingsCapacityState === "excellent") {
     return getCurrentLanguage() === "en"
       ? `${getSavingsCapacityStateLabel(metrics.savingsCapacityState)}: you are saving ${formatPercent(metrics.savingsCapacityPercent, 0)}.`
       : `${getSavingsCapacityStateLabel(metrics.savingsCapacityState)}: estas ahorrando el ${formatPercent(metrics.savingsCapacityPercent, 0)}.`;
   }
-
   if (metrics.savingsCapacityState === "healthy") {
     return getCurrentLanguage() === "en" ? "Healthy: good savings level." : "Saludable: buen nivel de ahorro.";
   }
-
   return getCurrentLanguage() === "en" ? "Low: you are spending too much." : "Bajo: estas gastando demasiado.";
 };
 const getSavingsCapacityInsight = (metrics) => {
@@ -1484,21 +128,17 @@ const getSavingsCapacityInsight = (metrics) => {
       ? "Add this month's income to calculate your savings capacity."
       : "Carga el ingreso del mes para calcular tu capacidad de ahorro.";
   }
-
   if (metrics.remainingBalance < 0) {
     return getCurrentLanguage() === "en" ? "Low: you are spending too much." : "Bajo: estas gastando demasiado.";
   }
-
   if (metrics.savingsCapacityState === "excellent") {
     return getCurrentLanguage() === "en"
       ? `Excellent: you are saving ${formatPercent(metrics.savingsCapacityPercent, 0)}.`
       : `Excelente: estas ahorrando el ${formatPercent(metrics.savingsCapacityPercent, 0)}.`;
   }
-
   if (metrics.savingsCapacityState === "healthy") {
     return getCurrentLanguage() === "en" ? "Healthy: good savings level." : "Saludable: buen nivel de ahorro.";
   }
-
   return getCurrentLanguage() === "en" ? "Low: you are spending too much." : "Bajo: estas gastando demasiado.";
 };
 const getSavingsCapacitySecondaryCopy = (metrics) => {
@@ -1510,77 +150,13 @@ const getSavingsCapacityBadgeCopy = (metrics) => {
   if (!metrics.totalIncome) {
     return t("status.noIncome");
   }
-
   return getSavingsCapacityStateLabel(metrics.savingsCapacityState);
-};
-const readDecimals = (element) => Number(element?.dataset.decimals || 0);
-const isValidMonthKey = (value) => MONTH_KEY_PATTERN.test(String(value || "").trim());
-const getExpenseDate = (expense) => {
-  const parsed = new Date(expense?.date);
-  return Number.isNaN(parsed.getTime()) ? null : parsed;
-};
-const getMonthKey = (value) => {
-  const parsed = value instanceof Date ? value : new Date(value);
-  return Number.isNaN(parsed.getTime()) ? "" : `${parsed.getFullYear()}-${String(parsed.getMonth() + 1).padStart(2, "0")}`;
-};
-const getCurrentMonthKey = () => getMonthKey(new Date());
-const getLatestMonthKey = (expenses = []) => {
-  const latestDate = expenses.reduce((latest, expense) => {
-    const parsed = getExpenseDate(expense);
-    return !parsed || (latest && latest > parsed) ? latest : parsed;
-  }, null);
-
-  return latestDate ? getMonthKey(latestDate) : getCurrentMonthKey();
-};
-const shiftMonthKey = (monthKey, offset) => {
-  const [year, month] = monthKey.split("-").map(Number);
-  const date = new Date(Date.UTC(year, month - 1 + offset, 1, 12));
-  return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}`;
 };
 const getMonthLabel = (monthKey, options = {}) => {
   const date = new Date(`${monthKey}-01T12:00:00`);
   return Number.isNaN(date.getTime()) ? "" : new Intl.DateTimeFormat(getCurrentLocale(), { month: "long", year: "numeric", ...options }).format(date);
 };
-const getYearFromMonthKey = (monthKey) => Number(String(monthKey || "").split("-")[0]) || new Date().getFullYear();
-const getMonthNumberFromMonthKey = (monthKey) => Number(String(monthKey || "").split("-")[1]) || 1;
-const buildMonthKey = (year, monthNumber) => `${year}-${String(monthNumber).padStart(2, "0")}`;
 const getCalendarMonthLabel = (monthKey) => getMonthLabel(monthKey, { month: "short", year: undefined }).replace(".", "");
-const isFutureMonthKey = (monthKey) => monthKey > getCurrentMonthKey();
-const getDaysInMonth = (monthKey) => {
-  const [year, month] = monthKey.split("-").map(Number);
-  return new Date(year, month, 0).getDate();
-};
-const getRemainingDaysInMonth = (monthKey) => {
-  if (!isValidMonthKey(monthKey)) {
-    return 0;
-  }
-
-  const currentMonthKey = getCurrentMonthKey();
-
-  if (monthKey < currentMonthKey) {
-    return 0;
-  }
-
-  const daysInMonth = getDaysInMonth(monthKey);
-
-  if (monthKey > currentMonthKey) {
-    return daysInMonth;
-  }
-
-  return Math.max(daysInMonth - new Date().getDate(), 0);
-};
-const getSpendTodayAmount = (liquidityAmount, monthKey) => {
-  const safeLiquidityAmount = Number(liquidityAmount);
-  const normalizedLiquidityAmount = Number.isFinite(safeLiquidityAmount) ? safeLiquidityAmount : 0;
-  const daysRemaining = getRemainingDaysInMonth(monthKey);
-
-  if (daysRemaining <= 0) {
-    return Math.round(normalizedLiquidityAmount);
-  }
-
-  const dailyAmount = normalizedLiquidityAmount / daysRemaining;
-  return Number.isFinite(dailyAmount) ? Math.round(dailyAmount) : 0;
-};
 const getDefaultFilters = (state = getState()) => ({
   month: getLatestMonthKey(state.expenses),
   category: "all",
@@ -1594,30 +170,24 @@ const getTotalIncome = (state) => roundCurrency(Number(state.incomeBase || 0) + 
 const getExpensesForMonth = (expenses, monthKey) => expenses.filter((expense) => getMonthKey(expense.date) === monthKey);
 const getElapsedDaysForMonth = (monthKey, expenses) => {
   const daysInMonth = getDaysInMonth(monthKey);
-
   if (monthKey === getCurrentMonthKey()) {
     return clamp(new Date().getDate(), 1, daysInMonth);
   }
-
   if (monthKey < getCurrentMonthKey()) {
     return daysInMonth;
   }
-
   const latestDay = expenses.reduce((maxDay, expense) => {
     const parsed = getExpenseDate(expense);
     return Math.max(maxDay, parsed?.getDate() || 0);
   }, 0);
-
   return clamp(latestDay || 1, 1, daysInMonth);
 };
-
 const buildCategoryBreakdown = (expenses, totalSpent) => {
   const totals = expenses.reduce((accumulator, expense) => {
     const category = expense.category || "Otros";
     accumulator[category] = roundCurrency((accumulator[category] || 0) + Number(expense.amount || 0));
     return accumulator;
   }, {});
-
   return Object.entries(totals)
     .map(([category, total]) => ({
       category,
@@ -1626,14 +196,11 @@ const buildCategoryBreakdown = (expenses, totalSpent) => {
     }))
     .sort((left, right) => right.total - left.total);
 };
-
 const buildLegendCategories = (breakdown) => {
   if (breakdown.length <= 5) {
     return breakdown;
   }
-
   const remaining = breakdown.slice(4);
-
   return [
     ...breakdown.slice(0, 4),
     {
@@ -1643,7 +210,6 @@ const buildLegendCategories = (breakdown) => {
     },
   ];
 };
-
 const summarizeMonth = (expenses, incomeTotal, monthKey) => {
   const investmentTransactions = expenses.filter((expense) => expense.category === "Inversion");
   const spendingTransactions = expenses.filter((expense) => expense.category !== "Inversion");
@@ -1666,11 +232,9 @@ const summarizeMonth = (expenses, incomeTotal, monthKey) => {
     if (!largest || Number(expense.amount || 0) > Number(largest.amount || 0)) {
       return expense;
     }
-
     return largest;
   }, null);
   const categoryBreakdown = buildCategoryBreakdown(spendingTransactions, totalSpent);
-
   return {
     monthKey,
     monthLabelLong: getMonthLabel(monthKey),
@@ -1705,35 +269,28 @@ const summarizeMonth = (expenses, incomeTotal, monthKey) => {
     projectedInvestmentAmount: investedThisMonth > 0 ? roundCurrency((investedThisMonth / Math.max(elapsedDays, 1)) * daysInMonth) : 0,
   };
 };
-
 const calculatePercentChange = (currentValue, previousValue, hasBaseline) => {
   if (!hasBaseline || !Number.isFinite(previousValue) || previousValue === 0) {
     return null;
   }
-
   return ((currentValue - previousValue) / previousValue) * 100;
 };
-
 const compareMetric = (currentValue, previousValue, hasBaseline) => ({
   current: currentValue,
   previous: previousValue,
   difference: roundCurrency(currentValue - previousValue),
   percent: calculatePercentChange(currentValue, previousValue, hasBaseline),
 });
-
 const getTopCategoryShift = (currentBreakdown, previousBreakdown) => {
   const categories = new Set([
     ...currentBreakdown.map((item) => item.category),
     ...previousBreakdown.map((item) => item.category),
   ]);
-
   let winner = null;
-
   categories.forEach((category) => {
     const currentTotal = currentBreakdown.find((item) => item.category === category)?.total || 0;
     const previousTotal = previousBreakdown.find((item) => item.category === category)?.total || 0;
     const difference = roundCurrency(currentTotal - previousTotal);
-
     if (!winner || Math.abs(difference) > Math.abs(winner.difference)) {
       winner = {
         category,
@@ -1743,10 +300,8 @@ const getTopCategoryShift = (currentBreakdown, previousBreakdown) => {
       };
     }
   });
-
   return winner;
 };
-
 const computeMetrics = (state) => {
   const activeMonthKey = getActiveMonthKey(state);
   const previousMonthKey = shiftMonthKey(activeMonthKey, -1);
@@ -1762,7 +317,6 @@ const computeMetrics = (state) => {
   const isGoalMet = goalAmount > 0 && currentMonth.investedThisMonth >= goalAmount;
   const savingsCapacityPercent = getSavingsCapacityPercent(currentMonth.remainingBalance, totalIncome);
   const savingsCapacityState = getSavingsCapacityState(savingsCapacityPercent, totalIncome);
-
   return {
     ...currentMonth,
     activeMonthKey,
@@ -1793,7 +347,6 @@ const computeMetrics = (state) => {
     topCategoryShift: hasPreviousData ? getTopCategoryShift(currentMonth.categoryBreakdown, previousMonth.categoryBreakdown) : null,
   };
 };
-
 const getVisibleExpensesContext = (state, metrics = computeMetrics(state)) => {
   const filters = {
     ...getDefaultFilters(state),
@@ -1801,7 +354,6 @@ const getVisibleExpensesContext = (state, metrics = computeMetrics(state)) => {
   };
   const searchQuery = normalizeText(filters.search);
   const monthExpenses = getExpensesForMonth(state.expenses, metrics.activeMonthKey);
-
   const visibleExpenses = monthExpenses
     .filter((expense) => filters.category === "all" || expense.category === filters.category)
     .filter((expense) => filters.paymentMethod === "all" || expense.paymentMethod === filters.paymentMethod)
@@ -1809,25 +361,21 @@ const getVisibleExpensesContext = (state, metrics = computeMetrics(state)) => {
       if (filters.expenseType === "fixed") {
         return expense.isFixed;
       }
-
       if (filters.expenseType === "variable") {
         return !expense.isFixed;
       }
-
       return true;
     })
     .filter((expense) => {
       if (!searchQuery) {
         return true;
       }
-
       const haystack = normalizeText([expense.title, expense.category, expense.paymentMethod, expense.note].filter(Boolean).join(" "));
       return haystack.includes(searchQuery);
     })
     .sort((left, right) => {
       const leftDate = getExpenseDate(left)?.getTime() || 0;
       const rightDate = getExpenseDate(right)?.getTime() || 0;
-
       switch (filters.sort) {
         case "oldest":
           return leftDate - rightDate;
@@ -1840,14 +388,12 @@ const getVisibleExpensesContext = (state, metrics = computeMetrics(state)) => {
           return rightDate - leftDate;
       }
     });
-
   const hasActiveFilters =
     filters.category !== "all" ||
     filters.paymentMethod !== "all" ||
     filters.expenseType !== "all" ||
     filters.sort !== "newest" ||
     Boolean(searchQuery);
-
   return {
     filters,
     monthExpenses,
@@ -1856,14 +402,12 @@ const getVisibleExpensesContext = (state, metrics = computeMetrics(state)) => {
     hasActiveFilters,
   };
 };
-
 const buildYearContext = (state, metrics) => {
   const activeYear = getYearFromMonthKey(metrics.activeMonthKey);
   const months = Array.from({ length: 12 }, (_, index) => {
     const monthKey = buildMonthKey(activeYear, index + 1);
     const monthSummary = summarizeMonth(getExpensesForMonth(state.expenses, monthKey), metrics.totalIncome, monthKey);
     const goalProgressPercent = metrics.goalAmount > 0 ? roundCurrency(Math.max((monthSummary.investedThisMonth / metrics.goalAmount) * 100, 0)) : 0;
-
     return {
       ...monthSummary,
       shortLabel: getCalendarMonthLabel(monthKey),
@@ -1879,7 +423,6 @@ const buildYearContext = (state, metrics) => {
   const totalSpent = roundCurrency(months.reduce((sum, month) => sum + month.totalSpent, 0));
   const totalInvested = roundCurrency(months.reduce((sum, month) => sum + month.investedThisMonth, 0));
   const totalFree = roundCurrency(monthsWithData.reduce((sum, month) => sum + month.savingsCapacityAmount, 0));
-
   return {
     activeYear,
     months,
@@ -1890,158 +433,125 @@ const buildYearContext = (state, metrics) => {
     averageMonthlyFree: monthsWithData.length ? roundCurrency(totalFree / monthsWithData.length) : 0,
   };
 };
-
 const setTextValue = (element, value) => {
   if (element) {
     element.textContent = value;
   }
 };
-
 const setBarWidth = (element, percent) => {
   if (element) {
     element.style.width = `${clamp(percent, 0, 100)}%`;
   }
 };
-
 const applyStatusPill = (element, label, tone = "neutral") => {
   if (!element) {
     return;
   }
-
   element.textContent = label;
   element.classList.remove(...STATUS_PILL_CLASSES);
   element.classList.add(`status-pill--${tone}`);
 };
-
 const applyCapacityState = (element, state) => {
   if (element) {
     element.dataset.capacityState = state;
   }
 };
-
 const applyKpiFeedbackState = (element, state) => {
   if (!element) {
     return;
   }
-
   applyCapacityState(element, state);
   element.classList.remove(...KPI_FEEDBACK_CLASSES);
   element.classList.add(`kpi-card--${getSavingsCapacityTone(state)}`);
 };
-
 const getTrendTone = (difference, { lowerIsBetter = false } = {}) => {
   if (!Number.isFinite(difference) || Math.abs(difference) < 0.05) {
     return "neutral";
   }
-
   const improved = lowerIsBetter ? difference < 0 : difference > 0;
   return improved ? "positive" : "negative";
 };
-
 const formatMetricValue = (value, options = {}) => {
   const { element, decimals = readDecimals(element), prefix = element?.dataset.prefix || "", suffix = element?.dataset.suffix || "" } = options;
-
   if (suffix === "%") {
     return `${formatNumber(value, decimals)}${suffix}`;
   }
-
   if (prefix === "$") {
     return formatMoney(value, decimals);
   }
-
   return `${prefix}${formatNumber(value, decimals)}${suffix}`;
 };
-
 const animateValue = (element, value, options = {}) => {
   if (!element) {
     return;
   }
-
   const nextValue = Number(value || 0);
   const previousValue = Number(element.dataset.currentValue || 0);
   const render = (current) => {
     element.textContent = formatMetricValue(current, { ...options, element });
     element.dataset.currentValue = String(current);
   };
-
   if (!options.animate || prefersReducedMotion()) {
     render(nextValue);
     return;
   }
-
   const startedAt = performance.now();
   const duration = 360;
-
   const frame = (timestamp) => {
     const progress = clamp((timestamp - startedAt) / duration, 0, 1);
     const eased = 1 - Math.pow(1 - progress, 3);
     render(previousValue + (nextValue - previousValue) * eased);
-
     if (progress < 1) {
       window.requestAnimationFrame(frame);
     } else {
       render(nextValue);
     }
   };
-
   window.requestAnimationFrame(frame);
 };
-
 const getCategoryTone = (category) => {
   if (category === "Inversion") {
     return "badge--investment";
   }
-
   if (["Supermercado", "Salud"].includes(category)) {
     return "badge--blue";
   }
-
   if (["Transporte", "Auto/Moto"].includes(category)) {
     return "badge--amber";
   }
-
   if (["Casa/Servicios", "Suscripciones"].includes(category)) {
     return "badge--mint";
   }
-
   if (["Gimnasio", "Salidas"].includes(category)) {
     return "badge--rose";
   }
-
   return "badge--slate";
 };
-
 const getCategoryLabel = (category = "") => {
   const normalizedCategory = String(category || "").trim();
   if (!normalizedCategory) {
     return "";
   }
-
   return translations[getCurrentLanguage()]?.categories?.[normalizedCategory]
     || translations[DEFAULT_LANGUAGE]?.categories?.[normalizedCategory]
     || normalizedCategory;
 };
-
 const getPaymentMethodLabel = (paymentMethod = "") => {
   const normalizedMethod = String(paymentMethod || "").trim();
   if (!normalizedMethod) {
     return "";
   }
-
   return translations[getCurrentLanguage()]?.paymentMethods?.[normalizedMethod]
     || translations[DEFAULT_LANGUAGE]?.paymentMethods?.[normalizedMethod]
     || normalizedMethod;
 };
-
 const getSortLabel = (sort) => translations[getCurrentLanguage()]?.sort?.[sort] || translations[DEFAULT_LANGUAGE]?.sort?.[sort] || translations[DEFAULT_LANGUAGE].sort.newest;
-
 const getScrollBehavior = () => (prefersReducedMotion() ? "auto" : "smooth");
 const getExpenseById = (expenseId) => getState().expenses.find((expense) => expense.id === expenseId) || null;
 const getFormField = (name) => expenseForm?.elements.namedItem(name);
 const isInvestmentCategory = (category = "") => category === "Inversion";
 const getMovementCopy = (category = "") => {
   const isInvestment = isInvestmentCategory(category);
-
   return {
     noun: isInvestment ? t("movement.investmentNoun") : t("movement.expenseNoun"),
     nounCapitalized: isInvestment ? t("movement.investmentNounCap") : t("movement.expenseNounCap"),
@@ -2055,10 +565,8 @@ const getMovementCopy = (category = "") => {
     deleteCopy: isInvestment ? t("movement.deleteInvestmentCopy") : t("movement.deleteExpenseCopy"),
   };
 };
-
 const getFloatingActionConfig = (metrics) => {
   const activeView = uiState.activeView || DEFAULT_VIEW;
-
   if (activeView === "actividad") {
     return {
       visible: true,
@@ -2066,21 +574,17 @@ const getFloatingActionConfig = (metrics) => {
       action: "expense",
     };
   }
-
   return {
     visible: false,
     label: t("hero.registerExpense"),
     action: "expense",
   };
 };
-
 const renderFloatingAction = (metrics) => {
   if (!fab) {
     return;
   }
-
   const config = getFloatingActionConfig(metrics);
-
   fab.hidden = !config.visible;
   fab.classList.toggle("is-hidden", !config.visible);
   fab.classList.toggle("is-investment", config.visible && config.action === "investment");
@@ -2088,35 +592,29 @@ const renderFloatingAction = (metrics) => {
   fab.setAttribute("aria-label", config.label);
   setTextValue(fabLabel, config.label);
 };
-
 const setSelectOptionText = (selectElement, optionValue, label) => {
   const nextOption = Array.from(selectElement?.options || []).find((option) => option.value === optionValue);
   if (nextOption) {
     nextOption.textContent = label;
   }
 };
-
 const syncLanguageButtons = () => {
   languageOptionButtons.forEach((button) => {
     const isActive = button.dataset.languageOption === getCurrentLanguage();
     button.classList.toggle("is-active", isActive);
     button.setAttribute("aria-pressed", isActive ? "true" : "false");
   });
-
   if (languageSwitch) {
     languageSwitch.setAttribute("aria-label", t("income.languageLabel"));
   }
-
   if (exchangeRateNote) {
     exchangeRateNote.hidden = getCurrentCurrency() !== "USD";
     exchangeRateNote.textContent = t("income.exchangeNote");
   }
 };
-
 const translateStaticUi = () => {
   document.documentElement.lang = getCurrentLanguage();
   body.dataset.language = getCurrentLanguage();
-
   setTextValue(document.querySelector(".sidebar__brand .eyebrow"), t("sidebar.brandEyebrow"));
   setTextValue(document.querySelector(".sidebar__rail .panel__header .eyebrow"), t("sidebar.activeMonthEyebrow"));
   setTextValue(document.querySelector(".sidebar__footer .eyebrow"), t("sidebar.profileEyebrow"));
@@ -2126,22 +624,18 @@ const translateStaticUi = () => {
       ? " of liquidity until next income"
       : " de liquidez hasta proximo ingreso";
   }
-
   document.querySelector(".sidebar")?.setAttribute("aria-label", t("sidebar.primaryAria"));
   document.querySelector(".mobile-nav")?.setAttribute("aria-label", t("sidebar.mobileAria"));
   menuToggle?.setAttribute("aria-label", getCurrentLanguage() === "en" ? "Open menu" : "Abrir menu");
   modalCloseButton?.setAttribute("aria-label", t("modal.closeButton"));
-
   const railMetricLabels = document.querySelectorAll(".sidebar__rail .rail-metric > span");
   setTextValue(railMetricLabels[0], t("sidebar.savingsCapacity"));
   setTextValue(railMetricLabels[1], t("sidebar.availableToSave"));
-
   Object.entries(translations[getCurrentLanguage()]?.views || translations[DEFAULT_LANGUAGE].views).forEach(([viewName, label]) => {
     document.querySelectorAll(`[data-nav-item="${viewName}"]`).forEach((item) => {
       setTextValue(item.lastElementChild, label);
     });
   });
-
   setTextValue(heroCardElement?.querySelector(".panel__header .eyebrow"), t("hero.eyebrow"));
   setTextValue(heroCardElement?.querySelector(".panel__header h3"), t("hero.title"));
   heroCardElement?.querySelector(".hero-card__meta")?.setAttribute("aria-label", t("hero.ariaLabel"));
@@ -2149,7 +643,6 @@ const translateStaticUi = () => {
   setTextValue(summaryElements.heroSpent?.closest(".hero-card__meta-item")?.querySelector("span"), t("hero.dailyLimit"));
   setTextValue(summaryElements.heroInvested?.closest(".hero-card__meta-item")?.querySelector("span"), t("hero.difference"));
   openExpenseButtons.forEach((button) => setTextValue(button, t("hero.registerExpense")));
-
   const splitCard = document.querySelector(".split-card");
   const allocationTitleLabels = splitCard?.querySelectorAll(".allocation-row__title > span");
   const allocationStatLabels = splitCard?.querySelectorAll(".allocation-stat > span");
@@ -2165,7 +658,6 @@ const translateStaticUi = () => {
   setTextValue(timelineTitles?.[2], t("goal.comparisonInvested"));
   setTextValue(timelineTitles?.[3], t("goal.comparisonCategoryShift"));
   setTextValue(splitCard?.querySelector(".panel-actions [data-open-investment]"), t("income.registerInvestment"));
-
   const flowSection = document.querySelector(".financial-flow");
   const flowLabels = flowSection?.querySelectorAll(".flow-step__label");
   const flowCopies = flowSection?.querySelectorAll(".flow-step__copy");
@@ -2183,7 +675,6 @@ const translateStaticUi = () => {
   setTextValue(flowCopies?.[2], t("flow.availableBeforeInvestingCopy"));
   setTextValue(flowCopies?.[3], t("flow.investmentCopy"));
   setTextValue(flowCopies?.[4], t("flow.liquidityFinalCopy"));
-
   const chartCards = document.querySelectorAll(".chart-card");
   const lineLegendLabels = document.querySelectorAll(".line-chart__badge span:last-child");
   setTextValue(chartCards?.[0]?.querySelector(".panel__header .eyebrow"), t("charts.distributionEyebrow"));
@@ -2197,7 +688,6 @@ const translateStaticUi = () => {
   setTextValue(document.querySelector(".insights-card .panel__header .eyebrow"), t("charts.readingEyebrow"));
   setTextValue(document.querySelector(".insights-card .panel__header h3"), t("charts.readingTitle"));
   setTextValue(document.querySelector(".insights-card .panel__header .pill"), t("charts.indicators", { count: 6 }));
-
   const incomeBoard = document.querySelector(".income-board");
   const incomeKpiLabels = incomeBoard?.querySelectorAll(".income-kpi-card__eyebrow > span");
   const incomeKpiNotes = incomeBoard?.querySelectorAll(".income-kpi-card__eyebrow > small");
@@ -2227,7 +717,6 @@ const translateStaticUi = () => {
   openGoalButtons.forEach((button) => setTextValue(button, t("income.editGoal")));
   openInvestmentButtons.forEach((button) => setTextValue(button, t("income.registerInvestment")));
   setTextValue(languageSwitch?.querySelector(".language-switch__label"), t("income.languageLabel"));
-
   const expensesCard = document.querySelector(".expenses-card");
   setTextValue(expensesCard?.querySelector(".panel__header .eyebrow"), t("activity.eyebrow"));
   setTextValue(expensesCard?.querySelector(".panel__header h3"), t("activity.title"));
@@ -2235,7 +724,6 @@ const translateStaticUi = () => {
   setTextValue(expensesCard?.querySelector("[data-open-import-json]"), t("activity.importJson"));
   setTextValue(expensesCard?.querySelector("[data-open-import-csv]"), t("activity.importCsv"));
   setTextValue(expensesCard?.querySelector("[data-open-export]"), t("activity.export"));
-
   const calendarCard = document.querySelector(".calendar-card");
   const calendarSummaryLabels = calendarCard?.querySelectorAll(".calendar-summary__card > span");
   setTextValue(calendarCard?.querySelector(".panel__header .eyebrow"), t("calendar.eyebrow"));
@@ -2246,7 +734,6 @@ const translateStaticUi = () => {
   setTextValue(calendarSummaryLabels?.[1], t("calendar.spentYear"));
   setTextValue(calendarSummaryLabels?.[2], t("calendar.investedYear"));
   setTextValue(calendarSummaryLabels?.[3], t("calendar.averageAvailable"));
-
   setTextValue(expenseForm?.querySelector('[name="title"]')?.closest(".field")?.querySelector(".field__label"), t("modal.description"));
   setTextValue(expenseForm?.querySelector('[name="amount"]')?.closest(".field")?.querySelector(".field__label"), t("modal.amount"));
   setTextValue(expenseForm?.querySelector('[name="date"]')?.closest(".field")?.querySelector(".field__label"), t("modal.date"));
@@ -2266,7 +753,6 @@ const translateStaticUi = () => {
   if (getFormField("note")) {
     getFormField("note").placeholder = t("modal.notesPlaceholder");
   }
-
   setTextValue(incomeForm?.querySelector(".panel__header .eyebrow"), t("modal.incomeEyebrow"));
   setTextValue(incomeForm?.querySelector(".panel__header h3"), t("modal.incomeTitle"));
   setTextValue(incomeForm?.querySelector(".panel__header .panel-note"), t("modal.incomeCopy"));
@@ -2282,7 +768,6 @@ const translateStaticUi = () => {
   if (incomeExtraInput) {
     incomeExtraInput.placeholder = getCurrentLanguage() === "en" ? "0.00" : "0,00";
   }
-
   setTextValue(goalForm?.querySelector(".panel__header .eyebrow"), t("modal.goalEyebrow"));
   setTextValue(goalForm?.querySelector(".panel__header h3"), t("modal.goalTitle"));
   setTextValue(goalForm?.querySelector(".panel__header .panel-note"), t("modal.goalCopy"));
@@ -2295,13 +780,11 @@ const translateStaticUi = () => {
   if (goalLabelInput) {
     goalLabelInput.placeholder = t("goal.defaultLabel");
   }
-
   setTextValue(document.querySelector('[data-modal-panel="confirm"] .panel__header .eyebrow'), t("modal.deleteEyebrow"));
   setTextValue(document.querySelector('[data-modal-panel="confirm"] .panel__header h3'), t("modal.deleteTitle"));
   setTextValue(document.querySelector('[data-modal-panel="confirm"] .panel__header .panel-note'), t("modal.deleteNote"));
   setTextValue(document.querySelector('[data-modal-panel="confirm"] .modal-actions [data-modal-close]'), t("modal.cancel"));
   setTextValue(confirmDeleteButton, t("modal.deleteAction"));
-
   setTextValue(document.querySelector('[data-modal-panel="filters"] .panel__header .eyebrow'), t("modal.filtersEyebrow"));
   setTextValue(document.querySelector('[data-modal-panel="filters"] .panel__header h3'), t("modal.filtersTitle"));
   setTextValue(document.querySelector('[data-modal-panel="filters"] .panel__header .panel-note'), t("modal.filtersCopy"));
@@ -2314,14 +797,12 @@ const translateStaticUi = () => {
   setTextValue(clearFiltersButton, t("filters.clearFilters"));
   setTextValue(document.querySelector('[data-modal-panel="filters"] [data-modal-restore-sample]'), t("modal.restoreSample"));
   setTextValue(document.querySelector('[data-modal-panel="filters"] [data-modal-close]'), t("modal.done"));
-
   setTextValue(document.querySelector('[data-modal-panel="export"] .panel__header .eyebrow'), t("modal.exportEyebrow"));
   setTextValue(document.querySelector('[data-modal-panel="export"] .panel__header h3'), t("modal.exportTitle"));
   setTextValue(document.querySelector('[data-modal-panel="export"] .panel__header .panel-note'), t("modal.exportCopy"));
   setTextValue(document.querySelector('[data-modal-panel="export"] [data-modal-close]'), t("modal.close"));
   setTextValue(exportJsonButton, t("modal.exportJson"));
   setTextValue(exportCsvButton, t("modal.exportCsv"));
-
   setTextValue(document.querySelector('[data-modal-panel="reset"] .panel__header .eyebrow'), t("modal.resetEyebrow"));
   setTextValue(document.querySelector('[data-modal-panel="reset"] .panel__header h3'), t("modal.resetTitle"));
   setTextValue(document.querySelector('[data-modal-panel="reset"] .panel__header .panel-note'), t("modal.resetCopy"));
@@ -2330,7 +811,6 @@ const translateStaticUi = () => {
   setTextValue(document.querySelector('[data-modal-panel="reset"] .confirm-card p'), t("modal.sampleDataHint"));
   setTextValue(document.querySelector('[data-modal-panel="reset"] [data-modal-close]'), t("modal.cancel"));
   setTextValue(confirmRestoreButton, t("modal.restoreSampleAction"));
-
   if (uiState.modalMode === "add" || uiState.modalMode === "investment" || uiState.modalMode === "edit") {
     const activeExpense = uiState.activeExpenseId ? getExpenseById(uiState.activeExpenseId) : null;
     const activeCategory = activeExpense?.category || getFormField("category")?.value || "";
@@ -2341,14 +821,12 @@ const translateStaticUi = () => {
     setTextValue(modalCopy, isEditMode ? (isInvestmentEntry ? t("modal.editInvestmentCopy") : t("modal.editExpenseCopy")) : isInvestmentEntry ? t("modal.investmentCopy") : t("modal.expenseCopy"));
     setTextValue(formSubmit, isInvestmentEntry ? t("modal.saveContribution") : t("modal.saveExpense"));
   }
-
   if (uiState.modalMode === "delete") {
     const activeExpense = uiState.activeExpenseId ? getExpenseById(uiState.activeExpenseId) : null;
     if (activeExpense && !activeExpense.note) {
       setTextValue(confirmCopy, getMovementCopy(activeExpense.category).deleteCopy);
     }
   }
-
   setSelectOptionText(getFormField("category"), "", t("modal.categoryPlaceholder"));
   setSelectOptionText(getFormField("paymentMethod"), "", t("modal.paymentMethodPlaceholder"));
   setSelectOptionText(filterCategoryInput, "all", t("filters.allCategories"));
@@ -2360,7 +838,6 @@ const translateStaticUi = () => {
   setSelectOptionText(filterSortInput, "oldest", t("filters.oldest"));
   setSelectOptionText(filterSortInput, "highest", t("filters.highest"));
   setSelectOptionText(filterSortInput, "lowest", t("filters.lowest"));
-
   Array.from(getFormField("category")?.options || []).forEach((option) => {
     if (option.value) {
       option.textContent = getCategoryLabel(option.value);
@@ -2381,32 +858,25 @@ const translateStaticUi = () => {
       option.textContent = getPaymentMethodLabel(option.value);
     }
   });
-
   syncLanguageButtons();
 };
-
 const refreshExchangeRate = async ({ force = false } = {}) => {
   const cachedTimestamp = readPersistedExchangeRateTimestamp();
-
   if (!force && isExchangeRateCacheFresh(cachedTimestamp)) {
     return;
   }
-
   try {
     const response = await fetch(EXCHANGE_RATE_API_URL, { cache: "no-store" });
     if (!response.ok) {
       throw new Error("exchange-rate-response");
     }
-
     const payload = await response.json();
     const parsedRate = Number(payload?.rates?.ARS);
     if (!(parsedRate > 0)) {
       throw new Error("exchange-rate-value");
     }
-
     uiState.exchangeRateUsdArs = parsedRate;
     persistExchangeRate(parsedRate);
-
     if (getCurrentCurrency() === "USD") {
       renderDashboard(false);
     }
@@ -2414,28 +884,23 @@ const refreshExchangeRate = async ({ force = false } = {}) => {
     uiState.exchangeRateUsdArs = readPersistedExchangeRate();
   }
 };
-
 const setCurrency = (currency) => {
   uiState.currentCurrency = currency === "USD" ? "USD" : "ARS";
 };
-
 const setLanguage = (language, options = {}) => {
   const nextLanguage = isSupportedLanguage(language) ? language : DEFAULT_LANGUAGE;
   uiState.currentLanguage = nextLanguage;
+  setI18nLanguage(nextLanguage);
   setCurrency(resolveCurrencyFromLanguage(nextLanguage));
-
   if (options.persist !== false) {
     persistLanguageSettings(nextLanguage);
   }
-
   renderDashboard(false);
   refreshOpenModalContent();
-
   if (uiState.currentCurrency === "USD") {
     refreshExchangeRate();
   }
 };
-
 const renderTopbar = (metrics) => {
   const activeView = uiState.activeView || DEFAULT_VIEW;
   const config = {
@@ -2475,31 +940,25 @@ const renderTopbar = (metrics) => {
     showSearch: false,
     showFilters: false,
   };
-
   setTextValue(topbarEyebrow, config.eyebrow);
   setTextValue(textElements.periodTitle, config.getTitle(metrics));
   setTextValue(textElements.periodPill, metrics.monthLabelShortYear);
   setTextValue(incomeMonthLabel, t("income.monthUseBase", { month: metrics.monthLabelLong }));
   setTextValue(goalLabelPreview, getDisplayGoalLabel(metrics.goalLabel));
-
   if (topbarSearch) {
     topbarSearch.hidden = !config.showSearch;
     topbarSearch.setAttribute("aria-label", t("search.aria"));
   }
-
   if (topbarFilters) {
     topbarFilters.hidden = !config.showFilters;
   }
-
   if (searchInput) {
     searchInput.placeholder = t("search.placeholder");
   }
-
   if (topbarActions) {
     topbarActions.hidden = !config.showSearch && !config.showFilters;
   }
 };
-
 const renderSidebar = (metrics, animate) => {
   animateValue(summaryElements.sidebarFreeCash, metrics.liquidityFinal, { animate });
   animateValue(summaryElements.sidebarAvailableToSave, metrics.savingsCapacityAmount, { animate });
@@ -2511,7 +970,6 @@ const renderSidebar = (metrics, animate) => {
     getSavingsCapacityTone(metrics.savingsCapacityState)
   );
 };
-
 const renderHero = (metrics, animate) => {
   const activeMonthKey = metrics.activeMonthKey || metrics.monthKey || "";
   const hasActiveMonth = isValidMonthKey(activeMonthKey);
@@ -2539,7 +997,6 @@ const renderHero = (metrics, animate) => {
   let riskReason = "";
   let differenceTone = "neutral";
   let differenceLabel = t("status.inBalance");
-
   if (liquidityAmount < 0) {
     riskReason = t("hero.riskLiquidity");
   } else if (dailyDifference < 0) {
@@ -2547,7 +1004,6 @@ const renderHero = (metrics, animate) => {
   } else if (projectedMonthEnd < 0) {
     riskReason = t("hero.riskClosing");
   }
-
   if (dailyDifference > 0) {
     differenceTone = "positive";
     differenceLabel = t("status.onTrack");
@@ -2555,12 +1011,10 @@ const renderHero = (metrics, animate) => {
     differenceTone = "negative";
     differenceLabel = t("status.overspending");
   }
-
   const liquidityFinalPercent = metrics.totalIncome > 0 ? roundCurrency((metrics.liquidityFinal / metrics.totalIncome) * 100) : 0;
   const liquidityFinalState = getSavingsCapacityState(liquidityFinalPercent, metrics.totalIncome);
   let liquidityStatusLabel = t("status.noIncome");
   let liquidityStatusTone = "neutral";
-
   if (metrics.totalIncome > 0) {
     if (liquidityFinalPercent > 40) {
       liquidityStatusLabel = t("status.comfortable");
@@ -2576,7 +1030,6 @@ const renderHero = (metrics, animate) => {
       liquidityStatusTone = "negative";
     }
   }
-
   animateValue(summaryElements.heroLiquidityFinal, metrics.liquidityFinal, { animate });
   animateValue(summaryElements.heroIncome, dailySpend, { animate });
   animateValue(summaryElements.heroSpent, dailyLimit, { animate });
@@ -2605,7 +1058,6 @@ const renderHero = (metrics, animate) => {
     liquidityStatusTone
   );
 };
-
 const renderFinancialFlow = (metrics, animate) => {
   animateValue(summaryElements.kpiAvailableBeforeInvesting, metrics.remainingBalance, { animate });
   animateValue(summaryElements.flowIncome, metrics.totalIncome, { animate });
@@ -2614,7 +1066,6 @@ const renderFinancialFlow = (metrics, animate) => {
   animateValue(summaryElements.flowInvested, metrics.investedThisMonth, { animate });
   animateValue(summaryElements.flowLiquidityFinal, metrics.liquidityFinal, { animate });
 };
-
 const renderSplitCard = (metrics, animate) => {
   animateValue(summaryElements.goalAmount, metrics.goalAmount, { animate });
   animateValue(summaryElements.goalSaved, metrics.investedThisMonth, { animate });
@@ -2638,7 +1089,6 @@ const renderSplitCard = (metrics, animate) => {
           ? "The goal only counts movements in the Investment category. Use \"Add investment\" when you make a real contribution."
           : "La meta solo suma movimientos en la categoria Inversion. Usa \"Registrar inversion\" cuando hagas un aporte real."
   );
-
   if (!metrics.goalAmount) {
     applyStatusPill(statusElements.goal, t("status.noGoal"), "neutral");
   } else if (metrics.isGoalMet) {
@@ -2654,15 +1104,12 @@ const renderSplitCard = (metrics, animate) => {
       "negative"
     );
   }
-
   if (goalAmountPreview && uiState.modalMode !== "goal") {
     animateValue(goalAmountPreview, metrics.goalAmount, { animate: false });
   }
-
   if (goalLabelPreview && uiState.modalMode !== "goal") {
     setTextValue(goalLabelPreview, getDisplayGoalLabel(metrics.goalLabel));
   }
-
   if (!metrics.hasPreviousData) {
     setTextValue(
       textElements.comparisonNote,
@@ -2680,7 +1127,6 @@ const renderSplitCard = (metrics, animate) => {
     setTextValue(comparisonElements.categoryShiftValue, t("status.noData"));
     return;
   }
-
   setTextValue(
     textElements.comparisonNote,
     getCurrentLanguage() === "en"
@@ -2693,20 +1139,17 @@ const renderSplitCard = (metrics, animate) => {
   setTextValue(comparisonElements.remainingBalanceValue, formatMoney(metrics.remainingBalance));
   setTextValue(comparisonElements.investedCopy, `${formatSignedCurrency(metrics.comparisons.investedThisMonth.difference)} vs ${metrics.previousMonthLabel}`);
   setTextValue(comparisonElements.investedValue, formatMoney(metrics.investedThisMonth));
-
   if (!metrics.topCategoryShift || Math.abs(metrics.topCategoryShift.difference) < 1) {
     setTextValue(comparisonElements.categoryShiftCopy, getCurrentLanguage() === "en" ? "No strong category shift" : "Sin cambio fuerte entre categorias");
     setTextValue(comparisonElements.categoryShiftValue, t("status.stable"));
     return;
   }
-
   const direction = metrics.topCategoryShift.difference > 0
     ? getCurrentLanguage() === "en" ? "went up" : "subio"
     : getCurrentLanguage() === "en" ? "went down" : "bajo";
   setTextValue(comparisonElements.categoryShiftCopy, `${getCategoryLabel(metrics.topCategoryShift.category)} ${direction} ${formatSignedCurrency(metrics.topCategoryShift.difference)}.`);
   setTextValue(comparisonElements.categoryShiftValue, getCategoryLabel(metrics.topCategoryShift.category));
 };
-
 const renderKpis = (metrics, animate) => {
   const investedDelta = metrics.hasPreviousData && Number.isFinite(metrics.comparisons.investedThisMonth.percent)
     ? formatSignedPercent(metrics.comparisons.investedThisMonth.percent)
@@ -2715,14 +1158,12 @@ const renderKpis = (metrics, animate) => {
         ? `${formatNumber(metrics.investmentTransactionsCount)} contribution(s)`
         : `${formatNumber(metrics.investmentTransactionsCount)} aporte(s)`
       : t("status.noContributions");
-
   animateValue(kpiElements.incomeTotal, metrics.totalIncome, { animate });
   animateValue(kpiElements.totalSpent, metrics.totalSpent, { animate });
   animateValue(kpiElements.investedThisMonth, metrics.investedThisMonth, { animate });
   animateValue(kpiElements.savingsCapacity, metrics.savingsCapacityPercent, { animate, decimals: 0, suffix: "%" });
   animateValue(kpiElements.dailyAverage, metrics.dailyAverage, { animate });
   animateValue(kpiElements.goalProgress, metrics.goalProgressPercent, { animate, decimals: 1, suffix: "%" });
-
   setTextValue(
     kpiDeltaElements.incomeTotal,
     metrics.totalIncome
@@ -2747,7 +1188,6 @@ const renderKpis = (metrics, animate) => {
   setTextValue(kpiSecondaryElements.savingsCapacity, getSavingsCapacitySecondaryCopy(metrics));
   setBarWidth(kpiBarElements.savingsCapacity, metrics.savingsCapacityBarPercent);
   applyKpiFeedbackState(kpiCardElements.savingsCapacity, metrics.savingsCapacityState);
-
   if (metrics.hasPreviousData) {
     setTextValue(kpiDeltaElements.totalSpent, formatSignedPercent(metrics.comparisons.totalSpent.percent));
     setTextValue(kpiDeltaElements.dailyAverage, formatSignedPercent(metrics.comparisons.dailyAverage.percent));
@@ -2755,7 +1195,6 @@ const renderKpis = (metrics, animate) => {
     setTextValue(kpiDeltaElements.totalSpent, t("status.noBase"));
     setTextValue(kpiDeltaElements.dailyAverage, t("status.currentAverage"));
   }
-
   setTextValue(
     kpiDeltaElements.goalProgress,
     metrics.goalAmount > 0
@@ -2772,13 +1211,11 @@ const renderKpis = (metrics, animate) => {
           : `Falta invertir ${formatMoney(metrics.goalRemainingAmount)}`
       : t("status.noGoal")
   );
-
   setTextValue(kpiCaptionElements.totalSpent, getCurrentLanguage() === "en" ? "Only living expenses from the active month. Investment is shown separately." : "Solo gastos de vida del mes activo. La inversion se muestra aparte.");
   setTextValue(kpiCaptionElements.investedThisMonth, getCurrentLanguage() === "en" ? "Sum of movements recorded in the Investment category." : "Suma de los movimientos cargados en la categoria Inversion.");
   setTextValue(kpiCaptionElements.dailyAverage, getCurrentLanguage() === "en" ? "Daily average using elapsed or recorded days." : "Promedio diario usando los dias cargados o transcurridos.");
   setTextValue(kpiCaptionElements.goalProgress, getCurrentLanguage() === "en" ? "Percentage of your monthly goal covered with Investment movements." : "Porcentaje de tu meta mensual cubierto con movimientos en Inversion.");
 };
-
 const renderIncomeCard = (metrics, animate) => {
   const incomeGoalGapValue = metrics.isGoalMet ? metrics.goalExceededAmount : metrics.goalRemainingAmount;
   const incomeGoalGapLabel = metrics.isGoalMet
@@ -2786,7 +1223,6 @@ const renderIncomeCard = (metrics, animate) => {
       ? t("goal.exceeded")
       : t("status.goalMet")
     : t("goal.toInvest");
-
   animateValue(summaryElements.incomeTotal, metrics.totalIncome, { animate });
   animateValue(summaryElements.incomeBase, metrics.incomeBase, { animate });
   animateValue(summaryElements.incomeExtra, metrics.incomeExtra, { animate });
@@ -2843,29 +1279,23 @@ const renderIncomeCard = (metrics, animate) => {
         ? "The available balance can go negative; available to save only shows the positive margin for the month."
         : "El saldo disponible puede quedar negativo; el disponible para ahorrar solo muestra el margen positivo del mes."
   );
-
   if (stackedSegments.length >= 2) {
     stackedSegments[0].style.width = `${metrics.savingsCapacityBarPercent}%`;
     stackedSegments[1].style.width = `${clamp(100 - metrics.savingsCapacityBarPercent, 0, 100)}%`;
   }
-
   if (incomeTotalPreview && uiState.modalMode !== "income") {
     animateValue(incomeTotalPreview, metrics.totalIncome, { animate: false });
   }
 };
-
 const getCategoryMixStopColor = (swatchColor, index, highlightedIndex) => {
   if (highlightedIndex < 0) {
     return swatchColor;
   }
-
   if (highlightedIndex === index) {
     return `color-mix(in srgb, ${swatchColor} 76%, white)`;
   }
-
   return `color-mix(in srgb, ${swatchColor} 34%, #0c1219)`;
 };
-
 const buildCategoryMixGradient = (legendItems, highlightedIndex = -1) => {
   let cursor = 0;
   const stops = legendItems.map((item, index) => {
@@ -2874,51 +1304,40 @@ const buildCategoryMixGradient = (legendItems, highlightedIndex = -1) => {
     cursor += item.share;
     return `${getCategoryMixStopColor(swatch.color, index, highlightedIndex)} ${start}% ${cursor}%`;
   });
-
   if (cursor < 100) {
     stops.push(`rgba(255,255,255,0.05) ${cursor}% 100%`);
   }
-
   return `conic-gradient(from -90deg, ${stops.join(", ")})`;
 };
-
 const setCategoryMixHighlight = (nextIndex = -1) => {
   if (uiState.categoryHighlightIndex === nextIndex) {
     return;
   }
-
   uiState.categoryHighlightIndex = nextIndex;
   applyCategoryMixHighlight();
 };
-
 const applyCategoryMixHighlight = () => {
   if (!donutChart) {
     return;
   }
-
   const legendItems = uiState.categoryLegendItems || [];
   const highlightedIndex = Number.isInteger(uiState.categoryHighlightIndex) && uiState.categoryHighlightIndex >= 0 && uiState.categoryHighlightIndex < legendItems.length
     ? uiState.categoryHighlightIndex
     : -1;
-
   donutChart.style.background = legendItems.length
     ? buildCategoryMixGradient(legendItems, highlightedIndex)
     : "conic-gradient(from -90deg, rgba(255,255,255,0.08) 0 100%)";
   donutChart.classList.toggle("is-highlighted", highlightedIndex >= 0);
-
   if (!categoryLegend) {
     return;
   }
-
   categoryLegend.querySelectorAll(".legend-item").forEach((item, index) => {
     const isActive = highlightedIndex === index;
     const isDimmed = highlightedIndex >= 0 && !isActive;
-
     item.classList.toggle("is-active", isActive);
     item.classList.toggle("is-dimmed", isDimmed);
   });
 };
-
 const renderCategoryMix = (metrics, animate) => {
   animateValue(summaryElements.chartTotalSpent, metrics.totalSpent, { animate });
   setTextValue(
@@ -2927,11 +1346,9 @@ const renderCategoryMix = (metrics, animate) => {
       ? `${metrics.activeCategoryCount} categor${metrics.activeCategoryCount === 1 ? "y" : "ies"}`
       : `${metrics.activeCategoryCount} categoria${metrics.activeCategoryCount === 1 ? "" : "s"}`
   );
-
   if (!categoryLegend) {
     return;
   }
-
   if (!metrics.categoryBreakdown.length) {
     uiState.categoryLegendItems = [];
     uiState.categoryHighlightIndex = -1;
@@ -2942,7 +1359,6 @@ const renderCategoryMix = (metrics, animate) => {
     }
     return;
   }
-
   const legendItems = buildLegendCategories(metrics.categoryBreakdown);
   uiState.categoryLegendItems = legendItems;
   if (uiState.categoryHighlightIndex >= legendItems.length) {
@@ -2954,25 +1370,20 @@ const renderCategoryMix = (metrics, animate) => {
       return `<div class="legend-item" data-legend-index="${index}" tabindex="0" style="--legend-accent:${swatch.color};"><div class="legend-item__title"><span class="legend-swatch" aria-hidden="true"></span><span>${escapeHtml(getCategoryLabel(item.category))}</span></div><div class="legend-item__value"><strong>${escapeHtml(formatPercent(item.share, item.share < 10 ? 1 : 0))}</strong><span>${escapeHtml(formatMoney(item.total))}</span></div></div>`;
     })
     .join("");
-
   if (!donutChart) {
     return;
   }
-
   applyCategoryMixHighlight();
 };
-
 const renderLineChart = (metrics) => {
   if (!lineActualPath || !lineTargetPath || !lineAreaPath || !linePoints || !lineAxis) {
     return;
   }
-
   const dailyTotals = new Array(metrics.daysInMonth).fill(0);
   metrics.spendingTransactions.forEach((expense) => {
     const day = getExpenseDate(expense)?.getDate() || 1;
     dailyTotals[day - 1] = roundCurrency(dailyTotals[day - 1] + Number(expense.amount || 0));
   });
-
   const cumulativeTotals = dailyTotals.reduce((accumulator, amount) => {
     accumulator.push(roundCurrency((accumulator[accumulator.length - 1] || 0) + amount));
     return accumulator;
@@ -2989,18 +1400,15 @@ const renderLineChart = (metrics) => {
   const actualPoints = toPoints(actualSeries);
   const projectedPoints = toPoints(projectedSeries);
   const pathFromPoints = (points) => points.map((point, index) => `${index ? "L" : "M"}${point.x} ${point.y}`).join(" ");
-
   lineActualPath.setAttribute("d", pathFromPoints(actualPoints));
   lineTargetPath.setAttribute("d", pathFromPoints(projectedPoints));
   lineAreaPath.setAttribute("d", `${pathFromPoints(actualPoints)} L${actualPoints[actualPoints.length - 1].x} 260 L${actualPoints[0].x} 260 Z`);
   linePoints.innerHTML = actualPoints.map((point) => `<circle cx="${point.x}" cy="${point.y}" r="5"></circle>`).join("");
   lineAxis.innerHTML = ticks.map((day) => `<span>${day} ${escapeHtml(metrics.monthLabelShort)}</span>`).join("");
-
   if (!metrics.expenseTransactionCount) {
     applyStatusPill(statusElements.line, t("status.noExpenses"), "neutral");
     return;
   }
-
   if (!metrics.hasPreviousData) {
     applyStatusPill(
       statusElements.line,
@@ -3011,21 +1419,18 @@ const renderLineChart = (metrics) => {
     );
     return;
   }
-
   applyStatusPill(
     statusElements.line,
     `${formatSignedPercent(metrics.comparisons.dailyAverage.percent)} vs ${metrics.previousMonthLabel}`,
     getTrendTone(metrics.comparisons.dailyAverage.difference, { lowerIsBetter: true })
   );
 };
-
 const createInsight = (label, tone, value, copy) => ({
   label,
   tone,
   value,
   copy,
 });
-
 const generateInsights = (metrics) => {
   const isSpendingOverIncome = metrics.totalIncome > 0 && metrics.projectedMonthlySpend > metrics.totalIncome;
   const spendingTone = isSpendingOverIncome ? "rose" : metrics.totalIncome > 0 && metrics.spentRatio <= 70 ? "mint" : "blue";
@@ -3064,7 +1469,6 @@ const generateInsights = (metrics) => {
     : getCurrentLanguage() === "en"
       ? "There is no dominant category yet."
       : "Todavia no hay una categoria dominante.";
-
   return [
     createInsight(
       t("insights.incomeUse"),
@@ -3150,37 +1554,29 @@ const generateInsights = (metrics) => {
     ),
   ];
 };
-
 const renderInsights = (metrics) => {
   if (!insightList) {
     return;
   }
-
   insightList.innerHTML = generateInsights(metrics)
     .map((insight) => `<article class="insight insight--${escapeHtml(insight.tone || "blue")}"><div class="insight__content"><span class="insight__label">${escapeHtml(insight.label)}</span><strong class="insight__value">${escapeHtml(insight.value)}</strong><span class="insight__copy">${escapeHtml(insight.copy)}</span></div></article>`)
     .join("");
 };
-
 const getEmptyStateMarkup = (state, metrics, context) => {
   if (!context.monthExpenses.length) {
     return `<div class="expense-list__empty"><strong>${escapeHtml(t("emptyState.noExpensesTitle", { month: metrics.monthLabelLong }))}</strong><p>${escapeHtml(t("emptyState.noExpensesCopy"))}</p><div class="expense-list__actions"><button class="button button--accent button--small" type="button" data-list-action="open-investment">${escapeHtml(t("income.registerInvestment"))}</button><button class="button button--ghost button--small" type="button" data-list-action="open-add">${escapeHtml(t("hero.registerExpense"))}</button>${!state.expenses.length ? `<button class="button button--ghost button--small" type="button" data-list-action="restore-sample">${escapeHtml(t("emptyState.loadSample"))}</button>` : ""}</div></div>`;
   }
-
   return `<div class="expense-list__empty"><strong>${escapeHtml(t("emptyState.noFilteredTitle"))}</strong><p>${escapeHtml(t("emptyState.noFilteredCopy"))}</p><div class="expense-list__actions"><button class="button button--ghost button--small" type="button" data-list-action="clear-filters">${escapeHtml(t("filters.clearFilters"))}</button><button class="button button--ghost button--small" type="button" data-list-action="open-filters">${escapeHtml(t("emptyState.adjustFilters"))}</button></div></div>`;
 };
-
 const renderExpenseList = (state, metrics, context) => {
   if (!expenseList) {
     return;
   }
-
   setTextValue(expenseResults, t("activity.visibleResults", { count: formatNumber(context.visibleExpenses.length, 0) }));
-
   if (!context.visibleExpenses.length) {
     expenseList.innerHTML = getEmptyStateMarkup(state, metrics, context);
     return;
   }
-
   expenseList.innerHTML = context.visibleExpenses
     .map((expense) => {
       const isInvestmentExpense = isInvestmentCategory(expense.category);
@@ -3193,37 +1589,29 @@ const renderExpenseList = (state, metrics, context) => {
         ? `<span class="badge badge--fixed">${escapeHtml(t("frequency.fixed"))}</span>`
         : `<span class="badge badge--variable">${escapeHtml(t("frequency.variable"))}</span>`;
       const amountClass = isInvestmentExpense ? "expense-row__amount expense-row__amount--investment" : "expense-row__amount";
-
       return `<article class="expense-row${isInvestmentExpense ? " expense-row--investment" : ""}"><div class="expense-row__merchant"><strong>${escapeHtml(expense.title)}</strong>${notePreview || `<span>${escapeHtml(getCategoryLabel(expense.category))} - ${escapeHtml(getPaymentMethodLabel(expense.paymentMethod))}</span>`}</div><div class="expense-row__meta">${movementTypeBadge}<span class="badge ${getCategoryTone(expense.category)}">${escapeHtml(getCategoryLabel(expense.category))}</span><span class="badge badge--method">${escapeHtml(getPaymentMethodLabel(expense.paymentMethod))}</span>${fixedBadge}<span class="expense-row__method">${escapeHtml(formatLocalizedDate(expense.date, { month: "short", day: "numeric", year: "numeric" }).replace(".", ""))}</span></div><div class="expense-row__side"><strong class="${amountClass}">- ${escapeHtml(formatMoney(expense.amount))}</strong><div class="expense-row__actions"><button class="icon-button icon-button--soft" type="button" aria-label="${escapeHtml(movementCopy.editLabel)}" data-expense-action="edit" data-expense-id="${expense.id}"><svg viewBox="0 0 24 24" fill="none"><path d="M4 20h4.5L19 9.5 14.5 5 4 15.5V20Z"></path><path d="m12.5 7 4.5 4.5"></path></svg></button><button class="icon-button icon-button--soft" type="button" aria-label="${escapeHtml(movementCopy.duplicateLabel)}" data-expense-action="duplicate" data-expense-id="${expense.id}"><svg viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M6 15H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v1"></path></svg></button><button class="icon-button icon-button--soft" type="button" aria-label="${escapeHtml(movementCopy.deleteLabel)}" data-expense-action="delete" data-expense-id="${expense.id}"><svg viewBox="0 0 24 24" fill="none"><path d="M4 7.5h16"></path><path d="M9.5 10.5v6"></path><path d="M14.5 10.5v6"></path><path d="M6.5 7.5 7.4 19a2 2 0 0 0 2 1.8h5.2a2 2 0 0 0 2-1.8l.9-11.5"></path><path d="M9 7.5V5.8A1.8 1.8 0 0 1 10.8 4h2.4A1.8 1.8 0 0 1 15 5.8v1.7"></path></svg></button></div></div></article>`;
     })
     .join("");
 };
-
 const renderFilters = (context, metrics) => {
   if (filterMonthInput) {
     filterMonthInput.value = context.filters.month;
   }
-
   if (filterCategoryInput) {
     filterCategoryInput.value = context.filters.category;
   }
-
   if (filterPaymentMethodInput) {
     filterPaymentMethodInput.value = context.filters.paymentMethod;
   }
-
   if (filterExpenseTypeInput) {
     filterExpenseTypeInput.value = context.filters.expenseType;
   }
-
   if (filterSortInput) {
     filterSortInput.value = context.filters.sort;
   }
-
   if (searchInput && searchInput.value !== (context.filters.search || "")) {
     searchInput.value = context.filters.search || "";
   }
-
   setTextValue(filterSearchPreview, context.searchQuery ? t("filters.searchPreview", { query: context.filters.search }) : t("filters.noSearch"));
   setTextValue(
     filterResultsCopy,
@@ -3234,9 +1622,7 @@ const renderFilters = (context, metrics) => {
     })
   );
 };
-
 const serializeExpensesToJson = (expenses) => JSON.stringify(expenses, null, 2);
-
 const serializeExpensesToCsv = (expenses) => {
   const rows = [
     ["descripcion", "monto", "fecha", "categoria", "medio_pago", "es_fijo", "nota"],
@@ -3250,25 +1636,20 @@ const serializeExpensesToCsv = (expenses) => {
       expense.note || "",
     ]),
   ];
-
   return rows
     .map((row) => row.map((value) => `"${String(value).replaceAll('"', '""')}"`).join(","))
     .join("\n");
 };
-
 const downloadTextFile = (filename, contents, mimeType) => {
   const blob = new Blob([contents], { type: mimeType });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
-
   link.href = url;
   link.download = filename;
   link.click();
   URL.revokeObjectURL(url);
 };
-
 const getExportBaseFilename = (metrics) => `aleclv-salary-planner-${metrics.activeMonthKey}`;
-
 const renderExportState = (metrics, context) => {
   setTextValue(exportSummary, t("exportState.ready", { count: formatNumber(context.visibleExpenses.length, 0) }));
   setTextValue(exportFilename, `${getExportBaseFilename(metrics)}.csv`);
@@ -3282,24 +1663,19 @@ const renderExportState = (metrics, context) => {
       })
       : t("exportState.empty")
   );
-
   if (exportJsonButton) {
     exportJsonButton.disabled = !context.visibleExpenses.length;
   }
-
   if (exportCsvButton) {
     exportCsvButton.disabled = !context.visibleExpenses.length;
   }
 };
-
 const renderCalendar = (state, metrics, animate) => {
   const yearContext = buildYearContext(state, metrics);
-
   animateValue(yearSummaryElements.income, yearContext.yearIncomeReference, { animate });
   animateValue(yearSummaryElements.spent, yearContext.totalSpent, { animate });
   animateValue(yearSummaryElements.invested, yearContext.totalInvested, { animate });
   animateValue(yearSummaryElements.average, yearContext.averageMonthlyFree, { animate });
-
   setTextValue(calendarYearLabel, String(yearContext.activeYear));
   setTextValue(
     calendarCopy,
@@ -3317,11 +1693,9 @@ const renderCalendar = (state, metrics, animate) => {
         ? "There are no months with movements in this year yet. Use the calendar to navigate and add data when you need it."
         : "Todavia no hay meses con movimientos en este año. Usa el calendario para navegar y cargar datos cuando los necesites."
   );
-
   if (!calendarGrid) {
     return;
   }
-
   calendarGrid.innerHTML = yearContext.months
     .map((month) => {
       const isDisabled = month.isFuture && !month.hasData;
@@ -3352,18 +1726,15 @@ const renderCalendar = (state, metrics, animate) => {
       ]
         .filter(Boolean)
         .join(" ");
-
       return `<button class="${classes}" type="button" data-calendar-month="${month.monthKey}" ${isDisabled ? "disabled" : ""}><div class="calendar-month__header"><span>${escapeHtml(month.shortLabel)}</span><span class="calendar-month__status">${escapeHtml(stateLabel)}</span></div><strong class="calendar-month__value">${escapeHtml(formatMoney(month.totalSpent))}</strong><div class="calendar-month__meta"><span>${escapeHtml(getCurrentLanguage() === "en" ? "Expenses" : "Gastos")} ${escapeHtml(formatMoney(month.totalSpent))}</span><span>${escapeHtml(getCurrentLanguage() === "en" ? "Invested" : "Invertido")} ${escapeHtml(formatMoney(month.investedThisMonth))}</span></div><div class="progress calendar-month__progress"><span style="width: ${month.goalProgressBarPercent}%;"></span></div><small>${escapeHtml(monthCopy)}</small></button>`;
     })
     .join("");
 };
-
 const renderDashboard = (animate = false) => {
   const state = getState();
   const metrics = computeMetrics(state);
   const context = getVisibleExpensesContext(state, metrics);
   uiState.latestMetrics = metrics;
-
   translateStaticUi();
   renderTopbar(metrics);
   renderFloatingAction(metrics);
@@ -3381,54 +1752,44 @@ const renderDashboard = (animate = false) => {
   renderInsights(metrics);
   renderExportState(metrics, context);
 };
-
 const clearFormFeedback = () => {
   if (formFeedback) {
     formFeedback.textContent = "";
   }
 };
-
 const clearIncomeFeedback = () => {
   if (incomeFeedback) {
     incomeFeedback.textContent = "";
   }
 };
-
 const clearGoalFeedback = () => {
   if (goalFeedback) {
     goalFeedback.textContent = "";
   }
 };
-
 const setModalPanel = (panelName) => {
   modalPanels.forEach((panel) => {
     panel.hidden = panel.dataset.modalPanel !== panelName;
   });
 };
-
 const openModal = (focusTarget = null) => {
   if (!modal) {
     return;
   }
-
   if (modal.hidden && document.activeElement instanceof HTMLElement) {
     uiState.lastFocusedElement = document.activeElement;
   }
-
   modal.hidden = false;
   body.classList.add("modal-open");
   body.classList.remove("sidebar-open");
-
   if (focusTarget instanceof HTMLElement) {
     window.requestAnimationFrame(() => focusTarget.focus());
   }
 };
-
 const closeModal = () => {
   if (!modal) {
     return;
   }
-
   modal.hidden = true;
   body.classList.remove("modal-open");
   uiState.modalMode = null;
@@ -3439,24 +1800,19 @@ const closeModal = () => {
   expenseForm?.reset();
   incomeForm?.reset();
   goalForm?.reset();
-
   if (uiState.lastFocusedElement instanceof HTMLElement) {
     window.requestAnimationFrame(() => uiState.lastFocusedElement.focus());
   }
-
   uiState.lastFocusedElement = null;
 };
-
 const showToast = (message, tone = "success") => {
   if (!toast) {
     return;
   }
-
   toast.textContent = message;
   toast.hidden = false;
   toast.classList.add("is-visible");
   toast.classList.toggle("toast--error", tone === "error");
-
   window.clearTimeout(uiState.toastTimer);
   uiState.toastTimer = window.setTimeout(() => {
     toast.classList.remove("is-visible");
@@ -3464,74 +1820,58 @@ const showToast = (message, tone = "success") => {
     toast.hidden = true;
   }, TOAST_TIMEOUT_MS);
 };
-
 const validateExpensePayload = (payload) => {
   if (!payload.title || payload.title.trim().length < 2) {
     return t("validation.description");
   }
-
   if (!Number.isFinite(payload.amount) || payload.amount <= 0) {
     return t("validation.amount");
   }
-
   if (!payload.category) {
     return t("validation.category");
   }
-
   if (!payload.date || Number.isNaN(new Date(payload.date).getTime())) {
     return t("validation.date");
   }
-
   if (!payload.paymentMethod) {
     return t("validation.paymentMethod");
   }
-
   return "";
 };
-
 const validateIncomePayload = (incomeBase, incomeExtra) => {
   if (!Number.isFinite(incomeBase) || incomeBase < 0) {
     return t("validation.incomeBase");
   }
-
   if (!Number.isFinite(incomeExtra) || incomeExtra < 0) {
     return t("validation.incomeExtra");
   }
-
   return "";
 };
-
 const validateGoalPayload = (goalAmount) => {
   if (!Number.isFinite(goalAmount) || goalAmount <= 0) {
     return t("validation.goalAmount");
   }
-
   return "";
 };
-
 const updateIncomePreview = () => {
   const base = convertMoneyInputToBase(incomeBaseInput?.value || 0);
   const extra = convertMoneyInputToBase(incomeExtraInput?.value || 0);
   const total = roundCurrency((Number.isFinite(base) ? base : 0) + (Number.isFinite(extra) ? extra : 0));
   animateValue(incomeTotalPreview, total, { animate: false });
 };
-
 const updateGoalPreview = () => {
   const parsedGoalAmount = convertMoneyInputToBase(goalAmountInput?.value || 0);
   const goalAmount = Number.isFinite(parsedGoalAmount) ? parsedGoalAmount : 0;
   animateValue(goalAmountPreview, goalAmount, { animate: false });
   setTextValue(goalLabelPreview, getDisplayGoalLabel(String(goalLabelInput?.value || "").trim()));
 };
-
 const buildExpensePayload = () => {
   if (!expenseForm) {
     return null;
   }
-
   const formData = new FormData(expenseForm);
   const existingExpense = uiState.activeExpenseId ? getExpenseById(uiState.activeExpenseId) : null;
   const submittedDate = String(formData.get("date") || "").trim();
-
   return {
     id: existingExpense?.id || String(formData.get("id") || "").trim() || generateId(),
     title: String(formData.get("title") || "").trim(),
@@ -3544,12 +1884,10 @@ const buildExpensePayload = () => {
     isFixed: Boolean(formData.get("isFixed")),
   };
 };
-
 const openExpenseModal = (mode, expense = null, options = {}) => {
   if (!expenseForm || !modalTitle || !modalEyebrow || !modalCopy || !formSubmit) {
     return;
   }
-
   const presetCategory = options.presetCategory || "";
   const isInvestmentMode = mode === "investment";
   const isInvestmentEntry = (expense?.category || presetCategory) === "Inversion";
@@ -3566,19 +1904,16 @@ const openExpenseModal = (mode, expense = null, options = {}) => {
   getFormField("paymentMethod").value = expense?.paymentMethod || "";
   getFormField("note").value = expense?.note || "";
   getFormField("isFixed").checked = Boolean(expense?.isFixed);
-
   modalEyebrow.textContent = mode === "edit" ? (isInvestmentEntry ? t("modal.editInvestmentEyebrow") : t("modal.editExpenseEyebrow")) : isInvestmentMode ? t("modal.investmentEyebrow") : t("modal.formEyebrow");
   modalTitle.textContent = mode === "edit" ? (isInvestmentEntry ? t("modal.editInvestmentTitle") : t("modal.editExpenseTitle")) : isInvestmentMode ? t("modal.investmentTitle") : t("modal.expenseTitle");
   modalCopy.textContent = mode === "edit" ? (isInvestmentEntry ? t("modal.editInvestmentCopy") : t("modal.editExpenseCopy")) : isInvestmentMode ? t("modal.investmentCopy") : t("modal.expenseCopy");
   formSubmit.textContent = mode === "edit" ? (isInvestmentEntry ? t("modal.saveContribution") : t("modal.saveExpense")) : isInvestmentMode ? t("modal.saveContribution") : t("modal.saveExpense");
   openModal(getFormField("title"));
 };
-
 const openIncomeModal = () => {
   if (!incomeForm || !incomeBaseInput || !incomeExtraInput) {
     return;
   }
-
   const state = getState();
   uiState.modalMode = "income";
   setModalPanel("income");
@@ -3589,16 +1924,13 @@ const openIncomeModal = () => {
   updateIncomePreview();
   openModal(incomeBaseInput);
 };
-
 const openInvestmentModal = () => {
   openExpenseModal("investment", null, { presetCategory: "Inversion" });
 };
-
 const openGoalModal = () => {
   if (!goalForm || !goalAmountInput || !goalLabelInput) {
     return;
   }
-
   const state = getState();
   uiState.modalMode = "goal";
   setModalPanel("goal");
@@ -3609,67 +1941,55 @@ const openGoalModal = () => {
   updateGoalPreview();
   openModal(goalAmountInput);
 };
-
 const refreshOpenModalContent = () => {
   if (!modal || modal.hidden) {
     return;
   }
-
   if (uiState.modalMode === "income") {
     openIncomeModal();
     return;
   }
-
   if (uiState.modalMode === "goal") {
     openGoalModal();
     return;
   }
-
   if (uiState.modalMode === "delete") {
     openDeleteModal(getExpenseById(uiState.activeExpenseId));
     return;
   }
-
   if (uiState.modalMode === "edit") {
     openExpenseModal("edit", getExpenseById(uiState.activeExpenseId));
     return;
   }
-
   if (uiState.modalMode === "investment") {
     openInvestmentModal();
     return;
   }
-
   if (uiState.modalMode === "add") {
     openExpenseModal("add");
   }
 };
-
 const openFiltersModal = () => {
   uiState.modalMode = "filters";
   setModalPanel("filters");
   renderDashboard(false);
   openModal(filterMonthInput || filterCategoryInput);
 };
-
 const openExportModal = () => {
   uiState.modalMode = "export";
   setModalPanel("export");
   renderDashboard(false);
   openModal(!exportCsvButton?.disabled ? exportCsvButton : !exportJsonButton?.disabled ? exportJsonButton : modalCloseButton);
 };
-
 const openRestoreModal = () => {
   uiState.modalMode = "restore";
   setModalPanel("reset");
   openModal(confirmRestoreButton || modalCloseButton);
 };
-
 const openDeleteModal = (expense) => {
   if (!expense) {
     return;
   }
-
   uiState.modalMode = "delete";
   uiState.activeExpenseId = expense.id;
   setModalPanel("confirm");
@@ -3679,7 +1999,6 @@ const openDeleteModal = (expense) => {
   setTextValue(confirmAmount, `- ${formatMoney(expense.amount)}`);
   openModal(confirmDeleteButton);
 };
-
 const applyFilterPatch = (patch) => {
   updateState((state) => ({
     filters: {
@@ -3689,7 +2008,6 @@ const applyFilterPatch = (patch) => {
   }));
   renderDashboard(false);
 };
-
 const setActiveMonth = (monthKey, animate = true) => {
   updateState((state) => ({
     filters: {
@@ -3699,36 +2017,29 @@ const setActiveMonth = (monthKey, animate = true) => {
   }));
   renderDashboard(animate);
 };
-
 const shiftCalendarYear = (offset) => {
   const state = getState();
   const activeMonthKey = getActiveMonthKey(state);
   const nextMonthKey = buildMonthKey(getYearFromMonthKey(activeMonthKey) + offset, getMonthNumberFromMonthKey(activeMonthKey));
   setActiveMonth(nextMonthKey, true);
 };
-
 const resetFilters = () => {
   updateState((state) => ({
     filters: getDefaultFilters(state),
   }));
   renderDashboard(false);
 };
-
 const handleExpenseSubmit = (event) => {
   event.preventDefault();
-
   const payload = buildExpensePayload();
   const validation = validateExpensePayload(payload);
-
   if (validation) {
     setTextValue(formFeedback, validation);
     return;
   }
-
   const expenseMonth = getMonthKey(payload.date);
   const isEditing = uiState.modalMode === "edit";
   const movementCopy = getMovementCopy(payload.category);
-
   updateState((state) => ({
     expenses: isEditing && uiState.activeExpenseId
       ? state.expenses.map((expense) => (expense.id === uiState.activeExpenseId ? { ...expense, ...payload, id: expense.id, createdAt: expense.createdAt } : expense))
@@ -3738,17 +2049,14 @@ const handleExpenseSubmit = (event) => {
       month: expenseMonth || state.filters.month,
     },
   }));
-
   closeModal();
   renderDashboard(true);
   showToast(isEditing ? movementCopy.updatedToast : movementCopy.registeredToast);
 };
-
 const handleDeleteExpense = () => {
   if (!uiState.activeExpenseId) {
     return;
   }
-
   const deletedExpense = getExpenseById(uiState.activeExpenseId);
   updateState((state) => ({
     expenses: state.expenses.filter((expense) => expense.id !== uiState.activeExpenseId),
@@ -3757,18 +2065,15 @@ const handleDeleteExpense = () => {
   renderDashboard(true);
   showToast(getMovementCopy(deletedExpense?.category).deletedToast);
 };
-
 const duplicateExpense = (expense) => {
   if (!expense) {
     return;
   }
-
   const duplicate = {
     ...expense,
     id: generateId(),
     createdAt: new Date().toISOString(),
   };
-
   updateState((state) => ({
     expenses: [duplicate, ...state.expenses],
     filters: {
@@ -3779,104 +2084,81 @@ const duplicateExpense = (expense) => {
   renderDashboard(true);
   showToast(getMovementCopy(expense.category).duplicatedToast);
 };
-
 const handleIncomeSubmit = (event) => {
   event.preventDefault();
-
   const base = convertMoneyInputToBase(incomeBaseInput?.value || 0);
   const extra = convertMoneyInputToBase(incomeExtraInput?.value || 0);
   const validation = validateIncomePayload(base, extra);
-
   if (validation) {
     setTextValue(incomeFeedback, validation);
     return;
   }
-
   updateState({
     incomeBase: base,
     incomeExtra: extra,
   });
-
   closeModal();
   renderDashboard(true);
   showToast(t("toast.incomeUpdated"));
 };
-
 const handleGoalSubmit = (event) => {
   event.preventDefault();
-
   const goalAmount = convertMoneyInputToBase(goalAmountInput?.value || 0);
   const goalLabel = String(goalLabelInput?.value || "").trim();
   const validation = validateGoalPayload(goalAmount);
-
   if (validation) {
     setTextValue(goalFeedback, validation);
     return;
   }
-
   updateState({
     savingsGoalAmount: goalAmount,
     savingsGoalLabel: goalLabel,
   });
-
   closeModal();
   renderDashboard(true);
   showToast(t("toast.goalUpdated"));
 };
-
 const handleSearchUpdate = (value) => {
   applyFilterPatch({ search: String(value || "").trim() });
 };
-
 const exportVisibleExpenses = (format) => {
   const state = getState();
   const metrics = computeMetrics(state);
   const context = getVisibleExpensesContext(state, metrics);
-
   if (!context.visibleExpenses.length) {
     showToast(t("toast.noVisibleExpenses"), "error");
     return;
   }
-
   const contents = format === "json" ? serializeExpensesToJson(context.visibleExpenses) : serializeExpensesToCsv(context.visibleExpenses);
   downloadTextFile(`${getExportBaseFilename(metrics)}.${format}`, contents, format === "json" ? "application/json;charset=utf-8" : "text/csv;charset=utf-8");
   closeModal();
   showToast(t("toast.exportReady", { format: format.toUpperCase() }));
 };
-
 const openImportJsonPicker = () => {
   if (!importJsonInput) {
     return;
   }
-
   importJsonInput.value = "";
   importJsonInput.click();
 };
-
 const openImportCsvPicker = () => {
   if (!importCsvInput) {
     return;
   }
-
   importCsvInput.value = "";
   importCsvInput.click();
 };
-
 const handleImportJsonSelection = async (event) => {
   const selectedFile = event.target?.files?.[0];
-
   if (!selectedFile) {
     return;
   }
-
   try {
     const rawContents = await selectedFile.text();
     const parsedState = JSON.parse(rawContents);
-
     if (!isValidImportState(parsedState)) {
       throw new Error("invalid-import-state");
     }
-
     setState(parsedState);
     renderDashboard(true);
     showToast(t("toast.jsonImported"));
@@ -3888,22 +2170,17 @@ const handleImportJsonSelection = async (event) => {
     }
   }
 };
-
 const handleImportCsvSelection = async (event) => {
   const selectedFile = event.target?.files?.[0];
-
   if (!selectedFile) {
     return;
   }
-
   try {
     const rawContents = await selectedFile.text();
     const importedExpenses = parseExpensesFromCsv(rawContents);
-
     if (!importedExpenses?.length) {
       throw new Error("invalid-import-csv");
     }
-
     updateState((state) => ({
       expenses: [...importedExpenses, ...state.expenses],
     }));
@@ -3917,7 +2194,6 @@ const handleImportCsvSelection = async (event) => {
     }
   }
 };
-
 const restoreSampleData = () => {
   setState(getSampleState());
   closeModal();
@@ -3925,7 +2201,6 @@ const restoreSampleData = () => {
   setActiveView(DEFAULT_VIEW, { instant: true });
   showToast(t("toast.sampleRestored"));
 };
-
 const setActiveNavItem = (target) => {
   navItems.forEach((item) => {
     const isActive = item.dataset.navItem === target;
@@ -3937,12 +2212,10 @@ const setActiveNavItem = (target) => {
     }
   });
 };
-
 const setActiveView = (target, options = {}) => {
   const nextView = Object.prototype.hasOwnProperty.call(viewSections, target) ? target : DEFAULT_VIEW;
   const metrics = uiState.latestMetrics || computeMetrics(getState());
   const shouldFocusMain = options.focusMain !== false && !options.instant;
-
   uiState.activeView = nextView;
   body.dataset.activeView = nextView;
   body.classList.remove("sidebar-open");
@@ -3952,7 +2225,6 @@ const setActiveView = (target, options = {}) => {
     if (!section) {
       return;
     }
-
     const isActive = viewName === nextView;
     section.hidden = !isActive;
     section.classList.toggle("is-hidden", !isActive);
@@ -3962,37 +2234,31 @@ const setActiveView = (target, options = {}) => {
   });
   renderTopbar(metrics);
   renderFloatingAction(metrics);
-
   window.requestAnimationFrame(() => {
     window.scrollTo({
       top: 0,
       behavior: options.instant ? "auto" : getScrollBehavior(),
     });
-
     if (shouldFocusMain && dashboardMain instanceof HTMLElement) {
       dashboardMain.focus({ preventScroll: true });
     }
   });
 };
-
 const initializeInteractions = () => {
   setCurrency(readPersistedCurrency(uiState.currentLanguage));
   persistLanguageSettings(uiState.currentLanguage);
   renderDashboard(false);
   setActiveView(uiState.activeView, { instant: true });
   refreshExchangeRate();
-
   if (fab) {
     fab.addEventListener("click", () => {
       if (fab.dataset.fabAction === "investment") {
         openInvestmentModal();
         return;
       }
-
       openExpenseModal("add");
     });
   }
-
   openExpenseButtons.forEach((button) => button.addEventListener("click", () => openExpenseModal("add")));
   openIncomeButtons.forEach((button) => button.addEventListener("click", openIncomeModal));
   openGoalButtons.forEach((button) => button.addEventListener("click", openGoalModal));
@@ -4006,7 +2272,6 @@ const initializeInteractions = () => {
   languageOptionButtons.forEach((button) => button.addEventListener("click", () => setLanguage(button.dataset.languageOption)));
   importJsonInput?.addEventListener("change", handleImportJsonSelection);
   importCsvInput?.addEventListener("change", handleImportCsvSelection);
-
   expenseForm?.addEventListener("submit", handleExpenseSubmit);
   expenseForm?.addEventListener("input", clearFormFeedback);
   expenseForm?.addEventListener("change", clearFormFeedback);
@@ -4028,7 +2293,6 @@ const initializeInteractions = () => {
     clearGoalFeedback();
     updateGoalPreview();
   });
-
   confirmDeleteButton?.addEventListener("click", handleDeleteExpense);
   confirmRestoreButton?.addEventListener("click", restoreSampleData);
   clearFiltersButton?.addEventListener("click", resetFilters);
@@ -4037,7 +2301,6 @@ const initializeInteractions = () => {
   calendarShiftButtons.forEach((button) =>
     button.addEventListener("click", () => shiftCalendarYear(Number(button.dataset.calendarShift || 0)))
   );
-
   searchInput?.addEventListener("input", (event) => handleSearchUpdate(event.target.value));
   filterMonthInput?.addEventListener("change", (event) => applyFilterPatch({ month: event.target.value || getDefaultFilters(getState()).month }));
   filterCategoryInput?.addEventListener("change", (event) => applyFilterPatch({ category: event.target.value || "all" }));
@@ -4048,62 +2311,49 @@ const initializeInteractions = () => {
     event.preventDefault();
     closeModal();
   });
-
   expenseList?.addEventListener("click", (event) => {
     const listAction = event.target.closest("[data-list-action]");
     if (listAction) {
       if (listAction.dataset.listAction === "open-add") {
         openExpenseModal("add");
       }
-
       if (listAction.dataset.listAction === "open-investment") {
         openInvestmentModal();
       }
-
       if (listAction.dataset.listAction === "restore-sample") {
         openRestoreModal();
       }
-
       if (listAction.dataset.listAction === "clear-filters") {
         resetFilters();
       }
-
       if (listAction.dataset.listAction === "open-filters") {
         openFiltersModal();
       }
-
       return;
     }
-
     const actionTrigger = event.target.closest("[data-expense-action]");
     if (!actionTrigger) {
       return;
     }
-
     const expense = getExpenseById(actionTrigger.dataset.expenseId);
     if (!expense) {
       return;
     }
-
     if (actionTrigger.dataset.expenseAction === "edit") {
       openExpenseModal("edit", expense);
     }
-
     if (actionTrigger.dataset.expenseAction === "duplicate") {
       duplicateExpense(expense);
     }
-
     if (actionTrigger.dataset.expenseAction === "delete") {
       openDeleteModal(expense);
     }
   });
-
   calendarGrid?.addEventListener("click", (event) => {
     const monthTrigger = event.target.closest("[data-calendar-month]");
     if (!(monthTrigger instanceof HTMLButtonElement) || monthTrigger.disabled) {
       return;
     }
-
     setActiveMonth(monthTrigger.dataset.calendarMonth, true);
   });
   categoryLegend?.addEventListener("mouseover", (event) => {
@@ -4111,7 +2361,6 @@ const initializeInteractions = () => {
     if (!legendItem || !categoryLegend.contains(legendItem)) {
       return;
     }
-
     setCategoryMixHighlight(Number(legendItem.dataset.legendIndex));
   });
   categoryLegend?.addEventListener("mouseleave", () => setCategoryMixHighlight(-1));
@@ -4120,17 +2369,14 @@ const initializeInteractions = () => {
     if (!legendItem || !categoryLegend.contains(legendItem)) {
       return;
     }
-
     setCategoryMixHighlight(Number(legendItem.dataset.legendIndex));
   });
   categoryLegend?.addEventListener("focusout", (event) => {
     if (categoryLegend.contains(event.relatedTarget)) {
       return;
     }
-
     setCategoryMixHighlight(-1);
   });
-
   menuToggle?.addEventListener("click", () => body.classList.toggle("sidebar-open"));
   backdrop?.addEventListener("click", () => body.classList.remove("sidebar-open"));
   navItems.forEach((item) => item.addEventListener("click", () => setActiveView(item.dataset.navItem)));
@@ -4152,12 +2398,9 @@ const initializeInteractions = () => {
     }, 900);
   });
 };
-
 initializeInteractions();
-
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("./service-worker.js", { scope: "./" }).catch(() => null);
   });
 }
-
