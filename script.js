@@ -3,6 +3,8 @@ const {
   translations,
   t: translateText,
 } = window.aleclvExpenseTrackerI18n;
+const { createValidationApi } = window.aleclvExpenseTrackerValidation;
+const { createFinancialEngine } = window.aleclvExpenseTrackerFinancialEngine;
 const { registerAppEventListeners } = window.aleclvExpenseTrackerEvents;
 const {
   prefersReducedMotion,
@@ -311,215 +313,6 @@ const fetchExchangeRatePayload = async () => {
     }
   }
 };
-const isValidImportState = (value) => {
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
-    return false;
-  }
-
-  if (!Array.isArray(value.expenses)) {
-    return false;
-  }
-
-  if (!value.filters || typeof value.filters !== "object" || Array.isArray(value.filters)) {
-    return false;
-  }
-
-  const hasIncomeData = ["incomeBase", "income", "incomeExtra"].some((key) => Object.prototype.hasOwnProperty.call(value, key));
-  const hasValidExpenses = value.expenses.every((expense) => expense && typeof expense === "object" && !Array.isArray(expense));
-
-  return hasIncomeData && hasValidExpenses;
-};
-const normalizeImportToken = (value = "") =>
-  String(value || "")
-    .trim()
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
-const splitCsvLine = (line = "") => {
-  const values = [];
-  let currentValue = "";
-  let insideQuotes = false;
-
-  for (let index = 0; index < line.length; index += 1) {
-    const character = line[index];
-
-    if (character === '"') {
-      if (insideQuotes && line[index + 1] === '"') {
-        currentValue += '"';
-        index += 1;
-      } else {
-        insideQuotes = !insideQuotes;
-      }
-
-      continue;
-    }
-
-    if (character === "," && !insideQuotes) {
-      values.push(currentValue.trim());
-      currentValue = "";
-      continue;
-    }
-
-    currentValue += character;
-  }
-
-  values.push(currentValue.trim());
-  return values;
-};
-const parseImportCsvAmount = (value) => {
-  const rawValue = String(value || "").trim().replace(/\s/g, "").replace(/\$/g, "");
-
-  if (!rawValue) {
-    return null;
-  }
-
-  let normalizedValue = rawValue;
-
-  if (normalizedValue.includes(",") && normalizedValue.includes(".")) {
-    normalizedValue = normalizedValue.lastIndexOf(",") > normalizedValue.lastIndexOf(".")
-      ? normalizedValue.replace(/\./g, "").replace(",", ".")
-      : normalizedValue.replace(/,/g, "");
-  } else if (/^\d{1,3}(\.\d{3})+$/.test(normalizedValue)) {
-    normalizedValue = normalizedValue.replace(/\./g, "");
-  } else if (/^\d{1,3}(,\d{3})+$/.test(normalizedValue)) {
-    normalizedValue = normalizedValue.replace(/,/g, "");
-  } else if (normalizedValue.includes(",")) {
-    normalizedValue = normalizedValue.replace(/\./g, "").replace(",", ".");
-  }
-
-  const parsedAmount = Number(normalizedValue);
-  return Number.isFinite(parsedAmount) ? Math.abs(parsedAmount) : null;
-};
-const parseImportCsvDate = (value) => {
-  const rawValue = String(value || "").trim();
-  const buildStableImportedDate = (year, month, day) => {
-    const normalizedYear = Number(year);
-    const normalizedMonth = Number(month);
-    const normalizedDay = Number(day);
-    const parsedDate = new Date(normalizedYear, normalizedMonth - 1, normalizedDay, 12);
-
-    if (
-      Number.isNaN(parsedDate.getTime())
-      || parsedDate.getFullYear() !== normalizedYear
-      || parsedDate.getMonth() !== normalizedMonth - 1
-      || parsedDate.getDate() !== normalizedDay
-    ) {
-      return null;
-    }
-
-    return `${normalizedYear}-${String(normalizedMonth).padStart(2, "0")}-${String(normalizedDay).padStart(2, "0")}T12:00:00`;
-  };
-
-  if (!rawValue) {
-    return null;
-  }
-
-  const yearMonthDayMatch = rawValue.match(/^(\d{4})[/-](\d{1,2})[/-](\d{1,2})$/);
-
-  if (yearMonthDayMatch) {
-    const [, year, month, day] = yearMonthDayMatch;
-    return buildStableImportedDate(year, month, day);
-  }
-
-  const dayMonthYearMatch = rawValue.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})$/);
-
-  if (dayMonthYearMatch) {
-    const [, day, month, year] = dayMonthYearMatch;
-    return buildStableImportedDate(year, month, day);
-  }
-
-  const parsedDate = new Date(rawValue);
-  return Number.isNaN(parsedDate.getTime())
-    ? null
-    : buildStableImportedDate(parsedDate.getFullYear(), parsedDate.getMonth() + 1, parsedDate.getDate());
-};
-const parseImportCsvFrequency = (value) => {
-  const normalizedValue = normalizeImportToken(value);
-
-  if (!normalizedValue) {
-    return undefined;
-  }
-
-  if (/^fij/.test(normalizedValue)) {
-    return true;
-  }
-
-  if (/^vari/.test(normalizedValue)) {
-    return false;
-  }
-
-  return undefined;
-};
-const buildExpenseFromCsvRow = (row) => {
-  const movementType = normalizeImportToken(row.tipo);
-  const parsedDate = parseImportCsvDate(row.fecha);
-  const parsedAmount = parseImportCsvAmount(row.monto);
-
-  if (!movementType || !parsedDate || parsedAmount === null) {
-    return null;
-  }
-
-  const isIncomeMovement = /ingres/.test(movementType);
-  const isInvestmentMovement = /inver|aport/.test(movementType);
-  const isExpenseMovement = /gast/.test(movementType);
-
-  if (!isIncomeMovement && !isInvestmentMovement && !isExpenseMovement) {
-    return null;
-  }
-
-  const frequency = parseImportCsvFrequency(row.frecuencia);
-  const description = String(row.descripcion || "").trim() || (isIncomeMovement ? "Ingreso importado" : "Movimiento importado");
-
-  return {
-    title: description,
-    amount: isIncomeMovement ? -parsedAmount : parsedAmount,
-    category: isInvestmentMovement ? "Inversion" : String(row.categoria || "").trim() || "Otros",
-    date: parsedDate,
-    paymentMethod: String(row.metodo || "").trim(),
-    note: isIncomeMovement ? "Ingreso importado por CSV" : "",
-    isFixed: typeof frequency === "boolean" ? frequency : undefined,
-  };
-};
-const parseExpensesFromCsv = (contents) => {
-  const lines = String(contents || "")
-    .split(/\r?\n/)
-    .filter((line) => line.trim());
-
-  if (lines.length < 2) {
-    return null;
-  }
-
-  const normalizedHeaders = splitCsvLine(lines[0]).map(normalizeImportToken);
-
-  if (!["fecha", "tipo", "monto"].every((header) => normalizedHeaders.includes(header))) {
-    return null;
-  }
-
-  const getValueByHeader = (values, headerName) => {
-    const headerIndex = normalizedHeaders.indexOf(headerName);
-    return headerIndex >= 0 ? values[headerIndex] || "" : "";
-  };
-
-  return lines.slice(1).reduce((expenses, line) => {
-    const values = splitCsvLine(line);
-    const importedExpense = buildExpenseFromCsvRow({
-      fecha: getValueByHeader(values, "fecha"),
-      tipo: getValueByHeader(values, "tipo"),
-      categoria: getValueByHeader(values, "categoria"),
-      descripcion: getValueByHeader(values, "descripcion"),
-      monto: getValueByHeader(values, "monto"),
-      metodo: getValueByHeader(values, "metodo"),
-      frecuencia: getValueByHeader(values, "frecuencia"),
-    });
-
-    if (importedExpense) {
-      expenses.push(importedExpense);
-    }
-
-    return expenses;
-  }, []);
-};
-
 const isKnownView = (viewName) => Boolean(viewName && Object.prototype.hasOwnProperty.call(viewSections, viewName) && viewSections[viewName]);
 
 const readPersistedActiveView = () => {
@@ -569,6 +362,14 @@ const getExchangeRateUsdArs = () => {
   return Number.isFinite(parsedRate) && parsedRate > 0 ? parsedRate : DEFAULT_EXCHANGE_RATE_USD_ARS;
 };
 const t = (key, replacements = {}) => translateText(key, replacements, { language: getCurrentLanguage(), fallbackLanguage: DEFAULT_LANGUAGE });
+const validationApi = createValidationApi({ t });
+const {
+  isValidImportState,
+  parseExpensesFromCsv,
+  validateExpensePayload,
+  validateIncomePayload,
+  validateGoalPayload,
+} = validationApi;
 const convertMoneyForDisplay = (value) => {
   const safeValue = toSafeNumber(value);
   if (getCurrentCurrency() !== "USD") {
@@ -615,22 +416,6 @@ const getDisplayGoalLabel = (value = "") => {
   }
 
   return String(value).trim();
-};
-const getSavingsCapacityPercent = (remainingBalance, totalIncome) => (totalIncome > 0 ? roundCurrency((remainingBalance / totalIncome) * 100) : 0);
-const getSavingsCapacityState = (percent, totalIncome) => {
-  if (!(totalIncome > 0)) {
-    return "neutral";
-  }
-
-  if (percent > 40) {
-    return "excellent";
-  }
-
-  if (percent >= 20) {
-    return "healthy";
-  }
-
-  return "low";
 };
 const getSavingsCapacityStateLabel = (state) => t(`savingsCapacityStates.${state}`, { }) || t("savingsCapacityStates.low");
 const getSavingsCapacityTone = (state) => {
@@ -707,6 +492,39 @@ const getMonthLabel = (monthKey, options = {}) => {
   return Number.isNaN(date.getTime()) ? "" : new Intl.DateTimeFormat(getCurrentLocale(), { month: "long", year: "numeric", ...options }).format(date);
 };
 const getCalendarMonthLabel = (monthKey) => getMonthLabel(monthKey, { month: "short", year: undefined }).replace(".", "");
+const financialEngine = createFinancialEngine({
+  clamp,
+  roundCurrency,
+  isValidMonthKey,
+  getLatestMonthKey,
+  getMonthKey,
+  getCurrentMonthKey,
+  shiftMonthKey,
+  getYearFromMonthKey,
+  buildMonthKey,
+  isFutureMonthKey,
+  getDaysInMonth,
+  getExpenseDate,
+  getMonthLabel,
+  getCalendarMonthLabel,
+  defaultGoalLabel: DEFAULT_GOAL_LABEL,
+});
+const {
+  getSavingsCapacityPercent,
+  getSavingsCapacityState,
+  getActiveMonthKey,
+  getTotalIncome,
+  getExpensesForMonth,
+  getElapsedDaysForMonth,
+  buildCategoryBreakdown,
+  buildLegendCategories,
+  summarizeMonth,
+  calculatePercentChange,
+  compareMetric,
+  getTopCategoryShift,
+  computeMetrics,
+  buildYearContext,
+} = financialEngine;
 const getDefaultFilters = (state = getState()) => ({
   month: getLatestMonthKey(state.expenses),
   category: "all",
@@ -715,210 +533,6 @@ const getDefaultFilters = (state = getState()) => ({
   sort: "newest",
   search: "",
 });
-const getActiveMonthKey = (state) => (isValidMonthKey(state.filters.month) ? state.filters.month : getLatestMonthKey(state.expenses));
-const getTotalIncome = (state) => roundCurrency(Number(state.incomeBase || 0) + Number(state.incomeExtra || 0));
-const getExpensesForMonth = (expenses, monthKey) => expenses.filter((expense) => getMonthKey(expense.date) === monthKey);
-const getElapsedDaysForMonth = (monthKey, expenses) => {
-  const daysInMonth = getDaysInMonth(monthKey);
-
-  if (monthKey === getCurrentMonthKey()) {
-    return clamp(new Date().getDate(), 1, daysInMonth);
-  }
-
-  if (monthKey < getCurrentMonthKey()) {
-    return daysInMonth;
-  }
-
-  const latestDay = expenses.reduce((maxDay, expense) => {
-    const parsed = getExpenseDate(expense);
-    return Math.max(maxDay, parsed?.getDate() || 0);
-  }, 0);
-
-  return clamp(latestDay || 1, 1, daysInMonth);
-};
-
-const buildCategoryBreakdown = (expenses, totalSpent) => {
-  const totals = expenses.reduce((accumulator, expense) => {
-    const category = expense.category || "Otros";
-    accumulator[category] = roundCurrency((accumulator[category] || 0) + Number(expense.amount || 0));
-    return accumulator;
-  }, {});
-
-  return Object.entries(totals)
-    .map(([category, total]) => ({
-      category,
-      total,
-      share: totalSpent > 0 ? (total / totalSpent) * 100 : 0,
-    }))
-    .sort((left, right) => right.total - left.total);
-};
-
-const buildLegendCategories = (breakdown) => {
-  if (breakdown.length <= 5) {
-    return breakdown;
-  }
-
-  const remaining = breakdown.slice(4);
-
-  return [
-    ...breakdown.slice(0, 4),
-    {
-      category: "Otros",
-      total: roundCurrency(remaining.reduce((sum, item) => sum + item.total, 0)),
-      share: remaining.reduce((sum, item) => sum + item.share, 0),
-    },
-  ];
-};
-
-const summarizeMonth = (expenses, incomeTotal, monthKey) => {
-  const investmentTransactions = expenses.filter((expense) => expense.category === "Inversion");
-  const spendingTransactions = expenses.filter((expense) => expense.category !== "Inversion");
-  const totalSpent = roundCurrency(spendingTransactions.reduce((sum, expense) => sum + Number(expense.amount || 0), 0));
-  const totalInvested = roundCurrency(investmentTransactions.reduce((sum, expense) => sum + Number(expense.amount || 0), 0));
-  const fixedSpend = roundCurrency(spendingTransactions.filter((expense) => expense.isFixed).reduce((sum, expense) => sum + Number(expense.amount || 0), 0));
-  const variableSpend = roundCurrency(Math.max(totalSpent - fixedSpend, 0));
-  const investedThisMonth = totalInvested;
-  const investmentTransactionsCount = investmentTransactions.length;
-  const expenseTransactionCount = spendingTransactions.length;
-  const remainingBalance = roundCurrency(incomeTotal - totalSpent);
-  const liquidityFinal = roundCurrency(remainingBalance - investedThisMonth);
-  const savingsCapacityAmount = roundCurrency(Math.max(remainingBalance, 0));
-  const daysInMonth = getDaysInMonth(monthKey);
-  const elapsedDays = getElapsedDaysForMonth(monthKey, expenses);
-  const dailyAverage = roundCurrency(totalSpent / Math.max(elapsedDays, 1));
-  const spentRatio = incomeTotal > 0 ? (totalSpent / incomeTotal) * 100 : 0;
-  const savingsRate = incomeTotal > 0 ? (remainingBalance / incomeTotal) * 100 : 0;
-  const largestExpense = spendingTransactions.reduce((largest, expense) => {
-    if (!largest || Number(expense.amount || 0) > Number(largest.amount || 0)) {
-      return expense;
-    }
-
-    return largest;
-  }, null);
-  const categoryBreakdown = buildCategoryBreakdown(spendingTransactions, totalSpent);
-
-  return {
-    monthKey,
-    monthLabelLong: getMonthLabel(monthKey),
-    monthLabelShort: getMonthLabel(monthKey, { month: "short", year: undefined }).replace(".", ""),
-    monthLabelShortYear: getMonthLabel(monthKey, { month: "short", year: "numeric" }).replace(".", ""),
-    expenses,
-    spendingTransactions,
-    investmentTransactions,
-    transactionCount: expenses.length,
-    expenseTransactionCount,
-    totalSpent,
-    totalInvested,
-    fixedSpend,
-    variableSpend,
-    fixedShare: totalSpent > 0 ? (fixedSpend / totalSpent) * 100 : 0,
-    variableShare: totalSpent > 0 ? (variableSpend / totalSpent) * 100 : 0,
-    investedThisMonth,
-    investmentTransactionsCount,
-    remainingBalance,
-    liquidityFinal,
-    savingsCapacityAmount,
-    dailyAverage,
-    spentRatio,
-    savingsRate,
-    largestExpense,
-    categoryBreakdown,
-    topCategory: categoryBreakdown[0] || null,
-    activeCategoryCount: categoryBreakdown.length,
-    daysInMonth,
-    elapsedDays,
-    projectedMonthlySpend: totalSpent > 0 ? roundCurrency((totalSpent / Math.max(elapsedDays, 1)) * daysInMonth) : 0,
-    projectedInvestmentAmount: investedThisMonth > 0 ? roundCurrency((investedThisMonth / Math.max(elapsedDays, 1)) * daysInMonth) : 0,
-  };
-};
-
-const calculatePercentChange = (currentValue, previousValue, hasBaseline) => {
-  if (!hasBaseline || !Number.isFinite(previousValue) || previousValue === 0) {
-    return null;
-  }
-
-  return ((currentValue - previousValue) / previousValue) * 100;
-};
-
-const compareMetric = (currentValue, previousValue, hasBaseline) => ({
-  current: currentValue,
-  previous: previousValue,
-  difference: roundCurrency(currentValue - previousValue),
-  percent: calculatePercentChange(currentValue, previousValue, hasBaseline),
-});
-
-const getTopCategoryShift = (currentBreakdown, previousBreakdown) => {
-  const categories = new Set([
-    ...currentBreakdown.map((item) => item.category),
-    ...previousBreakdown.map((item) => item.category),
-  ]);
-
-  let winner = null;
-
-  categories.forEach((category) => {
-    const currentTotal = currentBreakdown.find((item) => item.category === category)?.total || 0;
-    const previousTotal = previousBreakdown.find((item) => item.category === category)?.total || 0;
-    const difference = roundCurrency(currentTotal - previousTotal);
-
-    if (!winner || Math.abs(difference) > Math.abs(winner.difference)) {
-      winner = {
-        category,
-        currentTotal,
-        previousTotal,
-        difference,
-      };
-    }
-  });
-
-  return winner;
-};
-
-const computeMetrics = (state) => {
-  const activeMonthKey = getActiveMonthKey(state);
-  const previousMonthKey = shiftMonthKey(activeMonthKey, -1);
-  const totalIncome = getTotalIncome(state);
-  const goalAmount = roundCurrency(Number(state.savingsGoalAmount || 0));
-  const goalLabel = String(state.savingsGoalLabel || "").trim() || DEFAULT_GOAL_LABEL;
-  const currentMonth = summarizeMonth(getExpensesForMonth(state.expenses, activeMonthKey), totalIncome, activeMonthKey);
-  const previousMonth = summarizeMonth(getExpensesForMonth(state.expenses, previousMonthKey), totalIncome, previousMonthKey);
-  const hasPreviousData = previousMonth.transactionCount > 0;
-  const goalProgressPercent = goalAmount > 0 ? roundCurrency(Math.max((currentMonth.investedThisMonth / goalAmount) * 100, 0)) : 0;
-  const goalRemainingAmount = goalAmount > 0 && currentMonth.investedThisMonth < goalAmount ? roundCurrency(goalAmount - currentMonth.investedThisMonth) : 0;
-  const goalExceededAmount = goalAmount > 0 && currentMonth.investedThisMonth >= goalAmount ? roundCurrency(currentMonth.investedThisMonth - goalAmount) : 0;
-  const isGoalMet = goalAmount > 0 && currentMonth.investedThisMonth >= goalAmount;
-  const savingsCapacityPercent = getSavingsCapacityPercent(currentMonth.remainingBalance, totalIncome);
-  const savingsCapacityState = getSavingsCapacityState(savingsCapacityPercent, totalIncome);
-
-  return {
-    ...currentMonth,
-    activeMonthKey,
-    previousMonthKey,
-    previousMonth,
-    previousMonthLabel: previousMonth.monthLabelShort || getMonthLabel(previousMonthKey, { month: "short", year: undefined }).replace(".", ""),
-    hasPreviousData,
-    incomeBase: Number(state.incomeBase || 0),
-    incomeExtra: Number(state.incomeExtra || 0),
-    totalIncome,
-    savingsCapacityAmount: currentMonth.savingsCapacityAmount,
-    savingsCapacityPercent,
-    savingsCapacityBarPercent: clamp(savingsCapacityPercent, 0, 100),
-    savingsCapacityState,
-    goalAmount,
-    goalLabel,
-    goalProgressPercent,
-    goalProgressBarPercent: clamp(goalProgressPercent, 0, 100),
-    goalRemainingAmount,
-    goalExceededAmount,
-    isGoalMet,
-    comparisons: {
-      totalSpent: compareMetric(currentMonth.totalSpent, previousMonth.totalSpent, hasPreviousData),
-      remainingBalance: compareMetric(currentMonth.remainingBalance, previousMonth.remainingBalance, hasPreviousData),
-      investedThisMonth: compareMetric(currentMonth.investedThisMonth, previousMonth.investedThisMonth, hasPreviousData),
-      dailyAverage: compareMetric(currentMonth.dailyAverage, previousMonth.dailyAverage, hasPreviousData),
-    },
-    topCategoryShift: hasPreviousData ? getTopCategoryShift(currentMonth.categoryBreakdown, previousMonth.categoryBreakdown) : null,
-  };
-};
 
 const getVisibleExpensesContext = (state, metrics = computeMetrics(state)) => {
   const filters = {
@@ -980,40 +594,6 @@ const getVisibleExpensesContext = (state, metrics = computeMetrics(state)) => {
     visibleExpenses,
     searchQuery,
     hasActiveFilters,
-  };
-};
-
-const buildYearContext = (state, metrics) => {
-  const activeYear = getYearFromMonthKey(metrics.activeMonthKey);
-  const months = Array.from({ length: 12 }, (_, index) => {
-    const monthKey = buildMonthKey(activeYear, index + 1);
-    const monthSummary = summarizeMonth(getExpensesForMonth(state.expenses, monthKey), metrics.totalIncome, monthKey);
-    const goalProgressPercent = metrics.goalAmount > 0 ? roundCurrency(Math.max((monthSummary.investedThisMonth / metrics.goalAmount) * 100, 0)) : 0;
-
-    return {
-      ...monthSummary,
-      shortLabel: getCalendarMonthLabel(monthKey),
-      goalProgressPercent,
-      goalProgressBarPercent: clamp(goalProgressPercent, 0, 100),
-      hasData: monthSummary.transactionCount > 0,
-      isActive: monthKey === metrics.activeMonthKey,
-      isFuture: isFutureMonthKey(monthKey),
-      isGoalMet: metrics.goalAmount > 0 && monthSummary.investedThisMonth >= metrics.goalAmount,
-    };
-  });
-  const monthsWithData = months.filter((month) => month.hasData);
-  const totalSpent = roundCurrency(months.reduce((sum, month) => sum + month.totalSpent, 0));
-  const totalInvested = roundCurrency(months.reduce((sum, month) => sum + month.investedThisMonth, 0));
-  const totalFree = roundCurrency(monthsWithData.reduce((sum, month) => sum + month.savingsCapacityAmount, 0));
-
-  return {
-    activeYear,
-    months,
-    monthsWithDataCount: monthsWithData.length,
-    yearIncomeReference: metrics.totalIncome > 0 ? roundCurrency(metrics.totalIncome * 12) : 0,
-    totalSpent,
-    totalInvested,
-    averageMonthlyFree: monthsWithData.length ? roundCurrency(totalFree / monthsWithData.length) : 0,
   };
 };
 
@@ -2596,50 +2176,6 @@ const showToast = (message, tone = "success") => {
     toast.classList.remove("toast--error");
     toast.hidden = true;
   }, TOAST_TIMEOUT_MS);
-};
-
-const validateExpensePayload = (payload) => {
-  if (!payload.title || payload.title.trim().length < 2) {
-    return t("validation.description");
-  }
-
-  if (!Number.isFinite(payload.amount) || payload.amount <= 0) {
-    return t("validation.amount");
-  }
-
-  if (!payload.category) {
-    return t("validation.category");
-  }
-
-  if (!payload.date || Number.isNaN(new Date(payload.date).getTime())) {
-    return t("validation.date");
-  }
-
-  if (!payload.paymentMethod) {
-    return t("validation.paymentMethod");
-  }
-
-  return "";
-};
-
-const validateIncomePayload = (incomeBase, incomeExtra) => {
-  if (!Number.isFinite(incomeBase) || incomeBase < 0) {
-    return t("validation.incomeBase");
-  }
-
-  if (!Number.isFinite(incomeExtra) || incomeExtra < 0) {
-    return t("validation.incomeExtra");
-  }
-
-  return "";
-};
-
-const validateGoalPayload = (goalAmount) => {
-  if (!Number.isFinite(goalAmount) || goalAmount <= 0) {
-    return t("validation.goalAmount");
-  }
-
-  return "";
 };
 
 const updateIncomePreview = () => {

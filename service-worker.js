@@ -8,6 +8,8 @@ const CORE_ASSETS = [
   "./i18n.js",
   "./dom.js",
   "./events.js",
+  "./financial-engine.js",
+  "./validation.js",
   "./utils.js",
   "./manifest.webmanifest",
   "./icons/icon-192.png",
