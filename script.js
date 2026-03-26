@@ -36,6 +36,7 @@ const EXCHANGE_RATE_TIMESTAMP_STORAGE_KEY = "exchange-rate-usd-ars-timestamp";
 const DEFAULT_LANGUAGE = "es";
 const DEFAULT_EXCHANGE_RATE_USD_ARS = 1450;
 const EXCHANGE_RATE_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+const EXCHANGE_RATE_REQUEST_TIMEOUT_MS = 8000;
 const EXCHANGE_RATE_API_URL = "https://open.er-api.com/v6/latest/USD";
 const DEFAULT_CURRENCY_BY_LANGUAGE = {
   es: "ARS",
@@ -1002,7 +1003,7 @@ const persistLanguageSettings = (language) => {
   }
 };
 const persistExchangeRate = (rate) => {
-  if (!canUseLocalStorage() || !(rate > 0)) {
+  if (!canUseLocalStorage() || !Number.isFinite(rate) || !(rate > 0)) {
     return;
   }
 
@@ -1014,6 +1015,35 @@ const persistExchangeRate = (rate) => {
   }
 };
 const isExchangeRateCacheFresh = (timestamp) => Number.isFinite(timestamp) && Date.now() - timestamp < EXCHANGE_RATE_CACHE_TTL_MS;
+const fetchExchangeRatePayload = async () => {
+  const controller = typeof AbortController === "function" ? new AbortController() : null;
+  let timeoutId = 0;
+
+  try {
+    const response = await Promise.race([
+      fetch(EXCHANGE_RATE_API_URL, {
+        cache: "no-store",
+        ...(controller ? { signal: controller.signal } : {}),
+      }),
+      new Promise((_, reject) => {
+        timeoutId = window.setTimeout(() => {
+          controller?.abort();
+          reject(new Error("exchange-rate-timeout"));
+        }, EXCHANGE_RATE_REQUEST_TIMEOUT_MS);
+      }),
+    ]);
+
+    if (!response.ok) {
+      throw new Error("exchange-rate-response");
+    }
+
+    return await response.json();
+  } finally {
+    if (timeoutId) {
+      window.clearTimeout(timeoutId);
+    }
+  }
+};
 const isValidImportState = (value) => {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     return false;
@@ -1095,6 +1125,23 @@ const parseImportCsvAmount = (value) => {
 };
 const parseImportCsvDate = (value) => {
   const rawValue = String(value || "").trim();
+  const buildStableImportedDate = (year, month, day) => {
+    const normalizedYear = Number(year);
+    const normalizedMonth = Number(month);
+    const normalizedDay = Number(day);
+    const parsedDate = new Date(normalizedYear, normalizedMonth - 1, normalizedDay, 12);
+
+    if (
+      Number.isNaN(parsedDate.getTime())
+      || parsedDate.getFullYear() !== normalizedYear
+      || parsedDate.getMonth() !== normalizedMonth - 1
+      || parsedDate.getDate() !== normalizedDay
+    ) {
+      return null;
+    }
+
+    return `${normalizedYear}-${String(normalizedMonth).padStart(2, "0")}-${String(normalizedDay).padStart(2, "0")}T12:00:00`;
+  };
 
   if (!rawValue) {
     return null;
@@ -1104,20 +1151,20 @@ const parseImportCsvDate = (value) => {
 
   if (yearMonthDayMatch) {
     const [, year, month, day] = yearMonthDayMatch;
-    const parsedDate = new Date(`${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}T12:00:00`);
-    return Number.isNaN(parsedDate.getTime()) ? null : parsedDate.toISOString();
+    return buildStableImportedDate(year, month, day);
   }
 
   const dayMonthYearMatch = rawValue.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})$/);
 
   if (dayMonthYearMatch) {
     const [, day, month, year] = dayMonthYearMatch;
-    const parsedDate = new Date(`${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}T12:00:00`);
-    return Number.isNaN(parsedDate.getTime()) ? null : parsedDate.toISOString();
+    return buildStableImportedDate(year, month, day);
   }
 
   const parsedDate = new Date(rawValue);
-  return Number.isNaN(parsedDate.getTime()) ? null : parsedDate.toISOString();
+  return Number.isNaN(parsedDate.getTime())
+    ? null
+    : buildStableImportedDate(parsedDate.getFullYear(), parsedDate.getMonth() + 1, parsedDate.getDate());
 };
 const parseImportCsvFrequency = (value) => {
   const normalizedValue = normalizeImportToken(value);
@@ -2339,20 +2386,17 @@ const translateStaticUi = () => {
 
 const refreshExchangeRate = async ({ force = false } = {}) => {
   const cachedTimestamp = readPersistedExchangeRateTimestamp();
+  const currentRate = Number(uiState.exchangeRateUsdArs);
+  const fallbackRate = Number.isFinite(currentRate) && currentRate > 0 ? currentRate : readPersistedExchangeRate();
 
   if (!force && isExchangeRateCacheFresh(cachedTimestamp)) {
     return;
   }
 
   try {
-    const response = await fetch(EXCHANGE_RATE_API_URL, { cache: "no-store" });
-    if (!response.ok) {
-      throw new Error("exchange-rate-response");
-    }
-
-    const payload = await response.json();
+    const payload = await fetchExchangeRatePayload();
     const parsedRate = Number(payload?.rates?.ARS);
-    if (!(parsedRate > 0)) {
+    if (!Number.isFinite(parsedRate) || !(parsedRate > 0)) {
       throw new Error("exchange-rate-value");
     }
 
@@ -2363,7 +2407,7 @@ const refreshExchangeRate = async ({ force = false } = {}) => {
       renderDashboard(false);
     }
   } catch (error) {
-    uiState.exchangeRateUsdArs = readPersistedExchangeRate();
+    uiState.exchangeRateUsdArs = fallbackRate;
   }
 };
 
