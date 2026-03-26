@@ -1,0 +1,70 @@
+.dashboard {
+  width: min(100%, var(--content-max));
+  margin: 0 auto;
+  padding: 18px 18px 0;
+  outline: none;
+}
+
+.dashboard-state--content {
+  animation: rise 520ms ease both;
+}
+
+.dashboard-state--content {
+  display: grid;
+  gap: 20px;
+}
+
+.dashboard-views {
+  min-height: 0;
+}
+
+.dashboard-view {
+  display: grid;
+  gap: 20px;
+  width: 100%;
+  min-height: 0;
+  align-content: start;
+  isolation: isolate;
+}
+
+.dashboard-view[hidden] {
+  display: none !important;
+}
+
+.dashboard-view.is-hidden {
+  display: none !important;
+}
+
+.dashboard-view.is-active {
+  animation: viewEnter 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.flow-view {
+  gap: 24px;
+}
+
+.flow-section {
+  display: grid;
+  gap: 18px;
+}
+
+.flow-section--insights {
+  padding-top: 4px;
+}
+
+.topbar__actions[hidden] {
+  display: none !important;
+}
+
+.hero-grid,
+.charts-grid,
+.content-grid {
+  display: grid;
+  gap: 18px;
+}
+
+.content-grid--income {
+  gap: 18px;
+  align-items: start;
+}
+
