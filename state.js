@@ -2,6 +2,7 @@
   const { generateId } = window.aleclvExpenseTrackerUtils;
 
   const STORAGE_KEY = "aleclv-salary-planner-state";
+  const BACKUP_STORAGE_KEY = "aleclv-salary-planner-state:startup-backup";
   const COMPAT_STORAGE_KEYS = ["aleclv-expense-tracker-state", "aleclv-finance-state"];
   const SCHEMA_VERSION = 5;
   const MONTH_FILTER_PATTERN = /^\d{4}-\d{2}$/;
@@ -525,6 +526,37 @@
     return cloneValue(normalizedState);
   };
 
+  const backupPersistedStateOnce = () => {
+    if (!hasStorage()) {
+      return;
+    }
+
+    try {
+      if (window.localStorage.getItem(BACKUP_STORAGE_KEY)) {
+        return;
+      }
+
+      const sourceKey = [STORAGE_KEY, ...COMPAT_STORAGE_KEYS].find((storageKey) => {
+        const rawState = window.localStorage.getItem(storageKey);
+        return typeof rawState === "string" && rawState.length > 0;
+      });
+
+      if (!sourceKey) {
+        return;
+      }
+
+      const rawState = window.localStorage.getItem(sourceKey);
+
+      if (!rawState) {
+        return;
+      }
+
+      window.localStorage.setItem(BACKUP_STORAGE_KEY, rawState);
+    } catch (error) {
+      return;
+    }
+  };
+
   const loadState = () => {
     if (!hasStorage()) {
       return null;
@@ -553,6 +585,7 @@
   };
 
   const initializeState = () => {
+    backupPersistedStateOnce();
     const persistedState = loadState();
 
     if (persistedState) {

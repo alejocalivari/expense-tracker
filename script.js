@@ -1,5 +1,12 @@
 const { getSampleState, getState, setState, updateState } = window.aleclvExpenseTrackerState;
 const {
+  translations,
+  t: translateText,
+} = window.aleclvExpenseTrackerI18n;
+const { createValidationApi } = window.aleclvExpenseTrackerValidation;
+const { createFinancialEngine } = window.aleclvExpenseTrackerFinancialEngine;
+const { registerAppEventListeners } = window.aleclvExpenseTrackerEvents;
+const {
   prefersReducedMotion,
   clamp,
   roundCurrency,
@@ -24,6 +31,110 @@ const {
   formatDate,
   generateId,
 } = window.aleclvExpenseTrackerUtils;
+const {
+  body,
+  topbar,
+  openIncomeButtons,
+  openGoalButtons,
+  openInvestmentButtons,
+  openExpenseButtons,
+  modalRestoreButtons,
+  menuToggle,
+  backdrop,
+  navItems,
+  openFilterButtons,
+  openImportJsonButtons,
+  openImportCsvButtons,
+  openExportButtons,
+  importJsonInput,
+  importCsvInput,
+  languageSwitch,
+  languageOptionButtons,
+  exchangeRateNote,
+  searchInput,
+  topbarActions,
+  topbarEyebrow,
+  topbarSearch,
+  topbarFilters,
+  dashboardMain,
+  expenseList,
+  expenseResults,
+  insightList,
+  fab,
+  fabLabel,
+  modal,
+  modalPanels,
+  modalCloseButton,
+  modalCloseTriggers,
+  modalEyebrow,
+  modalTitle,
+  modalCopy,
+  expenseForm,
+  incomeForm,
+  goalForm,
+  formFeedback,
+  incomeFeedback,
+  goalFeedback,
+  formSubmit,
+  incomeBaseInput,
+  incomeExtraInput,
+  incomeTotalPreview,
+  incomeMonthLabel,
+  goalAmountInput,
+  goalLabelInput,
+  goalAmountPreview,
+  goalLabelPreview,
+  confirmDeleteButton,
+  confirmTitle,
+  confirmDate,
+  confirmCopy,
+  confirmAmount,
+  filterForm,
+  filterMonthInput,
+  filterCategoryInput,
+  filterPaymentMethodInput,
+  filterExpenseTypeInput,
+  filterSortInput,
+  filterSearchPreview,
+  filterResultsCopy,
+  clearFiltersButton,
+  exportJsonButton,
+  exportCsvButton,
+  exportSummary,
+  exportFilename,
+  exportCopy,
+  confirmRestoreButton,
+  toast,
+  donutChart,
+  categoryLegend,
+  lineActualPath,
+  lineTargetPath,
+  lineAreaPath,
+  linePoints,
+  lineAxis,
+  calendarGrid,
+  calendarYearLabel,
+  calendarCopy,
+  calendarSummaryNote,
+  calendarShiftButtons,
+  viewSections,
+  kpiElements,
+  kpiDeltaElements,
+  kpiCaptionElements,
+  kpiSecondaryElements,
+  kpiBarElements,
+  kpiCardElements,
+  heroCardElement,
+  yearSummaryElements,
+  summaryElements,
+  textElements,
+  heroDifferenceCardElement,
+  comparisonElements,
+  labelElements,
+  barElements,
+  statusElements,
+  stackedSegments,
+} = window.aleclvExpenseTrackerDom;
 
 const TOAST_TIMEOUT_MS = 2600;
 const MONTH_KEY_PATTERN = /^\d{4}-\d{2}$/;
@@ -36,758 +147,11 @@ const EXCHANGE_RATE_TIMESTAMP_STORAGE_KEY = "exchange-rate-usd-ars-timestamp";
 const DEFAULT_LANGUAGE = "es";
 const DEFAULT_EXCHANGE_RATE_USD_ARS = 1450;
 const EXCHANGE_RATE_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+const EXCHANGE_RATE_REQUEST_TIMEOUT_MS = 8000;
 const EXCHANGE_RATE_API_URL = "https://open.er-api.com/v6/latest/USD";
 const DEFAULT_CURRENCY_BY_LANGUAGE = {
   es: "ARS",
   en: "USD",
-};
-const translations = {
-  es: {
-    locale: "es-AR",
-    currency: "ARS",
-  },
-  en: {
-    locale: "en-US",
-    currency: "USD",
-  },
-};
-translations.es.views = {
-  resumen: "Resumen",
-  flujo: "Flujo",
-  ingreso: "Ingreso",
-  actividad: "Actividad",
-  calendario: "Calendario",
-};
-translations.en.views = {
-  resumen: "Summary",
-  flujo: "Flow",
-  ingreso: "Income",
-  actividad: "Activity",
-  calendario: "Calendar",
-};
-
-translations.es.topbar = {
-  resumenEyebrow: "vision general",
-  resumenTitle: "{month} - resumen mensual del salario",
-  flujoEyebrow: "analisis del mes",
-  flujoTitle: "flujo del mes",
-  ingresoEyebrow: "control del mes",
-  ingresoTitle: "plan de ingreso del mes",
-  actividadEyebrow: "operaciones del mes",
-  actividadTitle: "movimientos del mes",
-  calendarioEyebrow: "planificacion anual",
-  calendarioTitle: "plan anual por mes",
-};
-translations.en.topbar = {
-  resumenEyebrow: "monthly overview",
-  resumenTitle: "{month} - salary snapshot",
-  flujoEyebrow: "month analysis",
-  flujoTitle: "monthly flow",
-  ingresoEyebrow: "month control",
-  ingresoTitle: "monthly income plan",
-  actividadEyebrow: "month activity",
-  actividadTitle: "monthly movements",
-  calendarioEyebrow: "annual planning",
-  calendarioTitle: "annual month plan",
-};
-
-translations.es.search = {
-  aria: "Buscar",
-  placeholder: "Buscar descripcion, categoria, medio de pago o nota",
-};
-translations.en.search = {
-  aria: "Search",
-  placeholder: "Search description, category, payment method or note",
-};
-
-translations.es.sidebar = {
-  primaryAria: "Principal",
-  mobileAria: "Movil",
-  brandEyebrow: "plan de dinero mensual",
-  activeMonthEyebrow: "Mes activo",
-  savingsCapacity: "Capacidad de ahorro",
-  availableToSave: "Disponible para ahorrar",
-  profileEyebrow: "Perfil",
-  personalSpace: "Espacio personal",
-};
-translations.en.sidebar = {
-  primaryAria: "Primary",
-  mobileAria: "Mobile",
-  brandEyebrow: "monthly money plan",
-  activeMonthEyebrow: "Active month",
-  savingsCapacity: "Savings capacity",
-  availableToSave: "Available to save",
-  profileEyebrow: "Profile",
-  personalSpace: "Personal space",
-};
-
-translations.es.status = {
-  noData: "Sin datos",
-  noBase: "Sin base",
-  noIncome: "Sin ingreso",
-  atRisk: "En riesgo",
-  comfortable: "Sobrado",
-  controlled: "Controlado",
-  tight: "Ajustado",
-  onTrack: "Vas bien",
-  inBalance: "En equilibrio",
-  overspending: "Te estas pasando",
-  goalMet: "Meta cumplida",
-  onPace: "En ritmo",
-  noContributions: "Sin aportes",
-  stable: "Estable",
-  currentAverage: "Promedio actual",
-  editable: "Editable",
-  noExpenses: "Sin gastos",
-  withMovements: "Con movimientos",
-  future: "Futuro",
-  noGoal: "Sin meta",
-};
-translations.en.status = {
-  noData: "No data",
-  noBase: "No baseline",
-  noIncome: "No income",
-  atRisk: "At risk",
-  comfortable: "Comfortable",
-  controlled: "Controlled",
-  tight: "Tight",
-  onTrack: "You are on track",
-  inBalance: "Balanced",
-  overspending: "You are overspending",
-  goalMet: "Goal met",
-  onPace: "On pace",
-  noContributions: "No contributions",
-  stable: "Stable",
-  currentAverage: "Current average",
-  editable: "Editable",
-  noExpenses: "No expenses",
-  withMovements: "With movements",
-  future: "Future",
-  noGoal: "No goal",
-};
-
-translations.es.savingsCapacityStates = {
-  neutral: "Sin ingreso",
-  excellent: "Excelente",
-  healthy: "Saludable",
-  low: "Bajo",
-};
-translations.en.savingsCapacityStates = {
-  neutral: "No income",
-  excellent: "Excellent",
-  healthy: "Healthy",
-  low: "Low",
-};
-translations.es.hero = {
-  eyebrow: "Liquidez final",
-  title: "Disponible hasta proximo ingreso",
-  ariaLabel: "Resumen de liquidez",
-  dailySpend: "Gasto diario",
-  dailyLimit: "Limite diario",
-  difference: "Diferencia",
-  closingPositive: "Cierre estimado: {amount}",
-  closingNegative: "Vas a cerrar en negativo (-{amount})",
-  deviationCost: "Costo de desviarte: {amount}",
-  registerExpense: "Registrar gasto",
-  riskLiquidity: "Liquidez negativa",
-  riskDaily: "Gasto diario superior al limite",
-  riskClosing: "Cierre mensual en negativo",
-};
-translations.en.hero = {
-  eyebrow: "Final liquidity",
-  title: "Available until next income",
-  ariaLabel: "Liquidity summary",
-  dailySpend: "Daily spend",
-  dailyLimit: "Daily limit",
-  difference: "Difference",
-  closingPositive: "Closing projection: {amount}",
-  closingNegative: "You will close negative (-{amount})",
-  deviationCost: "Cost of drifting: {amount}",
-  registerExpense: "Add expense",
-  riskLiquidity: "Negative liquidity",
-  riskDaily: "Daily spending is above the limit",
-  riskClosing: "Monthly closing is negative",
-};
-
-translations.es.goal = {
-  eyebrow: "Meta mensual",
-  defaultLabel: "Meta mensual de inversion",
-  noteDefault: "La meta solo suma los movimientos cargados en la categoria Inversion.",
-  objective: "Objetivo",
-  investedThisMonth: "Invertido este mes",
-  progress: "Progreso de inversion",
-  toInvest: "Te falta invertir",
-  exceeded: "Excedente sobre la meta",
-  comparisonLabel: "Comparacion con el mes anterior",
-  comparisonSpent: "Gastos",
-  comparisonAvailable: "Disponible antes de invertir",
-  comparisonInvested: "Invertido",
-  comparisonCategoryShift: "Cambio de categoria",
-};
-translations.en.goal = {
-  eyebrow: "Monthly goal",
-  defaultLabel: "Monthly investment goal",
-  noteDefault: "The goal only adds movements recorded in the Investment category.",
-  objective: "Target",
-  investedThisMonth: "Invested this month",
-  progress: "Investment progress",
-  toInvest: "Still to invest",
-  exceeded: "Above target",
-  comparisonLabel: "Comparison with previous month",
-  comparisonSpent: "Expenses",
-  comparisonAvailable: "Available before investing",
-  comparisonInvested: "Invested",
-  comparisonCategoryShift: "Category shift",
-};
-
-translations.es.flow = {
-  ariaLabel: "Flujo financiero del mes",
-  eyebrow: "Flujo mensual",
-  title: "Del ingreso a la liquidez final",
-  note: "Una lectura lineal del mes para entender cuanto entro, cuanto salio, cuanto reservaste y cuanto te queda de verdad.",
-  totalIncome: "Ingreso total",
-  totalIncomeCopy: "Todo lo que entro este mes.",
-  spent: "Gastos",
-  spentCopy: "Tus gastos de vida del periodo.",
-  availableBeforeInvesting: "Disponible antes de invertir",
-  availableBeforeInvestingCopy: "Liquidez previa a cualquier aporte.",
-  investment: "Inversion",
-  investmentCopy: "Decision mensual registrada en la meta.",
-  liquidityFinal: "Liquidez final",
-  liquidityFinalCopy: "Lo que realmente tienes disponible hoy.",
-};
-translations.en.flow = {
-  ariaLabel: "Financial flow of the month",
-  eyebrow: "Monthly flow",
-  title: "From income to final liquidity",
-  note: "A simple month read so you can see what came in, what went out, what you set aside and what is truly left.",
-  totalIncome: "Total income",
-  totalIncomeCopy: "Everything that came in this month.",
-  spent: "Expenses",
-  spentCopy: "Your living expenses for the period.",
-  availableBeforeInvesting: "Available before investing",
-  availableBeforeInvestingCopy: "Liquidity before any contribution.",
-  investment: "Investment",
-  investmentCopy: "Monthly decision recorded in the goal.",
-  liquidityFinal: "Final liquidity",
-  liquidityFinalCopy: "What you truly have available today.",
-};
-
-translations.es.charts = {
-  distributionEyebrow: "Distribucion",
-  distributionTitle: "Gastos por categoria",
-  totalExpenses: "Gastos totales",
-  evolutionEyebrow: "Evolucion",
-  evolutionTitle: "Ritmo del mes",
-  actual: "Actual",
-  projection: "Proyeccion",
-  axisLabel: "Gastos acumulados del mes",
-  readingEyebrow: "Lectura",
-  readingTitle: "Claves del mes",
-  indicators: "{count} indicadores",
-  noCategories: "Sin categorias",
-  noCategoriesCopy: "Carga gastos reales para ver la mezcla del mes.",
-};
-translations.en.charts = {
-  distributionEyebrow: "Distribution",
-  distributionTitle: "Expenses by category",
-  totalExpenses: "Total expenses",
-  evolutionEyebrow: "Trend",
-  evolutionTitle: "Month pace",
-  actual: "Actual",
-  projection: "Projection",
-  axisLabel: "Accumulated monthly expenses",
-  readingEyebrow: "Reading",
-  readingTitle: "Month highlights",
-  indicators: "{count} indicators",
-  noCategories: "No categories",
-  noCategoriesCopy: "Add real expenses to see this month's mix.",
-};
-
-translations.es.insights = {
-  incomeUse: "Uso del ingreso",
-  savingsCapacity: "Capacidad de ahorro",
-  dailyAverage: "Promedio diario",
-  closingProjection: "Proyeccion de cierre",
-  dominantCategory: "Categoria dominante",
-  monthlyInvestment: "Inversion del mes",
-  noCategory: "Sin categoria",
-};
-translations.en.insights = {
-  incomeUse: "Income usage",
-  savingsCapacity: "Savings capacity",
-  dailyAverage: "Daily average",
-  closingProjection: "Closing projection",
-  dominantCategory: "Top category",
-  monthlyInvestment: "Monthly investment",
-  noCategory: "No category",
-};
-
-translations.es.income = {
-  eyebrow: "Plan del ingreso",
-  title: "Centro de control del mes",
-  kpiAria: "Resumen del ingreso",
-  totalIncome: "Ingreso total",
-  basePlusExtra: "Base + extra",
-  balance: "Saldo disponible",
-  afterExpenses: "Despues de gastos",
-  savingsCapacity: "Capacidad de ahorro",
-  currentMargin: "Margen actual",
-  monthUseBase: "Se usa como base para {month}.",
-  compositionEyebrow: "Ingreso",
-  compositionTitle: "Composicion del mes",
-  baseIncome: "Ingreso base",
-  extraIncome: "Ingreso extra",
-  resultEyebrow: "Resultado",
-  resultTitle: "Meta y margen real del mes",
-  availableToSave: "Disponible para ahorrar",
-  investedThisMonth: "Invertido este mes",
-  actionsEyebrow: "Acciones del mes",
-  actionsTitle: "Ajustes y aportes",
-  editIncome: "Editar ingreso mensual",
-  editGoal: "Editar meta mensual",
-  registerInvestment: "Registrar inversion",
-  languageLabel: "Idioma",
-  exchangeNote: "Tipo de cambio USD: ExchangeRate-API",
-};
-translations.en.income = {
-  eyebrow: "Income plan",
-  title: "Month control center",
-  kpiAria: "Income summary",
-  totalIncome: "Total income",
-  basePlusExtra: "Base + extra",
-  balance: "Available balance",
-  afterExpenses: "After expenses",
-  savingsCapacity: "Savings capacity",
-  currentMargin: "Current margin",
-  monthUseBase: "Used as the base for {month}.",
-  compositionEyebrow: "Income",
-  compositionTitle: "Month composition",
-  baseIncome: "Base income",
-  extraIncome: "Extra income",
-  resultEyebrow: "Result",
-  resultTitle: "Goal and real margin this month",
-  availableToSave: "Available to save",
-  investedThisMonth: "Invested this month",
-  actionsEyebrow: "Month actions",
-  actionsTitle: "Adjustments and contributions",
-  editIncome: "Edit monthly income",
-  editGoal: "Edit monthly goal",
-  registerInvestment: "Add investment",
-  languageLabel: "Language",
-  exchangeNote: "USD rate via ExchangeRate-API",
-};
-
-translations.es.activity = {
-  eyebrow: "Operaciones",
-  title: "Movimientos del mes",
-  visibleResults: "{count} visible(s)",
-  filters: "Filtros",
-  importJson: "Importar JSON",
-  importCsv: "Importar CSV",
-  export: "Exportar",
-};
-translations.en.activity = {
-  eyebrow: "Operations",
-  title: "Monthly movements",
-  visibleResults: "{count} visible",
-  filters: "Filters",
-  importJson: "Import JSON",
-  importCsv: "Import CSV",
-  export: "Export",
-};
-
-translations.es.calendar = {
-  eyebrow: "Calendario",
-  title: "Plan anual por mes",
-  previousYear: "Año anterior",
-  nextYear: "Año siguiente",
-  incomeReference: "Ingreso anual de referencia",
-  spentYear: "Gastos del año",
-  investedYear: "Invertido del año",
-  averageAvailable: "Promedio disponible para ahorrar",
-};
-translations.en.calendar = {
-  eyebrow: "Calendar",
-  title: "Annual month plan",
-  previousYear: "Previous year",
-  nextYear: "Next year",
-  incomeReference: "Reference yearly income",
-  spentYear: "Year expenses",
-  investedYear: "Year invested",
-  averageAvailable: "Average available to save",
-};
-translations.es.modal = {
-  closeButton: "Cerrar modal",
-  cancel: "Cancelar",
-  saveExpense: "Guardar gasto",
-  saveContribution: "Guardar aporte",
-  saveIncome: "Guardar ingreso",
-  saveGoal: "Guardar meta",
-  formEyebrow: "Registrar movimiento",
-  expenseTitle: "Registrar gasto",
-  expenseCopy: "Carga un gasto real del mes sin salir del planner.",
-  investmentEyebrow: "Registrar inversion",
-  investmentTitle: "Registrar inversion",
-  investmentCopy: "La categoria Inversion ya queda seleccionada para registrar un aporte real del mes.",
-  editExpenseEyebrow: "Editar gasto",
-  editExpenseTitle: "Editar gasto",
-  editExpenseCopy: "Actualiza el gasto y el resumen del mes se recalcula al instante.",
-  editInvestmentEyebrow: "Editar inversion",
-  editInvestmentTitle: "Editar aporte",
-  editInvestmentCopy: "Actualiza el aporte y el progreso de la meta se recalcula al instante.",
-  description: "Descripcion",
-  amount: "Monto",
-  date: "Fecha",
-  category: "Categoria",
-  categoryPlaceholder: "Elegir categoria",
-  paymentMethod: "Medio de pago",
-  paymentMethodPlaceholder: "Elegir medio de pago",
-  notes: "Notas",
-  notesPlaceholder: "Detalle opcional del movimiento",
-  movementType: "Tipo de movimiento",
-  markFixed: "Marcar como fijo",
-  fixedHelp: "Ideal para servicios, cuotas, suscripciones o pagos mensuales.",
-  incomeEyebrow: "Ingreso mensual",
-  incomeTitle: "Editar ingreso del mes",
-  incomeCopy: "Separa tu ingreso base del extra para entender mejor cuanto margen real te queda.",
-  incomeBase: "Ingreso base",
-  incomeExtra: "Ingreso extra",
-  incomeTotalCalculated: "Ingreso total calculado",
-  incomeTotalEditCopy: "El total se actualiza al instante mientras editas ingreso base y extra.",
-  goalEyebrow: "Meta mensual",
-  goalTitle: "Editar objetivo mensual de inversion",
-  goalCopy: "Define cuanto quieres invertir este mes. La meta solo avanza con movimientos cargados en la categoria Inversion.",
-  goalAmount: "Monto objetivo",
-  goalOptionalLabel: "Etiqueta opcional",
-  goalSummary: "Resumen de meta",
-  goalExample: "Ejemplo realista para este tracker: $740.000 ARS, equivalente aproximado a 500 USD. Solo suma aportes en Inversion.",
-  deleteEyebrow: "Eliminar movimiento",
-  deleteTitle: "Quitar este movimiento?",
-  deleteNote: "El total del mes se actualiza al instante y esta accion no se puede deshacer.",
-  deleteAction: "Eliminar movimiento",
-  filtersEyebrow: "Vista",
-  filtersTitle: "Filtros",
-  filtersCopy: "El mes define el contexto del tablero y el resto de los filtros ajusta la lista visible y las exportaciones.",
-  month: "Mes",
-  expenseType: "Tipo de movimiento",
-  sortBy: "Ordenar por",
-  currentSearch: "Busqueda actual",
-  restoreSample: "Restaurar datos de muestra",
-  done: "Listo",
-  exportEyebrow: "Exportacion",
-  exportTitle: "Exportar movimientos visibles",
-  exportCopy: "La exportacion respeta el mes, la busqueda y todos los filtros activos.",
-  close: "Cerrar",
-  exportJson: "Exportar JSON",
-  exportCsv: "Exportar CSV",
-  resetEyebrow: "Restaurar muestra",
-  resetTitle: "Reemplazar tus datos actuales?",
-  resetCopy: "Esto vuelve a cargar la muestra incluida con el planner y pisa el estado guardado en este navegador.",
-  sampleData: "Datos de muestra",
-  sampleDataCopy: "Se restablecen ingreso, movimientos, categorias, resumenes y filtros para seguir explorando el planner.",
-  sampleDataHint: "Usalo si quieres volver a una base limpia sin perder la estructura realista de la interfaz.",
-  restoreSampleAction: "Restaurar muestra",
-};
-translations.en.modal = {
-  closeButton: "Close modal",
-  cancel: "Cancel",
-  saveExpense: "Save expense",
-  saveContribution: "Save contribution",
-  saveIncome: "Save income",
-  saveGoal: "Save goal",
-  formEyebrow: "Add movement",
-  expenseTitle: "Add expense",
-  expenseCopy: "Record a real expense for the month without leaving the planner.",
-  investmentEyebrow: "Add investment",
-  investmentTitle: "Add investment",
-  investmentCopy: "The Investment category is preselected so you can record a real monthly contribution.",
-  editExpenseEyebrow: "Edit expense",
-  editExpenseTitle: "Edit expense",
-  editExpenseCopy: "Update the expense and the monthly summary recalculates instantly.",
-  editInvestmentEyebrow: "Edit investment",
-  editInvestmentTitle: "Edit contribution",
-  editInvestmentCopy: "Update the contribution and goal progress recalculates instantly.",
-  description: "Description",
-  amount: "Amount",
-  date: "Date",
-  category: "Category",
-  categoryPlaceholder: "Choose category",
-  paymentMethod: "Payment method",
-  paymentMethodPlaceholder: "Choose payment method",
-  notes: "Notes",
-  notesPlaceholder: "Optional movement detail",
-  movementType: "Movement type",
-  markFixed: "Mark as fixed",
-  fixedHelp: "Useful for utilities, installments, subscriptions or monthly payments.",
-  incomeEyebrow: "Monthly income",
-  incomeTitle: "Edit monthly income",
-  incomeCopy: "Separate base and extra income to understand your real margin more clearly.",
-  incomeBase: "Base income",
-  incomeExtra: "Extra income",
-  incomeTotalCalculated: "Calculated total income",
-  incomeTotalEditCopy: "The total updates instantly while you edit base and extra income.",
-  goalEyebrow: "Monthly goal",
-  goalTitle: "Edit monthly investment target",
-  goalCopy: "Define how much you want to invest this month. The goal only moves with transactions recorded in the Investment category.",
-  goalAmount: "Target amount",
-  goalOptionalLabel: "Optional label",
-  goalSummary: "Goal summary",
-  goalExample: "Realistic example for this tracker: ARS 740,000, roughly equal to USD 500. Only real Investment contributions count.",
-  deleteEyebrow: "Delete movement",
-  deleteTitle: "Remove this movement?",
-  deleteNote: "The monthly total updates instantly and this action cannot be undone.",
-  deleteAction: "Delete movement",
-  filtersEyebrow: "View",
-  filtersTitle: "Filters",
-  filtersCopy: "The month defines dashboard context and the rest of the filters adjust the visible list and exports.",
-  month: "Month",
-  expenseType: "Movement type",
-  sortBy: "Sort by",
-  currentSearch: "Current search",
-  restoreSample: "Restore sample data",
-  done: "Done",
-  exportEyebrow: "Export",
-  exportTitle: "Export visible movements",
-  exportCopy: "Export respects the active month, search and every current filter.",
-  close: "Close",
-  exportJson: "Export JSON",
-  exportCsv: "Export CSV",
-  resetEyebrow: "Restore sample",
-  resetTitle: "Replace your current data?",
-  resetCopy: "This reloads the built-in sample and overwrites the state saved in this browser.",
-  sampleData: "Sample data",
-  sampleDataCopy: "Income, movements, categories, summaries and filters are reset so you can keep exploring the planner.",
-  sampleDataHint: "Use it if you want a clean base without losing the realistic interface structure.",
-  restoreSampleAction: "Restore sample",
-};
-
-translations.es.filters = {
-  allCategories: "Todas las categorias",
-  allMethods: "Todos los medios",
-  allMovementTypes: "Fijos y variables",
-  onlyFixed: "Solo fijos",
-  onlyVariable: "Solo variables",
-  newest: "Mas recientes primero",
-  oldest: "Mas antiguos primero",
-  highest: "Monto mas alto",
-  lowest: "Monto mas bajo",
-  noSearch: "Sin busqueda aplicada",
-  searchPreview: "Busqueda: \"{query}\"",
-  resultsCopy: "{count} resultado(s) en {month}. Orden actual: {sort}.",
-  clearFilters: "Limpiar filtros",
-};
-translations.en.filters = {
-  allCategories: "All categories",
-  allMethods: "All methods",
-  allMovementTypes: "Fixed and variable",
-  onlyFixed: "Fixed only",
-  onlyVariable: "Variable only",
-  newest: "Newest first",
-  oldest: "Oldest first",
-  highest: "Highest amount",
-  lowest: "Lowest amount",
-  noSearch: "No active search",
-  searchPreview: "Search: \"{query}\"",
-  resultsCopy: "{count} result(s) in {month}. Current sort: {sort}.",
-  clearFilters: "Clear filters",
-};
-
-translations.es.exportState = {
-  ready: "{count} movimiento(s) listos para exportar",
-  copy: "Incluye filtros de {month}: {category}, {method}.",
-  empty: "No hay movimientos visibles para exportar con los filtros actuales.",
-  allCategories: "todas las categorias",
-  allMethods: "todos los medios",
-};
-translations.en.exportState = {
-  ready: "{count} movement(s) ready to export",
-  copy: "Includes filters for {month}: {category}, {method}.",
-  empty: "There are no visible movements to export with the current filters.",
-  allCategories: "all categories",
-  allMethods: "all payment methods",
-};
-
-translations.es.emptyState = {
-  noExpensesTitle: "No hay gastos en {month}",
-  noExpensesCopy: "Empieza cargando un gasto real o registra una inversion para medir por separado tu saldo disponible y el avance real de la meta.",
-  noFilteredTitle: "No hay movimientos con estos filtros",
-  noFilteredCopy: "Prueba limpiar categoria, medio de pago, tipo de movimiento o la busqueda para volver a ver resultados.",
-  loadSample: "Cargar muestra",
-  adjustFilters: "Ajustar filtros",
-};
-translations.en.emptyState = {
-  noExpensesTitle: "No expenses in {month}",
-  noExpensesCopy: "Start by recording a real expense or add an investment so you can track available balance and real goal progress separately.",
-  noFilteredTitle: "No movements with these filters",
-  noFilteredCopy: "Try clearing category, payment method, movement type or search to see results again.",
-  loadSample: "Load sample",
-  adjustFilters: "Adjust filters",
-};
-translations.es.movement = {
-  expenseNoun: "gasto",
-  expenseNounCap: "Gasto",
-  investmentNoun: "aporte",
-  investmentNounCap: "Aporte",
-  editExpense: "Editar gasto",
-  editInvestment: "Editar aporte",
-  duplicateExpense: "Duplicar gasto",
-  duplicateInvestment: "Duplicar aporte",
-  deleteExpense: "Eliminar gasto",
-  deleteInvestment: "Eliminar aporte",
-  registeredExpense: "Gasto registrado.",
-  registeredInvestment: "Aporte registrado.",
-  updatedExpense: "Gasto actualizado.",
-  updatedInvestment: "Aporte actualizado.",
-  deletedExpense: "Gasto eliminado.",
-  deletedInvestment: "Aporte eliminado.",
-  duplicatedExpense: "Gasto duplicado.",
-  duplicatedInvestment: "Aporte duplicado.",
-  deleteExpenseCopy: "Vas a eliminar este gasto del registro mensual.",
-  deleteInvestmentCopy: "Vas a eliminar este aporte del registro mensual.",
-};
-translations.en.movement = {
-  expenseNoun: "expense",
-  expenseNounCap: "Expense",
-  investmentNoun: "contribution",
-  investmentNounCap: "Contribution",
-  editExpense: "Edit expense",
-  editInvestment: "Edit contribution",
-  duplicateExpense: "Duplicate expense",
-  duplicateInvestment: "Duplicate contribution",
-  deleteExpense: "Delete expense",
-  deleteInvestment: "Delete contribution",
-  registeredExpense: "Expense recorded.",
-  registeredInvestment: "Contribution recorded.",
-  updatedExpense: "Expense updated.",
-  updatedInvestment: "Contribution updated.",
-  deletedExpense: "Expense removed.",
-  deletedInvestment: "Contribution removed.",
-  duplicatedExpense: "Expense duplicated.",
-  duplicatedInvestment: "Contribution duplicated.",
-  deleteExpenseCopy: "You are about to remove this expense from the monthly record.",
-  deleteInvestmentCopy: "You are about to remove this contribution from the monthly record.",
-};
-
-translations.es.validation = {
-  description: "Agrega una descripcion clara.",
-  amount: "Ingresa un monto mayor a cero.",
-  category: "Elegi una categoria.",
-  date: "Selecciona una fecha valida.",
-  paymentMethod: "Elegi un medio de pago.",
-  incomeBase: "Ingresa un monto valido para el ingreso base.",
-  incomeExtra: "Ingresa un monto valido para el ingreso extra.",
-  goalAmount: "Ingresa un objetivo mensual mayor a cero.",
-};
-translations.en.validation = {
-  description: "Add a clear description.",
-  amount: "Enter an amount greater than zero.",
-  category: "Choose a category.",
-  date: "Select a valid date.",
-  paymentMethod: "Choose a payment method.",
-  incomeBase: "Enter a valid amount for base income.",
-  incomeExtra: "Enter a valid amount for extra income.",
-  goalAmount: "Enter a monthly target greater than zero.",
-};
-
-translations.es.toast = {
-  incomeUpdated: "Ingreso mensual actualizado.",
-  goalUpdated: "Meta mensual actualizada.",
-  noVisibleExpenses: "No hay movimientos visibles para exportar.",
-  exportReady: "Exportacion {format} lista.",
-  jsonImported: "Datos importados correctamente",
-  jsonInvalid: "Archivo JSON invalido",
-  csvImported: "Movimientos importados correctamente",
-  csvInvalid: "Archivo CSV invalido",
-  sampleRestored: "Muestra restaurada.",
-  languageChangedEs: "Idioma cambiado a español",
-  languageChangedEn: "Language changed to English",
-};
-translations.en.toast = {
-  incomeUpdated: "Monthly income updated.",
-  goalUpdated: "Monthly goal updated.",
-  noVisibleExpenses: "There are no visible movements to export.",
-  exportReady: "{format} export ready.",
-  jsonImported: "Data imported successfully",
-  jsonInvalid: "Invalid JSON file",
-  csvImported: "Movements imported successfully",
-  csvInvalid: "Invalid CSV file",
-  sampleRestored: "Sample restored.",
-  languageChangedEs: "Idioma cambiado a español",
-  languageChangedEn: "Language changed to English",
-};
-
-translations.es.categories = {
-  Supermercado: "Supermercado",
-  Transporte: "Transporte",
-  "Casa/Servicios": "Casa/Servicios",
-  Gimnasio: "Gimnasio",
-  Facultad: "Facultad",
-  Suscripciones: "Suscripciones",
-  Salidas: "Gastos",
-  Salud: "Salud",
-  "Auto/Moto": "Auto/Moto",
-  Inversion: "Inversion",
-  Otros: "Otros",
-};
-translations.en.categories = {
-  Supermercado: "Groceries",
-  Transporte: "Transport",
-  "Casa/Servicios": "Home/Utilities",
-  Gimnasio: "Gym",
-  Facultad: "Studies",
-  Suscripciones: "Subscriptions",
-  Salidas: "Outings",
-  Salud: "Health",
-  "Auto/Moto": "Car/Bike",
-  Inversion: "Investment",
-  Otros: "Other",
-};
-
-translations.es.paymentMethods = {
-  Efectivo: "Efectivo",
-  Debito: "Debito",
-  Credito: "Credito",
-  Transferencia: "Transferencia",
-};
-translations.en.paymentMethods = {
-  Efectivo: "Cash",
-  Debito: "Debit",
-  Credito: "Credit",
-  Transferencia: "Transfer",
-};
-
-translations.es.frequency = {
-  fixed: "Fijo",
-  variable: "Variable",
-};
-translations.en.frequency = {
-  fixed: "Fixed",
-  variable: "Variable",
-};
-
-translations.es.movementTypes = {
-  expense: "Gasto",
-  investment: "Inversion",
-  income: "Ingreso",
-};
-translations.en.movementTypes = {
-  expense: "Expense",
-  investment: "Investment",
-  income: "Income",
-};
-
-translations.es.sort = {
-  newest: "Mas recientes",
-  oldest: "Mas antiguos",
-  highest: "Monto mas alto",
-  lowest: "Monto mas bajo",
-};
-translations.en.sort = {
-  newest: "Newest",
-  oldest: "Oldest",
-  highest: "Highest amount",
-  lowest: "Lowest amount",
 };
 const VIEW_TOPBAR_CONFIG = {
   resumen: {
@@ -843,100 +207,6 @@ const SAVINGS_CAPACITY_STATES = {
   low: { label: "Bajo" },
 };
 const DEFAULT_GOAL_LABEL = "Meta mensual de inversion";
-
-const body = document.body;
-const topbar = document.querySelector(".topbar");
-const openIncomeButtons = document.querySelectorAll("[data-open-income]");
-const openGoalButtons = document.querySelectorAll("[data-open-goal]");
-const openInvestmentButtons = document.querySelectorAll("[data-open-investment]");
-const openExpenseButtons = document.querySelectorAll("[data-open-expense]");
-const modalRestoreButtons = document.querySelectorAll("[data-modal-restore-sample]");
-const menuToggle = document.querySelector("[data-menu-toggle]");
-const backdrop = document.querySelector("[data-backdrop]");
-const navItems = document.querySelectorAll("[data-nav-item]");
-const openFilterButtons = document.querySelectorAll("[data-open-filters]");
-const openImportJsonButtons = document.querySelectorAll("[data-open-import-json]");
-const openImportCsvButtons = document.querySelectorAll("[data-open-import-csv]");
-const openExportButtons = document.querySelectorAll("[data-open-export]");
-const importJsonInput = document.querySelector("[data-import-json-input]");
-const importCsvInput = document.querySelector("[data-import-csv-input]");
-const languageSwitch = document.querySelector("[data-language-switch]");
-const languageOptionButtons = document.querySelectorAll("[data-language-option]");
-const exchangeRateNote = document.querySelector("[data-exchange-rate-note]");
-const searchInput = document.querySelector("[data-search-input]");
-const topbarActions = document.querySelector("[data-topbar-actions]");
-const topbarEyebrow = document.querySelector("[data-topbar-eyebrow]");
-const topbarSearch = document.querySelector("[data-topbar-search]");
-const topbarFilters = document.querySelector("[data-topbar-filters]");
-const dashboardMain = document.querySelector("[data-dashboard-main]");
-const expenseList = document.querySelector("[data-expense-list]");
-const expenseResults = document.querySelector("[data-expense-results]");
-const insightList = document.querySelector("[data-insight-list]");
-const fab = document.querySelector(".fab");
-const fabLabel = document.querySelector(".fab__label");
-const modal = document.querySelector("[data-modal]");
-const modalPanels = document.querySelectorAll("[data-modal-panel]");
-const modalCloseButton = document.querySelector(".app-modal__close");
-const modalCloseTriggers = document.querySelectorAll("[data-modal-close]");
-const modalEyebrow = document.querySelector("[data-modal-eyebrow]");
-const modalTitle = document.querySelector("[data-modal-title]");
-const modalCopy = document.querySelector("[data-modal-copy]");
-const expenseForm = document.querySelector("[data-expense-form]");
-const incomeForm = document.querySelector("[data-income-form]");
-const goalForm = document.querySelector("[data-goal-form]");
-const formFeedback = document.querySelector("[data-form-feedback]");
-const incomeFeedback = document.querySelector("[data-income-feedback]");
-const goalFeedback = document.querySelector("[data-goal-feedback]");
-const formSubmit = document.querySelector("[data-form-submit]");
-const incomeBaseInput = document.querySelector("[data-income-base-input]");
-const incomeExtraInput = document.querySelector("[data-income-extra-input]");
-const incomeTotalPreview = document.querySelector("[data-income-total-preview]");
-const incomeMonthLabel = document.querySelector("[data-income-month-label]");
-const goalAmountInput = document.querySelector("[data-goal-amount-input]");
-const goalLabelInput = document.querySelector("[data-goal-label-input]");
-const goalAmountPreview = document.querySelector("[data-goal-amount-preview]");
-const goalLabelPreview = document.querySelector("[data-goal-label-preview]");
-const confirmDeleteButton = document.querySelector("[data-confirm-delete]");
-const confirmTitle = document.querySelector("[data-confirm-title]");
-const confirmDate = document.querySelector("[data-confirm-date]");
-const confirmCopy = document.querySelector("[data-confirm-copy]");
-const confirmAmount = document.querySelector("[data-confirm-amount]");
-const filterForm = document.querySelector("[data-filter-form]");
-const filterMonthInput = document.querySelector("[data-filter-month]");
-const filterCategoryInput = document.querySelector("[data-filter-category]");
-const filterPaymentMethodInput = document.querySelector("[data-filter-payment-method]");
-const filterExpenseTypeInput = document.querySelector("[data-filter-expense-type]");
-const filterSortInput = document.querySelector("[data-filter-sort]");
-const filterSearchPreview = document.querySelector("[data-filter-search-preview]");
-const filterResultsCopy = document.querySelector("[data-filter-results-copy]");
-const clearFiltersButton = document.querySelector("[data-clear-filters]");
-const exportJsonButton = document.querySelector("[data-export-json]");
-const exportCsvButton = document.querySelector("[data-export-csv]");
-const exportSummary = document.querySelector("[data-export-summary]");
-const exportFilename = document.querySelector("[data-export-filename]");
-const exportCopy = document.querySelector("[data-export-copy]");
-const confirmRestoreButton = document.querySelector("[data-confirm-restore]");
-const toast = document.querySelector("[data-toast]");
-const donutChart = document.querySelector("[data-donut-chart]");
-const categoryLegend = document.querySelector("[data-category-legend]");
-const lineActualPath = document.querySelector("[data-line-actual]");
-const lineTargetPath = document.querySelector("[data-line-target]");
-const lineAreaPath = document.querySelector("[data-line-area]");
-const linePoints = document.querySelector("[data-line-points]");
-const lineAxis = document.querySelector("[data-line-axis]");
-const calendarGrid = document.querySelector("[data-calendar-grid]");
-const calendarYearLabel = document.querySelector("[data-calendar-year]");
-const calendarCopy = document.querySelector("[data-calendar-copy]");
-const calendarSummaryNote = document.querySelector("[data-calendar-summary-note]");
-const calendarShiftButtons = document.querySelectorAll("[data-calendar-shift]");
-
-const viewSections = {
-  resumen: document.querySelector('[data-view="resumen"]'),
-  flujo: document.querySelector('[data-view="flujo"]'),
-  ingreso: document.querySelector('[data-view="ingreso"]'),
-  actividad: document.querySelector('[data-view="actividad"]'),
-  calendario: document.querySelector('[data-view="calendario"]'),
-};
 
 const canUseLocalStorage = () => {
   try {
@@ -1002,7 +272,7 @@ const persistLanguageSettings = (language) => {
   }
 };
 const persistExchangeRate = (rate) => {
-  if (!canUseLocalStorage() || !(rate > 0)) {
+  if (!canUseLocalStorage() || !Number.isFinite(rate) || !(rate > 0)) {
     return;
   }
 
@@ -1014,198 +284,35 @@ const persistExchangeRate = (rate) => {
   }
 };
 const isExchangeRateCacheFresh = (timestamp) => Number.isFinite(timestamp) && Date.now() - timestamp < EXCHANGE_RATE_CACHE_TTL_MS;
-const isValidImportState = (value) => {
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
-    return false;
-  }
+const fetchExchangeRatePayload = async () => {
+  const controller = typeof AbortController === "function" ? new AbortController() : null;
+  let timeoutId = 0;
 
-  if (!Array.isArray(value.expenses)) {
-    return false;
-  }
+  try {
+    const response = await Promise.race([
+      fetch(EXCHANGE_RATE_API_URL, {
+        cache: "no-store",
+        ...(controller ? { signal: controller.signal } : {}),
+      }),
+      new Promise((_, reject) => {
+        timeoutId = window.setTimeout(() => {
+          controller?.abort();
+          reject(new Error("exchange-rate-timeout"));
+        }, EXCHANGE_RATE_REQUEST_TIMEOUT_MS);
+      }),
+    ]);
 
-  if (!value.filters || typeof value.filters !== "object" || Array.isArray(value.filters)) {
-    return false;
-  }
-
-  const hasIncomeData = ["incomeBase", "income", "incomeExtra"].some((key) => Object.prototype.hasOwnProperty.call(value, key));
-  const hasValidExpenses = value.expenses.every((expense) => expense && typeof expense === "object" && !Array.isArray(expense));
-
-  return hasIncomeData && hasValidExpenses;
-};
-const normalizeImportToken = (value = "") =>
-  String(value || "")
-    .trim()
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
-const splitCsvLine = (line = "") => {
-  const values = [];
-  let currentValue = "";
-  let insideQuotes = false;
-
-  for (let index = 0; index < line.length; index += 1) {
-    const character = line[index];
-
-    if (character === '"') {
-      if (insideQuotes && line[index + 1] === '"') {
-        currentValue += '"';
-        index += 1;
-      } else {
-        insideQuotes = !insideQuotes;
-      }
-
-      continue;
+    if (!response.ok) {
+      throw new Error("exchange-rate-response");
     }
 
-    if (character === "," && !insideQuotes) {
-      values.push(currentValue.trim());
-      currentValue = "";
-      continue;
+    return await response.json();
+  } finally {
+    if (timeoutId) {
+      window.clearTimeout(timeoutId);
     }
-
-    currentValue += character;
   }
-
-  values.push(currentValue.trim());
-  return values;
 };
-const parseImportCsvAmount = (value) => {
-  const rawValue = String(value || "").trim().replace(/\s/g, "").replace(/\$/g, "");
-
-  if (!rawValue) {
-    return null;
-  }
-
-  let normalizedValue = rawValue;
-
-  if (normalizedValue.includes(",") && normalizedValue.includes(".")) {
-    normalizedValue = normalizedValue.lastIndexOf(",") > normalizedValue.lastIndexOf(".")
-      ? normalizedValue.replace(/\./g, "").replace(",", ".")
-      : normalizedValue.replace(/,/g, "");
-  } else if (/^\d{1,3}(\.\d{3})+$/.test(normalizedValue)) {
-    normalizedValue = normalizedValue.replace(/\./g, "");
-  } else if (/^\d{1,3}(,\d{3})+$/.test(normalizedValue)) {
-    normalizedValue = normalizedValue.replace(/,/g, "");
-  } else if (normalizedValue.includes(",")) {
-    normalizedValue = normalizedValue.replace(/\./g, "").replace(",", ".");
-  }
-
-  const parsedAmount = Number(normalizedValue);
-  return Number.isFinite(parsedAmount) ? Math.abs(parsedAmount) : null;
-};
-const parseImportCsvDate = (value) => {
-  const rawValue = String(value || "").trim();
-
-  if (!rawValue) {
-    return null;
-  }
-
-  const yearMonthDayMatch = rawValue.match(/^(\d{4})[/-](\d{1,2})[/-](\d{1,2})$/);
-
-  if (yearMonthDayMatch) {
-    const [, year, month, day] = yearMonthDayMatch;
-    const parsedDate = new Date(`${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}T12:00:00`);
-    return Number.isNaN(parsedDate.getTime()) ? null : parsedDate.toISOString();
-  }
-
-  const dayMonthYearMatch = rawValue.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})$/);
-
-  if (dayMonthYearMatch) {
-    const [, day, month, year] = dayMonthYearMatch;
-    const parsedDate = new Date(`${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}T12:00:00`);
-    return Number.isNaN(parsedDate.getTime()) ? null : parsedDate.toISOString();
-  }
-
-  const parsedDate = new Date(rawValue);
-  return Number.isNaN(parsedDate.getTime()) ? null : parsedDate.toISOString();
-};
-const parseImportCsvFrequency = (value) => {
-  const normalizedValue = normalizeImportToken(value);
-
-  if (!normalizedValue) {
-    return undefined;
-  }
-
-  if (/^fij/.test(normalizedValue)) {
-    return true;
-  }
-
-  if (/^vari/.test(normalizedValue)) {
-    return false;
-  }
-
-  return undefined;
-};
-const buildExpenseFromCsvRow = (row) => {
-  const movementType = normalizeImportToken(row.tipo);
-  const parsedDate = parseImportCsvDate(row.fecha);
-  const parsedAmount = parseImportCsvAmount(row.monto);
-
-  if (!movementType || !parsedDate || parsedAmount === null) {
-    return null;
-  }
-
-  const isIncomeMovement = /ingres/.test(movementType);
-  const isInvestmentMovement = /inver|aport/.test(movementType);
-  const isExpenseMovement = /gast/.test(movementType);
-
-  if (!isIncomeMovement && !isInvestmentMovement && !isExpenseMovement) {
-    return null;
-  }
-
-  const frequency = parseImportCsvFrequency(row.frecuencia);
-  const description = String(row.descripcion || "").trim() || (isIncomeMovement ? "Ingreso importado" : "Movimiento importado");
-
-  return {
-    title: description,
-    amount: isIncomeMovement ? -parsedAmount : parsedAmount,
-    category: isInvestmentMovement ? "Inversion" : String(row.categoria || "").trim() || "Otros",
-    date: parsedDate,
-    paymentMethod: String(row.metodo || "").trim(),
-    note: isIncomeMovement ? "Ingreso importado por CSV" : "",
-    isFixed: typeof frequency === "boolean" ? frequency : undefined,
-  };
-};
-const parseExpensesFromCsv = (contents) => {
-  const lines = String(contents || "")
-    .split(/\r?\n/)
-    .filter((line) => line.trim());
-
-  if (lines.length < 2) {
-    return null;
-  }
-
-  const normalizedHeaders = splitCsvLine(lines[0]).map(normalizeImportToken);
-
-  if (!["fecha", "tipo", "monto"].every((header) => normalizedHeaders.includes(header))) {
-    return null;
-  }
-
-  const getValueByHeader = (values, headerName) => {
-    const headerIndex = normalizedHeaders.indexOf(headerName);
-    return headerIndex >= 0 ? values[headerIndex] || "" : "";
-  };
-
-  return lines.slice(1).reduce((expenses, line) => {
-    const values = splitCsvLine(line);
-    const importedExpense = buildExpenseFromCsvRow({
-      fecha: getValueByHeader(values, "fecha"),
-      tipo: getValueByHeader(values, "tipo"),
-      categoria: getValueByHeader(values, "categoria"),
-      descripcion: getValueByHeader(values, "descripcion"),
-      monto: getValueByHeader(values, "monto"),
-      metodo: getValueByHeader(values, "metodo"),
-      frecuencia: getValueByHeader(values, "frecuencia"),
-    });
-
-    if (importedExpense) {
-      expenses.push(importedExpense);
-    }
-
-    return expenses;
-  }, []);
-};
-
 const isKnownView = (viewName) => Boolean(viewName && Object.prototype.hasOwnProperty.call(viewSections, viewName) && viewSections[viewName]);
 
 const readPersistedActiveView = () => {
@@ -1233,137 +340,6 @@ const persistActiveView = (viewName) => {
   }
 };
 
-const kpiElements = {
-  incomeTotal: document.querySelector('[data-kpi="incomeTotal"]'),
-  totalSpent: document.querySelector('[data-kpi="totalSpent"]'),
-  investedThisMonth: document.querySelector('[data-kpi="investedThisMonth"]'),
-  savingsCapacity: document.querySelector('[data-kpi="savingsCapacity"]'),
-  dailyAverage: document.querySelector('[data-kpi="dailyAverage"]'),
-  goalProgress: document.querySelector('[data-kpi="goalProgress"]'),
-};
-
-const kpiDeltaElements = {
-  incomeTotal: document.querySelector('[data-kpi-delta="incomeTotal"]'),
-  totalSpent: document.querySelector('[data-kpi-delta="totalSpent"]'),
-  investedThisMonth: document.querySelector('[data-kpi-delta="investedThisMonth"]'),
-  savingsCapacity: document.querySelector('[data-kpi-delta="savingsCapacity"]'),
-  dailyAverage: document.querySelector('[data-kpi-delta="dailyAverage"]'),
-  goalProgress: document.querySelector('[data-kpi-delta="goalProgress"]'),
-};
-
-const kpiCaptionElements = {
-  incomeTotal: document.querySelector('[data-kpi-caption="incomeTotal"]'),
-  totalSpent: document.querySelector('[data-kpi-caption="totalSpent"]'),
-  investedThisMonth: document.querySelector('[data-kpi-caption="investedThisMonth"]'),
-  savingsCapacity: document.querySelector('[data-kpi-caption="savingsCapacity"]'),
-  dailyAverage: document.querySelector('[data-kpi-caption="dailyAverage"]'),
-  goalProgress: document.querySelector('[data-kpi-caption="goalProgress"]'),
-};
-
-const kpiSecondaryElements = {
-  savingsCapacity: document.querySelector('[data-kpi-secondary="savingsCapacity"]'),
-};
-
-const kpiBarElements = {
-  savingsCapacity: document.querySelector('[data-kpi-bar="savingsCapacity"]'),
-};
-
-const kpiCardElements = {
-  savingsCapacity: document.querySelector('[data-kpi-card="savingsCapacity"]'),
-};
-
-const heroCardElement = document.querySelector('[data-capacity-card="hero"]');
-
-const yearSummaryElements = {
-  income: document.querySelector('[data-year-summary="income"]'),
-  spent: document.querySelector('[data-year-summary="spent"]'),
-  invested: document.querySelector('[data-year-summary="invested"]'),
-  average: document.querySelector('[data-year-summary="average"]'),
-};
-
-const summaryElements = {
-  sidebarFreeCash: document.querySelector('[data-summary="sidebar-free-cash"]'),
-  sidebarAvailableToSave: document.querySelector('[data-summary="sidebar-available-to-save"]'),
-  heroLiquidityFinal: document.querySelector('[data-summary="hero-liquidity-final"]'),
-  heroIncome: document.querySelector('[data-summary="hero-income"]'),
-  heroSpent: document.querySelector('[data-summary="hero-spent"]'),
-  heroInvested: document.querySelector('[data-summary="hero-invested"]'),
-  flowIncome: document.querySelector('[data-summary="flow-income"]'),
-  flowSpent: document.querySelector('[data-summary="flow-spent"]'),
-  flowAvailable: document.querySelector('[data-summary="flow-available"]'),
-  flowInvested: document.querySelector('[data-summary="flow-invested"]'),
-  flowLiquidityFinal: document.querySelector('[data-summary="flow-liquidity-final"]'),
-  kpiAvailableBeforeInvesting: document.querySelector('[data-summary="kpi-available-before-investing"]'),
-  chartTotalSpent: document.querySelector('[data-summary="chart-total-spent"]'),
-  goalAmount: document.querySelector('[data-summary="goal-amount"]'),
-  goalSaved: document.querySelector('[data-summary="goal-saved"]'),
-  goalGapValue: document.querySelector('[data-summary="goal-gap-value"]'),
-  goalExceeded: document.querySelector('[data-summary="goal-exceeded"]'),
-  incomeTotal: document.querySelector('[data-summary="income-total"]'),
-  incomeBase: document.querySelector('[data-summary="income-base"]'),
-  incomeExtra: document.querySelector('[data-summary="income-extra"]'),
-  incomeBalance: document.querySelector('[data-summary="income-balance"]'),
-  incomeAvailableToSave: document.querySelector('[data-summary="income-available-to-save"]'),
-  incomeCapacityAmount: document.querySelector('[data-summary="income-capacity-amount"]'),
-  incomeSpent: document.querySelector('[data-summary="income-spent"]'),
-  incomeGoalAmount: document.querySelector('[data-summary="income-goal-amount"]'),
-  incomeGoalSaved: document.querySelector('[data-summary="income-goal-saved"]'),
-  incomeGoalGap: document.querySelector('[data-summary="income-goal-gap"]'),
-};
-
-const textElements = {
-  periodTitle: document.querySelector("[data-period-title]"),
-  periodPill: document.querySelector("[data-period-pill]"),
-  sidebarSavingsCapacity: document.querySelector('[data-summary-text="sidebar-savings-capacity"]'),
-  heroLiquidityCopy: document.querySelector('[data-summary-text="hero-liquidity-copy"]'),
-  heroRiskReason: document.querySelector('[data-summary-text="hero-risk-reason"]'),
-  heroDifferenceNote: document.querySelector('[data-summary-text="hero-difference-note"]'),
-  heroBalanceNote: document.querySelector('[data-summary-text="hero-balance-note"]'),
-  heroCaption: document.querySelector('[data-summary-text="hero-caption"]'),
-  categoryCountPill: document.querySelector('[data-summary-text="category-count-pill"]'),
-  goalHeading: document.querySelector('[data-summary-text="goal-heading"]'),
-  goalNote: document.querySelector('[data-summary-text="goal-note"]'),
-  goalProgressText: document.querySelector('[data-summary-text="goal-progress-text"]'),
-  comparisonNote: document.querySelector('[data-summary-text="comparison-note"]'),
-  incomeCaption: document.querySelector('[data-summary-text="income-caption"]'),
-  incomeUsageLabel: document.querySelector("[data-income-usage-label]"),
-  incomeUsageCopy: document.querySelector('[data-summary-text="income-usage-copy"]'),
-  incomeGoalLabel: document.querySelector('[data-summary-text="income-goal-label"]'),
-  incomeGoalGapLabel: document.querySelector('[data-summary-text="income-goal-gap-label"]'),
-  incomeGoalCopy: document.querySelector('[data-summary-text="income-goal-copy"]'),
-  incomeResultCopy: document.querySelector('[data-summary-text="income-result-copy"]'),
-};
-const heroDifferenceCardElement = summaryElements.heroInvested?.closest(".hero-card__meta-item");
-
-const comparisonElements = {
-  totalSpentCopy: document.querySelector('[data-comparison="totalSpent-copy"]'),
-  totalSpentValue: document.querySelector('[data-comparison="totalSpent-value"]'),
-  remainingBalanceCopy: document.querySelector('[data-comparison="remainingBalance-copy"]'),
-  remainingBalanceValue: document.querySelector('[data-comparison="remainingBalance-value"]'),
-  investedCopy: document.querySelector('[data-comparison="invested-copy"]'),
-  investedValue: document.querySelector('[data-comparison="invested-value"]'),
-  categoryShiftCopy: document.querySelector('[data-comparison="categoryShift-copy"]'),
-  categoryShiftValue: document.querySelector('[data-comparison="categoryShift-value"]'),
-};
-
-const labelElements = {
-  goalGap: document.querySelector('[data-summary-label="goal-gap-label"]'),
-};
-
-const barElements = {
-  sidebarSavingsCapacity: document.querySelector('[data-summary-bar="sidebar-savings-capacity"]'),
-  goalProgress: document.querySelector('[data-summary-bar="goal-progress"]'),
-};
-
-const statusElements = {
-  sidebar: document.querySelector('[data-summary-status="sidebar"]'),
-  hero: document.querySelector('[data-summary-status="hero"]'),
-  goal: document.querySelector('[data-summary-status="goal"]'),
-  line: document.querySelector('[data-summary-status="line"]'),
-};
-
-const stackedSegments = document.querySelectorAll(".stacked-bar__segment");
-
 const uiState = {
   activeView: readPersistedActiveView(),
   currentLanguage: readPersistedLanguage(),
@@ -1385,16 +361,15 @@ const getExchangeRateUsdArs = () => {
   const parsedRate = Number(uiState.exchangeRateUsdArs);
   return Number.isFinite(parsedRate) && parsedRate > 0 ? parsedRate : DEFAULT_EXCHANGE_RATE_USD_ARS;
 };
-const getTranslationValue = (language, key) => key.split(".").reduce((accumulator, segment) => accumulator?.[segment], translations[language]);
-const interpolateText = (template, replacements = {}) =>
-  String(template || "").replace(/\{(\w+)\}/g, (match, token) => (Object.prototype.hasOwnProperty.call(replacements, token) ? replacements[token] : match));
-const t = (key, replacements = {}) => {
-  const language = getCurrentLanguage();
-  const fallbackValue = getTranslationValue(DEFAULT_LANGUAGE, key);
-  const translatedValue = getTranslationValue(language, key);
-  const resolvedValue = typeof translatedValue === "string" ? translatedValue : typeof fallbackValue === "string" ? fallbackValue : key;
-  return interpolateText(resolvedValue, replacements);
-};
+const t = (key, replacements = {}) => translateText(key, replacements, { language: getCurrentLanguage(), fallbackLanguage: DEFAULT_LANGUAGE });
+const validationApi = createValidationApi({ t });
+const {
+  isValidImportState,
+  parseExpensesFromCsv,
+  validateExpensePayload,
+  validateIncomePayload,
+  validateGoalPayload,
+} = validationApi;
 const convertMoneyForDisplay = (value) => {
   const safeValue = toSafeNumber(value);
   if (getCurrentCurrency() !== "USD") {
@@ -1441,22 +416,6 @@ const getDisplayGoalLabel = (value = "") => {
   }
 
   return String(value).trim();
-};
-const getSavingsCapacityPercent = (remainingBalance, totalIncome) => (totalIncome > 0 ? roundCurrency((remainingBalance / totalIncome) * 100) : 0);
-const getSavingsCapacityState = (percent, totalIncome) => {
-  if (!(totalIncome > 0)) {
-    return "neutral";
-  }
-
-  if (percent > 40) {
-    return "excellent";
-  }
-
-  if (percent >= 20) {
-    return "healthy";
-  }
-
-  return "low";
 };
 const getSavingsCapacityStateLabel = (state) => t(`savingsCapacityStates.${state}`, { }) || t("savingsCapacityStates.low");
 const getSavingsCapacityTone = (state) => {
@@ -1533,6 +492,39 @@ const getMonthLabel = (monthKey, options = {}) => {
   return Number.isNaN(date.getTime()) ? "" : new Intl.DateTimeFormat(getCurrentLocale(), { month: "long", year: "numeric", ...options }).format(date);
 };
 const getCalendarMonthLabel = (monthKey) => getMonthLabel(monthKey, { month: "short", year: undefined }).replace(".", "");
+const financialEngine = createFinancialEngine({
+  clamp,
+  roundCurrency,
+  isValidMonthKey,
+  getLatestMonthKey,
+  getMonthKey,
+  getCurrentMonthKey,
+  shiftMonthKey,
+  getYearFromMonthKey,
+  buildMonthKey,
+  isFutureMonthKey,
+  getDaysInMonth,
+  getExpenseDate,
+  getMonthLabel,
+  getCalendarMonthLabel,
+  defaultGoalLabel: DEFAULT_GOAL_LABEL,
+});
+const {
+  getSavingsCapacityPercent,
+  getSavingsCapacityState,
+  getActiveMonthKey,
+  getTotalIncome,
+  getExpensesForMonth,
+  getElapsedDaysForMonth,
+  buildCategoryBreakdown,
+  buildLegendCategories,
+  summarizeMonth,
+  calculatePercentChange,
+  compareMetric,
+  getTopCategoryShift,
+  computeMetrics,
+  buildYearContext,
+} = financialEngine;
 const getDefaultFilters = (state = getState()) => ({
   month: getLatestMonthKey(state.expenses),
   category: "all",
@@ -1541,210 +533,6 @@ const getDefaultFilters = (state = getState()) => ({
   sort: "newest",
   search: "",
 });
-const getActiveMonthKey = (state) => (isValidMonthKey(state.filters.month) ? state.filters.month : getLatestMonthKey(state.expenses));
-const getTotalIncome = (state) => roundCurrency(Number(state.incomeBase || 0) + Number(state.incomeExtra || 0));
-const getExpensesForMonth = (expenses, monthKey) => expenses.filter((expense) => getMonthKey(expense.date) === monthKey);
-const getElapsedDaysForMonth = (monthKey, expenses) => {
-  const daysInMonth = getDaysInMonth(monthKey);
-
-  if (monthKey === getCurrentMonthKey()) {
-    return clamp(new Date().getDate(), 1, daysInMonth);
-  }
-
-  if (monthKey < getCurrentMonthKey()) {
-    return daysInMonth;
-  }
-
-  const latestDay = expenses.reduce((maxDay, expense) => {
-    const parsed = getExpenseDate(expense);
-    return Math.max(maxDay, parsed?.getDate() || 0);
-  }, 0);
-
-  return clamp(latestDay || 1, 1, daysInMonth);
-};
-
-const buildCategoryBreakdown = (expenses, totalSpent) => {
-  const totals = expenses.reduce((accumulator, expense) => {
-    const category = expense.category || "Otros";
-    accumulator[category] = roundCurrency((accumulator[category] || 0) + Number(expense.amount || 0));
-    return accumulator;
-  }, {});
-
-  return Object.entries(totals)
-    .map(([category, total]) => ({
-      category,
-      total,
-      share: totalSpent > 0 ? (total / totalSpent) * 100 : 0,
-    }))
-    .sort((left, right) => right.total - left.total);
-};
-
-const buildLegendCategories = (breakdown) => {
-  if (breakdown.length <= 5) {
-    return breakdown;
-  }
-
-  const remaining = breakdown.slice(4);
-
-  return [
-    ...breakdown.slice(0, 4),
-    {
-      category: "Otros",
-      total: roundCurrency(remaining.reduce((sum, item) => sum + item.total, 0)),
-      share: remaining.reduce((sum, item) => sum + item.share, 0),
-    },
-  ];
-};
-
-const summarizeMonth = (expenses, incomeTotal, monthKey) => {
-  const investmentTransactions = expenses.filter((expense) => expense.category === "Inversion");
-  const spendingTransactions = expenses.filter((expense) => expense.category !== "Inversion");
-  const totalSpent = roundCurrency(spendingTransactions.reduce((sum, expense) => sum + Number(expense.amount || 0), 0));
-  const totalInvested = roundCurrency(investmentTransactions.reduce((sum, expense) => sum + Number(expense.amount || 0), 0));
-  const fixedSpend = roundCurrency(spendingTransactions.filter((expense) => expense.isFixed).reduce((sum, expense) => sum + Number(expense.amount || 0), 0));
-  const variableSpend = roundCurrency(Math.max(totalSpent - fixedSpend, 0));
-  const investedThisMonth = totalInvested;
-  const investmentTransactionsCount = investmentTransactions.length;
-  const expenseTransactionCount = spendingTransactions.length;
-  const remainingBalance = roundCurrency(incomeTotal - totalSpent);
-  const liquidityFinal = roundCurrency(remainingBalance - investedThisMonth);
-  const savingsCapacityAmount = roundCurrency(Math.max(remainingBalance, 0));
-  const daysInMonth = getDaysInMonth(monthKey);
-  const elapsedDays = getElapsedDaysForMonth(monthKey, expenses);
-  const dailyAverage = roundCurrency(totalSpent / Math.max(elapsedDays, 1));
-  const spentRatio = incomeTotal > 0 ? (totalSpent / incomeTotal) * 100 : 0;
-  const savingsRate = incomeTotal > 0 ? (remainingBalance / incomeTotal) * 100 : 0;
-  const largestExpense = spendingTransactions.reduce((largest, expense) => {
-    if (!largest || Number(expense.amount || 0) > Number(largest.amount || 0)) {
-      return expense;
-    }
-
-    return largest;
-  }, null);
-  const categoryBreakdown = buildCategoryBreakdown(spendingTransactions, totalSpent);
-
-  return {
-    monthKey,
-    monthLabelLong: getMonthLabel(monthKey),
-    monthLabelShort: getMonthLabel(monthKey, { month: "short", year: undefined }).replace(".", ""),
-    monthLabelShortYear: getMonthLabel(monthKey, { month: "short", year: "numeric" }).replace(".", ""),
-    expenses,
-    spendingTransactions,
-    investmentTransactions,
-    transactionCount: expenses.length,
-    expenseTransactionCount,
-    totalSpent,
-    totalInvested,
-    fixedSpend,
-    variableSpend,
-    fixedShare: totalSpent > 0 ? (fixedSpend / totalSpent) * 100 : 0,
-    variableShare: totalSpent > 0 ? (variableSpend / totalSpent) * 100 : 0,
-    investedThisMonth,
-    investmentTransactionsCount,
-    remainingBalance,
-    liquidityFinal,
-    savingsCapacityAmount,
-    dailyAverage,
-    spentRatio,
-    savingsRate,
-    largestExpense,
-    categoryBreakdown,
-    topCategory: categoryBreakdown[0] || null,
-    activeCategoryCount: categoryBreakdown.length,
-    daysInMonth,
-    elapsedDays,
-    projectedMonthlySpend: totalSpent > 0 ? roundCurrency((totalSpent / Math.max(elapsedDays, 1)) * daysInMonth) : 0,
-    projectedInvestmentAmount: investedThisMonth > 0 ? roundCurrency((investedThisMonth / Math.max(elapsedDays, 1)) * daysInMonth) : 0,
-  };
-};
-
-const calculatePercentChange = (currentValue, previousValue, hasBaseline) => {
-  if (!hasBaseline || !Number.isFinite(previousValue) || previousValue === 0) {
-    return null;
-  }
-
-  return ((currentValue - previousValue) / previousValue) * 100;
-};
-
-const compareMetric = (currentValue, previousValue, hasBaseline) => ({
-  current: currentValue,
-  previous: previousValue,
-  difference: roundCurrency(currentValue - previousValue),
-  percent: calculatePercentChange(currentValue, previousValue, hasBaseline),
-});
-
-const getTopCategoryShift = (currentBreakdown, previousBreakdown) => {
-  const categories = new Set([
-    ...currentBreakdown.map((item) => item.category),
-    ...previousBreakdown.map((item) => item.category),
-  ]);
-
-  let winner = null;
-
-  categories.forEach((category) => {
-    const currentTotal = currentBreakdown.find((item) => item.category === category)?.total || 0;
-    const previousTotal = previousBreakdown.find((item) => item.category === category)?.total || 0;
-    const difference = roundCurrency(currentTotal - previousTotal);
-
-    if (!winner || Math.abs(difference) > Math.abs(winner.difference)) {
-      winner = {
-        category,
-        currentTotal,
-        previousTotal,
-        difference,
-      };
-    }
-  });
-
-  return winner;
-};
-
-const computeMetrics = (state) => {
-  const activeMonthKey = getActiveMonthKey(state);
-  const previousMonthKey = shiftMonthKey(activeMonthKey, -1);
-  const totalIncome = getTotalIncome(state);
-  const goalAmount = roundCurrency(Number(state.savingsGoalAmount || 0));
-  const goalLabel = String(state.savingsGoalLabel || "").trim() || DEFAULT_GOAL_LABEL;
-  const currentMonth = summarizeMonth(getExpensesForMonth(state.expenses, activeMonthKey), totalIncome, activeMonthKey);
-  const previousMonth = summarizeMonth(getExpensesForMonth(state.expenses, previousMonthKey), totalIncome, previousMonthKey);
-  const hasPreviousData = previousMonth.transactionCount > 0;
-  const goalProgressPercent = goalAmount > 0 ? roundCurrency(Math.max((currentMonth.investedThisMonth / goalAmount) * 100, 0)) : 0;
-  const goalRemainingAmount = goalAmount > 0 && currentMonth.investedThisMonth < goalAmount ? roundCurrency(goalAmount - currentMonth.investedThisMonth) : 0;
-  const goalExceededAmount = goalAmount > 0 && currentMonth.investedThisMonth >= goalAmount ? roundCurrency(currentMonth.investedThisMonth - goalAmount) : 0;
-  const isGoalMet = goalAmount > 0 && currentMonth.investedThisMonth >= goalAmount;
-  const savingsCapacityPercent = getSavingsCapacityPercent(currentMonth.remainingBalance, totalIncome);
-  const savingsCapacityState = getSavingsCapacityState(savingsCapacityPercent, totalIncome);
-
-  return {
-    ...currentMonth,
-    activeMonthKey,
-    previousMonthKey,
-    previousMonth,
-    previousMonthLabel: previousMonth.monthLabelShort || getMonthLabel(previousMonthKey, { month: "short", year: undefined }).replace(".", ""),
-    hasPreviousData,
-    incomeBase: Number(state.incomeBase || 0),
-    incomeExtra: Number(state.incomeExtra || 0),
-    totalIncome,
-    savingsCapacityAmount: currentMonth.savingsCapacityAmount,
-    savingsCapacityPercent,
-    savingsCapacityBarPercent: clamp(savingsCapacityPercent, 0, 100),
-    savingsCapacityState,
-    goalAmount,
-    goalLabel,
-    goalProgressPercent,
-    goalProgressBarPercent: clamp(goalProgressPercent, 0, 100),
-    goalRemainingAmount,
-    goalExceededAmount,
-    isGoalMet,
-    comparisons: {
-      totalSpent: compareMetric(currentMonth.totalSpent, previousMonth.totalSpent, hasPreviousData),
-      remainingBalance: compareMetric(currentMonth.remainingBalance, previousMonth.remainingBalance, hasPreviousData),
-      investedThisMonth: compareMetric(currentMonth.investedThisMonth, previousMonth.investedThisMonth, hasPreviousData),
-      dailyAverage: compareMetric(currentMonth.dailyAverage, previousMonth.dailyAverage, hasPreviousData),
-    },
-    topCategoryShift: hasPreviousData ? getTopCategoryShift(currentMonth.categoryBreakdown, previousMonth.categoryBreakdown) : null,
-  };
-};
 
 const getVisibleExpensesContext = (state, metrics = computeMetrics(state)) => {
   const filters = {
@@ -1806,40 +594,6 @@ const getVisibleExpensesContext = (state, metrics = computeMetrics(state)) => {
     visibleExpenses,
     searchQuery,
     hasActiveFilters,
-  };
-};
-
-const buildYearContext = (state, metrics) => {
-  const activeYear = getYearFromMonthKey(metrics.activeMonthKey);
-  const months = Array.from({ length: 12 }, (_, index) => {
-    const monthKey = buildMonthKey(activeYear, index + 1);
-    const monthSummary = summarizeMonth(getExpensesForMonth(state.expenses, monthKey), metrics.totalIncome, monthKey);
-    const goalProgressPercent = metrics.goalAmount > 0 ? roundCurrency(Math.max((monthSummary.investedThisMonth / metrics.goalAmount) * 100, 0)) : 0;
-
-    return {
-      ...monthSummary,
-      shortLabel: getCalendarMonthLabel(monthKey),
-      goalProgressPercent,
-      goalProgressBarPercent: clamp(goalProgressPercent, 0, 100),
-      hasData: monthSummary.transactionCount > 0,
-      isActive: monthKey === metrics.activeMonthKey,
-      isFuture: isFutureMonthKey(monthKey),
-      isGoalMet: metrics.goalAmount > 0 && monthSummary.investedThisMonth >= metrics.goalAmount,
-    };
-  });
-  const monthsWithData = months.filter((month) => month.hasData);
-  const totalSpent = roundCurrency(months.reduce((sum, month) => sum + month.totalSpent, 0));
-  const totalInvested = roundCurrency(months.reduce((sum, month) => sum + month.investedThisMonth, 0));
-  const totalFree = roundCurrency(monthsWithData.reduce((sum, month) => sum + month.savingsCapacityAmount, 0));
-
-  return {
-    activeYear,
-    months,
-    monthsWithDataCount: monthsWithData.length,
-    yearIncomeReference: metrics.totalIncome > 0 ? roundCurrency(metrics.totalIncome * 12) : 0,
-    totalSpent,
-    totalInvested,
-    averageMonthlyFree: monthsWithData.length ? roundCurrency(totalFree / monthsWithData.length) : 0,
   };
 };
 
@@ -2339,20 +1093,17 @@ const translateStaticUi = () => {
 
 const refreshExchangeRate = async ({ force = false } = {}) => {
   const cachedTimestamp = readPersistedExchangeRateTimestamp();
+  const currentRate = Number(uiState.exchangeRateUsdArs);
+  const fallbackRate = Number.isFinite(currentRate) && currentRate > 0 ? currentRate : readPersistedExchangeRate();
 
   if (!force && isExchangeRateCacheFresh(cachedTimestamp)) {
     return;
   }
 
   try {
-    const response = await fetch(EXCHANGE_RATE_API_URL, { cache: "no-store" });
-    if (!response.ok) {
-      throw new Error("exchange-rate-response");
-    }
-
-    const payload = await response.json();
+    const payload = await fetchExchangeRatePayload();
     const parsedRate = Number(payload?.rates?.ARS);
-    if (!(parsedRate > 0)) {
+    if (!Number.isFinite(parsedRate) || !(parsedRate > 0)) {
       throw new Error("exchange-rate-value");
     }
 
@@ -2363,7 +1114,7 @@ const refreshExchangeRate = async ({ force = false } = {}) => {
       renderDashboard(false);
     }
   } catch (error) {
-    uiState.exchangeRateUsdArs = readPersistedExchangeRate();
+    uiState.exchangeRateUsdArs = fallbackRate;
   }
 };
 
@@ -3427,50 +2178,6 @@ const showToast = (message, tone = "success") => {
   }, TOAST_TIMEOUT_MS);
 };
 
-const validateExpensePayload = (payload) => {
-  if (!payload.title || payload.title.trim().length < 2) {
-    return t("validation.description");
-  }
-
-  if (!Number.isFinite(payload.amount) || payload.amount <= 0) {
-    return t("validation.amount");
-  }
-
-  if (!payload.category) {
-    return t("validation.category");
-  }
-
-  if (!payload.date || Number.isNaN(new Date(payload.date).getTime())) {
-    return t("validation.date");
-  }
-
-  if (!payload.paymentMethod) {
-    return t("validation.paymentMethod");
-  }
-
-  return "";
-};
-
-const validateIncomePayload = (incomeBase, incomeExtra) => {
-  if (!Number.isFinite(incomeBase) || incomeBase < 0) {
-    return t("validation.incomeBase");
-  }
-
-  if (!Number.isFinite(incomeExtra) || incomeExtra < 0) {
-    return t("validation.incomeExtra");
-  }
-
-  return "";
-};
-
-const validateGoalPayload = (goalAmount) => {
-  if (!Number.isFinite(goalAmount) || goalAmount <= 0) {
-    return t("validation.goalAmount");
-  }
-
-  return "";
-};
-
 const updateIncomePreview = () => {
   const base = convertMoneyInputToBase(incomeBaseInput?.value || 0);
   const extra = convertMoneyInputToBase(incomeExtraInput?.value || 0);
@@ -3888,6 +2595,173 @@ const restoreSampleData = () => {
   showToast(t("toast.sampleRestored"));
 };
 
+const registerEventListeners = () => {
+  registerAppEventListeners({
+    dom: window.aleclvExpenseTrackerDom,
+    onFabClick: () => {
+      if (fab?.dataset.fabAction === "investment") {
+        openInvestmentModal();
+        return;
+      }
+
+      openExpenseModal("add");
+    },
+    onOpenExpenseClick: () => openExpenseModal("add"),
+    onOpenIncomeClick: openIncomeModal,
+    onOpenGoalClick: openGoalModal,
+    onOpenInvestmentClick: openInvestmentModal,
+    onOpenFiltersClick: openFiltersModal,
+    onOpenImportJsonClick: openImportJsonPicker,
+    onOpenImportCsvClick: openImportCsvPicker,
+    onOpenExportClick: openExportModal,
+    onOpenRestoreClick: openRestoreModal,
+    onModalCloseClick: closeModal,
+    onLanguageOptionClick: (language) => setLanguage(language),
+    onImportJsonSelection: handleImportJsonSelection,
+    onImportCsvSelection: handleImportCsvSelection,
+    onExpenseFormSubmit: handleExpenseSubmit,
+    onExpenseFormInput: clearFormFeedback,
+    onExpenseFormChange: clearFormFeedback,
+    onIncomeFormSubmit: handleIncomeSubmit,
+    onIncomeFormInput: () => {
+      clearIncomeFeedback();
+      updateIncomePreview();
+    },
+    onIncomeFormChange: () => {
+      clearIncomeFeedback();
+      updateIncomePreview();
+    },
+    onGoalFormSubmit: handleGoalSubmit,
+    onGoalFormInput: () => {
+      clearGoalFeedback();
+      updateGoalPreview();
+    },
+    onGoalFormChange: () => {
+      clearGoalFeedback();
+      updateGoalPreview();
+    },
+    onConfirmDeleteClick: handleDeleteExpense,
+    onConfirmRestoreClick: restoreSampleData,
+    onClearFiltersClick: resetFilters,
+    onExportJsonClick: () => exportVisibleExpenses("json"),
+    onExportCsvClick: () => exportVisibleExpenses("csv"),
+    onCalendarShiftClick: (offset) => shiftCalendarYear(offset),
+    onSearchInput: (event) => handleSearchUpdate(event.target.value),
+    onFilterMonthChange: (event) => applyFilterPatch({ month: event.target.value || getDefaultFilters(getState()).month }),
+    onFilterCategoryChange: (event) => applyFilterPatch({ category: event.target.value || "all" }),
+    onFilterPaymentMethodChange: (event) => applyFilterPatch({ paymentMethod: event.target.value || "all" }),
+    onFilterExpenseTypeChange: (event) => applyFilterPatch({ expenseType: event.target.value || "all" }),
+    onFilterSortChange: (event) => applyFilterPatch({ sort: event.target.value || "newest" }),
+    onFilterFormSubmit: (event) => {
+      event.preventDefault();
+      closeModal();
+    },
+    onExpenseListClick: (event) => {
+      const listAction = event.target.closest("[data-list-action]");
+      if (listAction) {
+        if (listAction.dataset.listAction === "open-add") {
+          openExpenseModal("add");
+        }
+
+        if (listAction.dataset.listAction === "open-investment") {
+          openInvestmentModal();
+        }
+
+        if (listAction.dataset.listAction === "restore-sample") {
+          openRestoreModal();
+        }
+
+        if (listAction.dataset.listAction === "clear-filters") {
+          resetFilters();
+        }
+
+        if (listAction.dataset.listAction === "open-filters") {
+          openFiltersModal();
+        }
+
+        return;
+      }
+
+      const actionTrigger = event.target.closest("[data-expense-action]");
+      if (!actionTrigger) {
+        return;
+      }
+
+      const expense = getExpenseById(actionTrigger.dataset.expenseId);
+      if (!expense) {
+        return;
+      }
+
+      if (actionTrigger.dataset.expenseAction === "edit") {
+        openExpenseModal("edit", expense);
+      }
+
+      if (actionTrigger.dataset.expenseAction === "duplicate") {
+        duplicateExpense(expense);
+      }
+
+      if (actionTrigger.dataset.expenseAction === "delete") {
+        openDeleteModal(expense);
+      }
+    },
+    onCalendarGridClick: (event) => {
+      const monthTrigger = event.target.closest("[data-calendar-month]");
+      if (!(monthTrigger instanceof HTMLButtonElement) || monthTrigger.disabled) {
+        return;
+      }
+
+      setActiveMonth(monthTrigger.dataset.calendarMonth, true);
+    },
+    onCategoryLegendMouseOver: (event) => {
+      const legendItem = event.target.closest("[data-legend-index]");
+      if (!legendItem || !categoryLegend.contains(legendItem)) {
+        return;
+      }
+
+      setCategoryMixHighlight(Number(legendItem.dataset.legendIndex));
+    },
+    onCategoryLegendMouseLeave: () => setCategoryMixHighlight(-1),
+    onCategoryLegendFocusIn: (event) => {
+      const legendItem = event.target.closest("[data-legend-index]");
+      if (!legendItem || !categoryLegend.contains(legendItem)) {
+        return;
+      }
+
+      setCategoryMixHighlight(Number(legendItem.dataset.legendIndex));
+    },
+    onCategoryLegendFocusOut: (event) => {
+      if (categoryLegend.contains(event.relatedTarget)) {
+        return;
+      }
+
+      setCategoryMixHighlight(-1);
+    },
+    onMenuToggleClick: () => body.classList.toggle("sidebar-open"),
+    onBackdropClick: () => body.classList.remove("sidebar-open"),
+    onNavItemClick: (viewName) => setActiveView(viewName),
+    onWindowResize: () => {
+      if (window.innerWidth >= 1120) {
+        body.classList.remove("sidebar-open");
+      }
+    },
+    onWindowKeyDown: (event) => {
+      if (event.key === "Escape" && modal && !modal.hidden) {
+        closeModal();
+      }
+    },
+    onWindowLoad: () => {
+      window.setTimeout(() => {
+        body.classList.remove("is-loading");
+        body.classList.add("is-ready");
+        renderDashboard(true);
+      }, 900);
+    },
+    onServiceWorkerLoad: "serviceWorker" in navigator
+      ? () => navigator.serviceWorker.register("./service-worker.js", { scope: "./" }).catch(() => null)
+      : null,
+  });
+};
+
 const setActiveNavItem = (target) => {
   navItems.forEach((item) => {
     const isActive = item.dataset.navItem === target;
@@ -3943,183 +2817,8 @@ const initializeInteractions = () => {
   renderDashboard(false);
   setActiveView(uiState.activeView, { instant: true });
   refreshExchangeRate();
-
-  if (fab) {
-    fab.addEventListener("click", () => {
-      if (fab.dataset.fabAction === "investment") {
-        openInvestmentModal();
-        return;
-      }
-
-      openExpenseModal("add");
-    });
-  }
-
-  openExpenseButtons.forEach((button) => button.addEventListener("click", () => openExpenseModal("add")));
-  openIncomeButtons.forEach((button) => button.addEventListener("click", openIncomeModal));
-  openGoalButtons.forEach((button) => button.addEventListener("click", openGoalModal));
-  openInvestmentButtons.forEach((button) => button.addEventListener("click", openInvestmentModal));
-  openFilterButtons.forEach((button) => button.addEventListener("click", openFiltersModal));
-  openImportJsonButtons.forEach((button) => button.addEventListener("click", openImportJsonPicker));
-  openImportCsvButtons.forEach((button) => button.addEventListener("click", openImportCsvPicker));
-  openExportButtons.forEach((button) => button.addEventListener("click", openExportModal));
-  modalRestoreButtons.forEach((button) => button.addEventListener("click", openRestoreModal));
-  modalCloseTriggers.forEach((trigger) => trigger.addEventListener("click", closeModal));
-  languageOptionButtons.forEach((button) => button.addEventListener("click", () => setLanguage(button.dataset.languageOption)));
-  importJsonInput?.addEventListener("change", handleImportJsonSelection);
-  importCsvInput?.addEventListener("change", handleImportCsvSelection);
-
-  expenseForm?.addEventListener("submit", handleExpenseSubmit);
-  expenseForm?.addEventListener("input", clearFormFeedback);
-  expenseForm?.addEventListener("change", clearFormFeedback);
-  incomeForm?.addEventListener("submit", handleIncomeSubmit);
-  incomeForm?.addEventListener("input", () => {
-    clearIncomeFeedback();
-    updateIncomePreview();
-  });
-  incomeForm?.addEventListener("change", () => {
-    clearIncomeFeedback();
-    updateIncomePreview();
-  });
-  goalForm?.addEventListener("submit", handleGoalSubmit);
-  goalForm?.addEventListener("input", () => {
-    clearGoalFeedback();
-    updateGoalPreview();
-  });
-  goalForm?.addEventListener("change", () => {
-    clearGoalFeedback();
-    updateGoalPreview();
-  });
-
-  confirmDeleteButton?.addEventListener("click", handleDeleteExpense);
-  confirmRestoreButton?.addEventListener("click", restoreSampleData);
-  clearFiltersButton?.addEventListener("click", resetFilters);
-  exportJsonButton?.addEventListener("click", () => exportVisibleExpenses("json"));
-  exportCsvButton?.addEventListener("click", () => exportVisibleExpenses("csv"));
-  calendarShiftButtons.forEach((button) =>
-    button.addEventListener("click", () => shiftCalendarYear(Number(button.dataset.calendarShift || 0)))
-  );
-
-  searchInput?.addEventListener("input", (event) => handleSearchUpdate(event.target.value));
-  filterMonthInput?.addEventListener("change", (event) => applyFilterPatch({ month: event.target.value || getDefaultFilters(getState()).month }));
-  filterCategoryInput?.addEventListener("change", (event) => applyFilterPatch({ category: event.target.value || "all" }));
-  filterPaymentMethodInput?.addEventListener("change", (event) => applyFilterPatch({ paymentMethod: event.target.value || "all" }));
-  filterExpenseTypeInput?.addEventListener("change", (event) => applyFilterPatch({ expenseType: event.target.value || "all" }));
-  filterSortInput?.addEventListener("change", (event) => applyFilterPatch({ sort: event.target.value || "newest" }));
-  filterForm?.addEventListener("submit", (event) => {
-    event.preventDefault();
-    closeModal();
-  });
-
-  expenseList?.addEventListener("click", (event) => {
-    const listAction = event.target.closest("[data-list-action]");
-    if (listAction) {
-      if (listAction.dataset.listAction === "open-add") {
-        openExpenseModal("add");
-      }
-
-      if (listAction.dataset.listAction === "open-investment") {
-        openInvestmentModal();
-      }
-
-      if (listAction.dataset.listAction === "restore-sample") {
-        openRestoreModal();
-      }
-
-      if (listAction.dataset.listAction === "clear-filters") {
-        resetFilters();
-      }
-
-      if (listAction.dataset.listAction === "open-filters") {
-        openFiltersModal();
-      }
-
-      return;
-    }
-
-    const actionTrigger = event.target.closest("[data-expense-action]");
-    if (!actionTrigger) {
-      return;
-    }
-
-    const expense = getExpenseById(actionTrigger.dataset.expenseId);
-    if (!expense) {
-      return;
-    }
-
-    if (actionTrigger.dataset.expenseAction === "edit") {
-      openExpenseModal("edit", expense);
-    }
-
-    if (actionTrigger.dataset.expenseAction === "duplicate") {
-      duplicateExpense(expense);
-    }
-
-    if (actionTrigger.dataset.expenseAction === "delete") {
-      openDeleteModal(expense);
-    }
-  });
-
-  calendarGrid?.addEventListener("click", (event) => {
-    const monthTrigger = event.target.closest("[data-calendar-month]");
-    if (!(monthTrigger instanceof HTMLButtonElement) || monthTrigger.disabled) {
-      return;
-    }
-
-    setActiveMonth(monthTrigger.dataset.calendarMonth, true);
-  });
-  categoryLegend?.addEventListener("mouseover", (event) => {
-    const legendItem = event.target.closest("[data-legend-index]");
-    if (!legendItem || !categoryLegend.contains(legendItem)) {
-      return;
-    }
-
-    setCategoryMixHighlight(Number(legendItem.dataset.legendIndex));
-  });
-  categoryLegend?.addEventListener("mouseleave", () => setCategoryMixHighlight(-1));
-  categoryLegend?.addEventListener("focusin", (event) => {
-    const legendItem = event.target.closest("[data-legend-index]");
-    if (!legendItem || !categoryLegend.contains(legendItem)) {
-      return;
-    }
-
-    setCategoryMixHighlight(Number(legendItem.dataset.legendIndex));
-  });
-  categoryLegend?.addEventListener("focusout", (event) => {
-    if (categoryLegend.contains(event.relatedTarget)) {
-      return;
-    }
-
-    setCategoryMixHighlight(-1);
-  });
-
-  menuToggle?.addEventListener("click", () => body.classList.toggle("sidebar-open"));
-  backdrop?.addEventListener("click", () => body.classList.remove("sidebar-open"));
-  navItems.forEach((item) => item.addEventListener("click", () => setActiveView(item.dataset.navItem)));
-  window.addEventListener("resize", () => {
-    if (window.innerWidth >= 1120) {
-      body.classList.remove("sidebar-open");
-    }
-  });
-  window.addEventListener("keydown", (event) => {
-    if (event.key === "Escape" && modal && !modal.hidden) {
-      closeModal();
-    }
-  });
-  window.addEventListener("load", () => {
-    window.setTimeout(() => {
-      body.classList.remove("is-loading");
-      body.classList.add("is-ready");
-      renderDashboard(true);
-    }, 900);
-  });
+  registerEventListeners();
 };
 
 initializeInteractions();
-
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./service-worker.js", { scope: "./" }).catch(() => null);
-  });
-}
 
