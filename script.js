@@ -1,5 +1,29 @@
 const { getSampleState, getState, setState, updateState } = window.aleclvExpenseTrackerState;
-const { formatCurrency, formatDate, generateId } = window.aleclvExpenseTrackerUtils;
+const {
+  prefersReducedMotion,
+  clamp,
+  roundCurrency,
+  escapeHtml,
+  normalizeText,
+  toSafeNumber,
+  readDecimals,
+  isValidMonthKey,
+  getExpenseDate,
+  getMonthKey,
+  getCurrentMonthKey,
+  getLatestMonthKey,
+  shiftMonthKey,
+  getYearFromMonthKey,
+  getMonthNumberFromMonthKey,
+  buildMonthKey,
+  isFutureMonthKey,
+  getDaysInMonth,
+  getRemainingDaysInMonth,
+  getSpendTodayAmount,
+  formatCurrency,
+  formatDate,
+  generateId,
+} = window.aleclvExpenseTrackerUtils;
 
 const TOAST_TIMEOUT_MS = 2600;
 const MONTH_KEY_PATTERN = /^\d{4}-\d{2}$/;
@@ -1354,11 +1378,6 @@ const uiState = {
   toastTimer: null,
 };
 
-const prefersReducedMotion = () => window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
-const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
-const roundCurrency = (value) => Math.round((Number(value || 0) + Number.EPSILON) * 100) / 100;
-const escapeHtml = (value = "") => String(value).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#39;");
-const normalizeText = (value = "") => String(value).trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 const getCurrentLanguage = () => (isSupportedLanguage(uiState.currentLanguage) ? uiState.currentLanguage : DEFAULT_LANGUAGE);
 const getCurrentCurrency = () => (uiState.currentCurrency === "USD" ? "USD" : "ARS");
 const getCurrentLocale = () => translations[getCurrentLanguage()]?.locale || translations[DEFAULT_LANGUAGE].locale;
@@ -1375,10 +1394,6 @@ const t = (key, replacements = {}) => {
   const translatedValue = getTranslationValue(language, key);
   const resolvedValue = typeof translatedValue === "string" ? translatedValue : typeof fallbackValue === "string" ? fallbackValue : key;
   return interpolateText(resolvedValue, replacements);
-};
-const toSafeNumber = (value) => {
-  const parsedValue = Number(value);
-  return Number.isFinite(parsedValue) ? parsedValue : 0;
 };
 const convertMoneyForDisplay = (value) => {
   const safeValue = toSafeNumber(value);
@@ -1513,74 +1528,11 @@ const getSavingsCapacityBadgeCopy = (metrics) => {
 
   return getSavingsCapacityStateLabel(metrics.savingsCapacityState);
 };
-const readDecimals = (element) => Number(element?.dataset.decimals || 0);
-const isValidMonthKey = (value) => MONTH_KEY_PATTERN.test(String(value || "").trim());
-const getExpenseDate = (expense) => {
-  const parsed = new Date(expense?.date);
-  return Number.isNaN(parsed.getTime()) ? null : parsed;
-};
-const getMonthKey = (value) => {
-  const parsed = value instanceof Date ? value : new Date(value);
-  return Number.isNaN(parsed.getTime()) ? "" : `${parsed.getFullYear()}-${String(parsed.getMonth() + 1).padStart(2, "0")}`;
-};
-const getCurrentMonthKey = () => getMonthKey(new Date());
-const getLatestMonthKey = (expenses = []) => {
-  const latestDate = expenses.reduce((latest, expense) => {
-    const parsed = getExpenseDate(expense);
-    return !parsed || (latest && latest > parsed) ? latest : parsed;
-  }, null);
-
-  return latestDate ? getMonthKey(latestDate) : getCurrentMonthKey();
-};
-const shiftMonthKey = (monthKey, offset) => {
-  const [year, month] = monthKey.split("-").map(Number);
-  const date = new Date(Date.UTC(year, month - 1 + offset, 1, 12));
-  return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}`;
-};
 const getMonthLabel = (monthKey, options = {}) => {
   const date = new Date(`${monthKey}-01T12:00:00`);
   return Number.isNaN(date.getTime()) ? "" : new Intl.DateTimeFormat(getCurrentLocale(), { month: "long", year: "numeric", ...options }).format(date);
 };
-const getYearFromMonthKey = (monthKey) => Number(String(monthKey || "").split("-")[0]) || new Date().getFullYear();
-const getMonthNumberFromMonthKey = (monthKey) => Number(String(monthKey || "").split("-")[1]) || 1;
-const buildMonthKey = (year, monthNumber) => `${year}-${String(monthNumber).padStart(2, "0")}`;
 const getCalendarMonthLabel = (monthKey) => getMonthLabel(monthKey, { month: "short", year: undefined }).replace(".", "");
-const isFutureMonthKey = (monthKey) => monthKey > getCurrentMonthKey();
-const getDaysInMonth = (monthKey) => {
-  const [year, month] = monthKey.split("-").map(Number);
-  return new Date(year, month, 0).getDate();
-};
-const getRemainingDaysInMonth = (monthKey) => {
-  if (!isValidMonthKey(monthKey)) {
-    return 0;
-  }
-
-  const currentMonthKey = getCurrentMonthKey();
-
-  if (monthKey < currentMonthKey) {
-    return 0;
-  }
-
-  const daysInMonth = getDaysInMonth(monthKey);
-
-  if (monthKey > currentMonthKey) {
-    return daysInMonth;
-  }
-
-  return Math.max(daysInMonth - new Date().getDate(), 0);
-};
-const getSpendTodayAmount = (liquidityAmount, monthKey) => {
-  const safeLiquidityAmount = Number(liquidityAmount);
-  const normalizedLiquidityAmount = Number.isFinite(safeLiquidityAmount) ? safeLiquidityAmount : 0;
-  const daysRemaining = getRemainingDaysInMonth(monthKey);
-
-  if (daysRemaining <= 0) {
-    return Math.round(normalizedLiquidityAmount);
-  }
-
-  const dailyAmount = normalizedLiquidityAmount / daysRemaining;
-  return Number.isFinite(dailyAmount) ? Math.round(dailyAmount) : 0;
-};
 const getDefaultFilters = (state = getState()) => ({
   month: getLatestMonthKey(state.expenses),
   category: "all",
@@ -3420,7 +3372,12 @@ const openModal = (focusTarget = null) => {
   body.classList.remove("sidebar-open");
 
   if (focusTarget instanceof HTMLElement) {
-    window.requestAnimationFrame(() => focusTarget.focus());
+    const scheduledFocusTarget = focusTarget;
+    window.requestAnimationFrame(() => {
+      if (scheduledFocusTarget?.isConnected) {
+        scheduledFocusTarget.focus();
+      }
+    });
   }
 };
 
@@ -3440,11 +3397,16 @@ const closeModal = () => {
   incomeForm?.reset();
   goalForm?.reset();
 
-  if (uiState.lastFocusedElement instanceof HTMLElement) {
-    window.requestAnimationFrame(() => uiState.lastFocusedElement.focus());
-  }
-
+  const focusTarget = uiState.lastFocusedElement;
   uiState.lastFocusedElement = null;
+
+  if (focusTarget instanceof HTMLElement) {
+    window.requestAnimationFrame(() => {
+      if (focusTarget.isConnected && typeof focusTarget.focus === "function") {
+        focusTarget.focus();
+      }
+    });
+  }
 };
 
 const showToast = (message, tone = "success") => {
@@ -3969,7 +3931,7 @@ const setActiveView = (target, options = {}) => {
       behavior: options.instant ? "auto" : getScrollBehavior(),
     });
 
-    if (shouldFocusMain && dashboardMain instanceof HTMLElement) {
+    if (shouldFocusMain && dashboardMain instanceof HTMLElement && dashboardMain.isConnected) {
       dashboardMain.focus({ preventScroll: true });
     }
   });
