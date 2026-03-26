@@ -1984,44 +1984,25 @@ body.sidebar-open .mobile-backdrop {
   color: var(--accent-blue);
 }
 
-.toolbar-language-switch {
-  position: relative;
-  z-index: 1;
+.language-switch--toolbar {
   display: inline-flex;
-  flex: 0 0 auto;
   align-items: center;
-  gap: 6px;
-  min-width: max-content;
-  visibility: visible;
-  opacity: 1;
+  gap: 8px;
 }
 
-.toolbar-language-switch__button {
-  display: inline-flex;
+.language-switch--toolbar .language-switch__label,
+.language-switch--toolbar .language-switch__rate {
+  display: none;
+}
+
+.language-switch--toolbar .language-switch__actions {
+  gap: 6px;
+}
+
+.language-switch--toolbar .language-switch__button {
   min-width: 46px;
   min-height: 38px;
-  align-items: center;
-  justify-content: center;
   padding-inline: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  visibility: visible;
-  opacity: 1;
-}
-
-.toolbar-language-switch__button.is-active {
-  color: var(--surface-1);
-  border-color: rgba(117, 229, 192, 0.28);
-  background: var(--accent);
-}
-
-.toolbar-language-switch__button:not(.is-active):hover,
-.toolbar-language-switch__button:not(.is-active):focus-visible {
-  border-color: rgba(132, 166, 255, 0.2);
-  background: rgba(255, 255, 255, 0.05);
-}
-
-.toolbar-language-switch__rate {
-  display: none !important;
 }
 
 .income-kpi-grid {
