@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#060a10">
-  <title>aleclv salary planner</title>
+  <title>Cashflow Salary Tracker</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@500;600;700;800&display=swap" rel="stylesheet">
@@ -13,16 +13,157 @@
   <link rel="apple-touch-icon" href="icons/icon-192.png">
   <link rel="stylesheet" href="styles.css">
 </head>
-<body class="is-loading">
+<body class="is-loading auth-locked">
+  <div class="auth-shell" data-auth-shell>
+    <div class="auth-shell__glow auth-shell__glow--mint" aria-hidden="true"></div>
+    <div class="auth-shell__glow auth-shell__glow--blue" aria-hidden="true"></div>
+
+    <main class="auth-layout">
+      <section class="auth-intro panel" aria-labelledby="auth-intro-title">
+        <div class="auth-intro__content">
+          <div class="auth-intro__label">
+            <span class="brand-mark brand-mark--auth">cf</span>
+            <p class="eyebrow">Cashflow Salary Tracker</p>
+          </div>
+          <h2 id="auth-intro-title">Clarity for your cashflow</h2>
+          <p class="auth-intro__copy">Track income with confidence.</p>
+        </div>
+
+        <div class="auth-art" aria-hidden="true">
+          <div class="auth-art__halo auth-art__halo--primary"></div>
+          <div class="auth-art__halo auth-art__halo--secondary"></div>
+
+          <div class="auth-art__panel">
+            <div class="auth-art__panel-top">
+              <span class="auth-art__dot"></span>
+              <span class="auth-art__line auth-art__line--short"></span>
+            </div>
+
+            <div class="auth-art__orbits">
+              <span class="auth-art__orbit auth-art__orbit--large"></span>
+              <span class="auth-art__orbit auth-art__orbit--medium"></span>
+              <span class="auth-art__orbit auth-art__orbit--small"></span>
+              <span class="auth-art__node auth-art__node--one"></span>
+              <span class="auth-art__node auth-art__node--two"></span>
+              <span class="auth-art__node auth-art__node--three"></span>
+            </div>
+
+            <div class="auth-art__bars">
+              <span></span>
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="auth-panel panel" aria-label="Authentication">
+        <div class="auth-panel__top">
+          <p class="eyebrow auth-panel__eyebrow">Secure access</p>
+
+          <nav class="auth-switch" aria-label="Authentication navigation">
+            <a class="auth-switch__link is-active" href="#login" data-auth-nav="login" aria-current="page">Login</a>
+            <a class="auth-switch__link" href="#register" data-auth-nav="register">Register</a>
+          </nav>
+        </div>
+
+        <p class="auth-notice auth-notice--info" data-auth-notice role="status" aria-live="polite">Preview mode</p>
+
+        <section class="auth-view" data-auth-view="login" aria-labelledby="auth-login-title">
+          <div class="auth-view__header">
+            <p class="eyebrow">Login</p>
+            <h1 id="auth-login-title">Welcome back</h1>
+            <p class="auth-view__copy">Sign in to continue.</p>
+          </div>
+
+          <form class="auth-form" data-auth-form="login" novalidate>
+            <div class="auth-form__grid">
+              <label class="field" data-auth-field="email">
+                <span class="field__label">Email</span>
+                <input class="field__control" id="login-email" type="email" name="email" autocomplete="email" inputmode="email" placeholder="you@example.com" required aria-describedby="login-email-error">
+                <span class="auth-field__error" id="login-email-error" data-field-error="email"></span>
+              </label>
+
+              <label class="field" data-auth-field="password">
+                <span class="field__label">Password</span>
+                <input class="field__control" id="login-password" type="password" name="password" autocomplete="current-password" placeholder="At least 8 characters" required aria-describedby="login-password-error">
+                <span class="auth-field__error" id="login-password-error" data-field-error="password"></span>
+              </label>
+            </div>
+
+            <div class="auth-form__row">
+              <a class="auth-link" href="#login" data-auth-forgot>Forgot password?</a>
+            </div>
+
+            <p class="auth-form__feedback" data-auth-form-feedback="login" role="status" aria-live="polite"></p>
+
+            <div class="auth-form__actions">
+              <button class="button button--accent auth-submit" type="submit" data-auth-submit="login">
+                <span data-auth-submit-label>Sign in</span>
+              </button>
+              <p class="auth-form__switch">Need an account? <a class="auth-link" href="#register" data-auth-link="register">Create one</a></p>
+            </div>
+          </form>
+        </section>
+
+        <section class="auth-view" data-auth-view="register" aria-labelledby="auth-register-title" hidden>
+          <div class="auth-view__header">
+            <p class="eyebrow">Register</p>
+            <h2 id="auth-register-title">Create your account</h2>
+            <p class="auth-view__copy">Set up your workspace.</p>
+          </div>
+
+          <form class="auth-form" data-auth-form="register" novalidate>
+            <div class="auth-form__grid">
+              <label class="field" data-auth-field="fullName">
+                <span class="field__label">Full name</span>
+                <input class="field__control" id="register-full-name" type="text" name="fullName" autocomplete="name" placeholder="Jordan Lee" required aria-describedby="register-full-name-error">
+                <span class="auth-field__error" id="register-full-name-error" data-field-error="fullName"></span>
+              </label>
+
+              <label class="field" data-auth-field="email">
+                <span class="field__label">Email</span>
+                <input class="field__control" id="register-email" type="email" name="email" autocomplete="email" inputmode="email" placeholder="you@example.com" required aria-describedby="register-email-error">
+                <span class="auth-field__error" id="register-email-error" data-field-error="email"></span>
+              </label>
+
+              <label class="field" data-auth-field="password">
+                <span class="field__label">Password</span>
+                <input class="field__control" id="register-password" type="password" name="password" autocomplete="new-password" placeholder="Create a secure password" required aria-describedby="register-password-error">
+                <span class="auth-field__error" id="register-password-error" data-field-error="password"></span>
+              </label>
+
+              <label class="field" data-auth-field="confirmPassword">
+                <span class="field__label">Confirm password</span>
+                <input class="field__control" id="register-confirm-password" type="password" name="confirmPassword" autocomplete="new-password" placeholder="Repeat your password" required aria-describedby="register-confirm-password-error">
+                <span class="auth-field__error" id="register-confirm-password-error" data-field-error="confirmPassword"></span>
+              </label>
+            </div>
+
+            <p class="auth-form__feedback" data-auth-form-feedback="register" role="status" aria-live="polite"></p>
+
+            <div class="auth-form__actions">
+              <button class="button button--accent auth-submit" type="submit" data-auth-submit="register">
+                <span data-auth-submit-label>Create account</span>
+              </button>
+              <p class="auth-form__switch">Already have an account? <a class="auth-link" href="#login" data-auth-link="login">Back to login</a></p>
+            </div>
+          </form>
+        </section>
+      </section>
+    </main>
+  </div>
+
   <div class="app-shell">
     <div class="mobile-backdrop" data-backdrop></div>
 
     <aside class="sidebar" aria-label="Principal">
       <div class="sidebar__brand">
-        <span class="brand-mark">ae</span>
+        <span class="brand-mark">cf</span>
         <div>
           <p class="eyebrow">plan de dinero mensual</p>
-          <h1>aleclv salary planner</h1>
+          <h1>Cashflow Salary Tracker</h1>
         </div>
       </div>
 
@@ -49,7 +190,11 @@
 
       <section class="sidebar__footer panel panel--soft">
         <p class="eyebrow">Perfil</p>
-        <div class="profile-card"><div class="profile-card__avatar">AL</div><div><strong>Alejo</strong><span>Espacio personal</span></div></div>
+        <div class="profile-card">
+          <div class="profile-card__avatar" data-profile-avatar>CF</div>
+          <div><strong data-profile-name>Cashflow User</strong><span data-profile-meta>Personal workspace</span></div>
+        </div>
+        <button class="button button--ghost button--small sidebar__logout" type="button" data-auth-logout>Sign out</button>
       </section>
     </aside>
 
@@ -382,7 +527,7 @@
         </section>
         <section class="modal-section" data-modal-panel="confirm" hidden><div class="panel__header panel__header--stack"><div><p class="eyebrow">Eliminar movimiento</p><h3>Quitar este movimiento?</h3></div><p class="panel-note">El total del mes se actualiza al instante y esta accion no se puede deshacer.</p></div><div class="confirm-card"><strong data-confirm-title>Movimiento</strong><span data-confirm-date>19 mar 2026</span><p data-confirm-copy>Vas a eliminar este movimiento del registro mensual.</p><strong class="confirm-card__amount" data-confirm-amount>-$0,00</strong></div><div class="modal-actions"><button class="button button--ghost" type="button" data-modal-close>Cancelar</button><button class="button button--accent button--danger" type="button" data-confirm-delete>Eliminar movimiento</button></div></section>
         <section class="modal-section" data-modal-panel="filters" hidden><div class="panel__header panel__header--stack"><div><p class="eyebrow">Vista</p><h3>Filtros</h3></div><p class="panel-note">El mes define el contexto del tablero y el resto de los filtros ajusta la lista visible y las exportaciones.</p></div><form class="expense-form" data-filter-form><div class="expense-form__grid"><label class="field"><span class="field__label">Mes</span><input class="field__control" type="month" name="month" data-filter-month></label><label class="field"><span class="field__label">Categoria</span><select class="field__control field__control--select" name="category" data-filter-category><option value="all">Todas las categorias</option><option value="Supermercado">Supermercado</option><option value="Transporte">Transporte</option><option value="Casa/Servicios">Casa/Servicios</option><option value="Gimnasio">Gimnasio</option><option value="Facultad">Facultad</option><option value="Suscripciones">Suscripciones</option><option value="Salidas">Gastos</option><option value="Salud">Salud</option><option value="Auto/Moto">Auto/Moto</option><option value="Inversion">Inversion</option><option value="Otros">Otros</option></select></label><label class="field"><span class="field__label">Medio de pago</span><select class="field__control field__control--select" name="paymentMethod" data-filter-payment-method><option value="all">Todos los medios</option><option value="Efectivo">Efectivo</option><option value="Debito">Debito</option><option value="Credito">Credito</option><option value="Transferencia">Transferencia</option></select></label><label class="field"><span class="field__label">Tipo de movimiento</span><select class="field__control field__control--select" name="expenseType" data-filter-expense-type><option value="all">Fijos y variables</option><option value="fixed">Solo fijos</option><option value="variable">Solo variables</option></select></label><label class="field field--full"><span class="field__label">Ordenar por</span><select class="field__control field__control--select" name="sort" data-filter-sort><option value="newest">Mas recientes primero</option><option value="oldest">Mas antiguos primero</option><option value="highest">Monto mas alto</option><option value="lowest">Monto mas bajo</option></select></label></div><div class="confirm-card"><strong>Busqueda actual</strong><span data-filter-search-preview>Sin busqueda aplicada</span><p data-filter-results-copy>Los movimientos visibles cambian en tiempo real segun los filtros activos.</p></div><div class="modal-actions modal-actions--spread"><button class="button button--ghost" type="button" data-clear-filters>Limpiar filtros</button><div class="modal-actions__cluster"><button class="button button--ghost" type="button" data-modal-restore-sample>Restaurar datos de muestra</button><button class="button button--accent" type="button" data-modal-close>Listo</button></div></div></form></section>
-        <section class="modal-section" data-modal-panel="export" hidden><div class="panel__header panel__header--stack"><div><p class="eyebrow">Exportacion</p><h3>Exportar movimientos visibles</h3></div><p class="panel-note">La exportacion respeta el mes, la busqueda y todos los filtros activos.</p></div><div class="confirm-card"><strong data-export-summary>0 movimientos listos</strong><span data-export-filename>aleclv-salary-planner-2026-03.csv</span><p data-export-copy>Ajusta los filtros si quieres descargar otro conjunto de movimientos.</p></div><div class="modal-actions modal-actions--spread"><button class="button button--ghost" type="button" data-modal-close>Cerrar</button><div class="modal-actions__cluster"><button class="button button--ghost" type="button" data-export-json>Exportar JSON</button><button class="button button--accent" type="button" data-export-csv>Exportar CSV</button></div></div></section>
+        <section class="modal-section" data-modal-panel="export" hidden><div class="panel__header panel__header--stack"><div><p class="eyebrow">Exportacion</p><h3>Exportar movimientos visibles</h3></div><p class="panel-note">La exportacion respeta el mes, la busqueda y todos los filtros activos.</p></div><div class="confirm-card"><strong data-export-summary>0 movimientos listos</strong><span data-export-filename>cashflow-salary-tracker-2026-03.csv</span><p data-export-copy>Ajusta los filtros si quieres descargar otro conjunto de movimientos.</p></div><div class="modal-actions modal-actions--spread"><button class="button button--ghost" type="button" data-modal-close>Cerrar</button><div class="modal-actions__cluster"><button class="button button--ghost" type="button" data-export-json>Exportar JSON</button><button class="button button--accent" type="button" data-export-csv>Exportar CSV</button></div></div></section>
         <section class="modal-section" data-modal-panel="reset" hidden><div class="panel__header panel__header--stack"><div><p class="eyebrow">Restaurar muestra</p><h3>Reemplazar tus datos actuales?</h3></div><p class="panel-note">Esto vuelve a cargar la muestra incluida con el planner y pisa el estado guardado en este navegador.</p></div><div class="confirm-card"><strong>Datos de muestra</strong><span>Se restablecen ingreso, movimientos, categorias, resumenes y filtros para seguir explorando el planner.</span><p>Usalo si quieres volver a una base limpia sin perder la estructura realista de la interfaz.</p></div><div class="modal-actions"><button class="button button--ghost" type="button" data-modal-close>Cancelar</button><button class="button button--accent" type="button" data-confirm-restore>Restaurar muestra</button></div></section>
       </div>
     </div>
@@ -398,6 +543,7 @@
     </nav>
   </div>
 
+  <script src="auth.js"></script>
   <script src="utils.js"></script>
   <script src="state.js"></script>
   <script src="i18n.js"></script>
