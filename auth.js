@@ -1,9 +1,8 @@
 (function () {
-  const AUTH_SESSION_STORAGE_KEY = "cashflow-salary-tracker-auth:session";
-  const AUTH_REGISTERED_USER_STORAGE_KEY = "cashflow-salary-tracker-auth:registered-user";
+  const AUTH_SESSION_STORAGE_KEY = "auth-session";
+  const AUTH_API_BASE_URL = "http://localhost:3000";
   const AUTH_ROUTE_KEYS = new Set(["login", "register"]);
   const DEFAULT_AUTH_ROUTE = "login";
-  const MOCK_REQUEST_DELAY_MS = 850;
   const NOTICE_TONES = ["auth-notice--info", "auth-notice--success", "auth-notice--error"];
   const FEEDBACK_TONES = ["is-success", "is-error"];
   const BASE_TITLE = "Cashflow Salary Tracker";
@@ -91,49 +90,75 @@
     return `${String(email).trim().slice(0, 2) || "CF"}`.toUpperCase();
   };
 
-  const readMockSession = () => readJson(AUTH_SESSION_STORAGE_KEY);
-  const readRegisteredUser = () => readJson(AUTH_REGISTERED_USER_STORAGE_KEY);
+  const readSession = () => readJson(AUTH_SESSION_STORAGE_KEY);
 
-  // Replace these placeholder methods with real API calls once the backend is ready.
-  const mockAuthService = {
-    async register(payload) {
-      await wait(MOCK_REQUEST_DELAY_MS);
+  const saveSession = (user) => {
+    writeJson(AUTH_SESSION_STORAGE_KEY, user);
+  };
 
-      const user = {
+  const normalizeUser = (user = {}) => {
+    const normalizedEmail = String(user.email || "").trim().toLowerCase();
+    const normalizedName = normalizeName(user.fullName || user.name || normalizedEmail || "Cashflow User");
+
+    return {
+      ...user,
+      fullName: normalizedName,
+      email: normalizedEmail,
+    };
+  };
+
+  const requestAuth = async (endpoint, payload) => {
+    let response;
+
+    try {
+      response = await window.fetch(`${AUTH_API_BASE_URL}${endpoint}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+    } catch (error) {
+      throw new Error("Unable to reach the server.");
+    }
+
+    let data = null;
+
+    try {
+      data = await response.json();
+    } catch (error) {
+      data = null;
+    }
+
+    if (!response.ok) {
+      throw new Error(data?.error || "Authentication request failed.");
+    }
+
+    if (!data || typeof data !== "object" || !data.user || typeof data.user !== "object") {
+      throw new Error("Invalid server response.");
+    }
+
+    return normalizeUser(data.user);
+  };
+
+  const authService = {
+    register(payload) {
+      return requestAuth("/register", {
         fullName: normalizeName(payload.fullName),
         email: String(payload.email || "").trim().toLowerCase(),
-        createdAt: new Date().toISOString(),
-      };
-
-      writeJson(AUTH_REGISTERED_USER_STORAGE_KEY, user);
-      return { user };
-    },
-    async login(payload) {
-      await wait(MOCK_REQUEST_DELAY_MS);
-
-      const registeredUser = readRegisteredUser();
-      const normalizedEmail = String(payload.email || "").trim().toLowerCase();
-
-      if (registeredUser && registeredUser.email !== normalizedEmail) {
-        throw new Error(`Use ${registeredUser.email} to sign in, or create a new account.`);
-      }
-
-      const fallbackName = normalizedEmail.split("@")[0]?.replace(/[._-]+/g, " ") || "Cashflow User";
-      const user = registeredUser || {
-        fullName: normalizeName(fallbackName.replace(/\b\w/g, (character) => character.toUpperCase())),
-        email: normalizedEmail,
-      };
-
-      writeJson(AUTH_SESSION_STORAGE_KEY, {
-        user,
-        authenticatedAt: new Date().toISOString(),
+        password: String(payload.password || ""),
       });
-
-      return { user };
     },
-    async logout() {
-      await wait(120);
+    login(payload) {
+      return requestAuth("/login", {
+        email: String(payload.email || "").trim().toLowerCase(),
+        password: String(payload.password || ""),
+      });
+    },
+    logout() {
       removeStorageItem(AUTH_SESSION_STORAGE_KEY);
+      return Promise.resolve();
     },
   };
 
@@ -368,14 +393,6 @@
     firstInput?.focus();
   };
 
-  const prefillLoginEmail = (email) => {
-    const loginEmailInput = authForms.login?.elements?.namedItem("email");
-
-    if (loginEmailInput) {
-      loginEmailInput.value = email;
-    }
-  };
-
   const handleForgotPassword = (event) => {
     event.preventDefault();
     setNotice("info", "Password reset will be connected later.");
@@ -425,14 +442,16 @@
     setNotice("info", "Signing in...");
 
     try {
-      const { user } = await mockAuthService.login(values);
+      const user = await authService.login(values);
+      saveSession(user);
       setFeedback("login", "success", "Opening your workspace...");
       setNotice("success", "Signed in.");
-      await wait(420);
+      await wait(250);
       revealDashboard(user);
     } catch (error) {
-      setFeedback("login", "error", error.message || "Unable to sign in right now.");
-      setNotice("error", error.message || "Unable to sign in right now.");
+      const message = error?.message || "Unable to sign in right now.";
+      setFeedback("login", "error", message);
+      setNotice("error", message);
     } finally {
       setButtonLoadingState("login", false);
     }
@@ -457,35 +476,26 @@
     setNotice("info", "Creating account...");
 
     try {
-      const { user } = await mockAuthService.register(values);
-      setFeedback("register", "success", "Account created.");
-      prefillLoginEmail(user.email);
-      await wait(500);
-      setActiveRoute("login", { replaceHistory: true });
-      setNotice("success", "Account created. Sign in to continue.");
-      authForms.register.reset();
-      focusFirstField("login");
+      const user = await authService.register(values);
+      saveSession(user);
+      setFeedback("register", "success", "Opening your workspace...");
+      setNotice("success", "Account created.");
+      await wait(250);
+      revealDashboard(user);
     } catch (error) {
-      setFeedback("register", "error", error.message || "Unable to create the mock account right now.");
-      setNotice("error", error.message || "Unable to create the mock account right now.");
+      const message = error?.message || "Unable to create your account right now.";
+      setFeedback("register", "error", message);
+      setNotice("error", message);
     } finally {
       setButtonLoadingState("register", false);
     }
   };
 
   const handleLogout = async () => {
-    await mockAuthService.logout();
+    await authService.logout();
     showAuthShell("login");
     setActiveRoute("login", { replaceHistory: true });
     setNotice("info", "Signed out.");
-
-    const registeredUser = readRegisteredUser();
-
-    if (registeredUser?.email) {
-      prefillLoginEmail(registeredUser.email);
-      setNotice("info", `Use ${registeredUser.email} to sign in.`);
-    }
-
     focusFirstField("login");
   };
 
@@ -510,22 +520,14 @@
     }
   });
 
-  const session = readMockSession();
+  const session = readSession();
 
-  if (session?.user) {
-    revealDashboard(session.user);
+  if (session) {
+    revealDashboard(normalizeUser(session));
   } else {
     const initialRoute = getRouteFromHash();
-    const registeredUser = readRegisteredUser();
-
     showAuthShell(initialRoute);
     setActiveRoute(initialRoute, { replaceHistory: !window.location.hash });
-
-    if (registeredUser?.email) {
-      prefillLoginEmail(registeredUser.email);
-      setNotice("info", `Use ${registeredUser.email} to sign in.`);
-    }
-
     focusFirstField(initialRoute);
   }
 })();
