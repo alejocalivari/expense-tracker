@@ -826,7 +826,7 @@ const translateStaticUi = () => {
   setTextValue(document.querySelector(".sidebar__brand .eyebrow"), t("sidebar.brandEyebrow"));
   setTextValue(document.querySelector(".sidebar__rail .panel__header .eyebrow"), t("sidebar.activeMonthEyebrow"));
   setTextValue(document.querySelector(".sidebar__footer .eyebrow"), t("sidebar.profileEyebrow"));
-  setTextValue(document.querySelector(".profile-card span"), t("sidebar.personalSpace"));
+  setTextValue(document.querySelector("[data-profile-meta]"), body.dataset.authProfileMeta || t("sidebar.personalSpace"));
   if (summaryElements.sidebarFreeCash?.nextSibling) {
     summaryElements.sidebarFreeCash.nextSibling.textContent = getCurrentLanguage() === "en"
       ? " of liquidity until next income"
@@ -1970,7 +1970,7 @@ const downloadTextFile = (filename, contents, mimeType) => {
   URL.revokeObjectURL(url);
 };
 
-const getExportBaseFilename = (metrics) => `aleclv-salary-planner-${metrics.activeMonthKey}`;
+const getExportBaseFilename = (metrics) => `cashflow-salary-tracker-${metrics.activeMonthKey}`;
 
 const renderExportState = (metrics, context) => {
   setTextValue(exportSummary, t("exportState.ready", { count: formatNumber(context.visibleExpenses.length, 0) }));
