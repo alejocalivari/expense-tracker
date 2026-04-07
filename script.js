@@ -2757,7 +2757,139 @@ const registerEventListeners = () => {
       }, 900);
     },
     onServiceWorkerLoad: "serviceWorker" in navigator
-      ? () => navigator.serviceWorker.register("./service-worker.js", { scope: "./" }).catch(() => null)
+      ? () => {
+          const appBuildVersion =
+            document.querySelector('meta[name="app-build"]')?.getAttribute("content") || "dev";
+          const isDevelopmentEnvironment =
+            window.location.protocol === "file:" || ["localhost", "127.0.0.1"].includes(window.location.hostname);
+          const searchParams = new URLSearchParams(window.location.search);
+          const isServiceWorkerDisabled =
+            isDevelopmentEnvironment ||
+            searchParams.get("sw") === "off" ||
+            window.localStorage.getItem("cashflow:disable-service-worker") === "true";
+          const serviceWorkerUrl = `./service-worker.js?v=${encodeURIComponent(appBuildVersion)}`;
+          const cleanupReloadKey = "cashflow:service-worker-clean-reload";
+          let shouldReloadForServiceWorkerUpdate = false;
+
+          const clearAppCaches = () => {
+            if (!("caches" in window)) {
+              return Promise.resolve();
+            }
+
+            return caches.keys().then((cacheNames) =>
+              Promise.all(
+                cacheNames
+                  .filter((cacheName) => cacheName.startsWith("cashflow-"))
+                  .map((cacheName) => caches.delete(cacheName))
+              )
+            );
+          };
+
+          const unregisterServiceWorkers = () =>
+            navigator.serviceWorker.getRegistrations().then((registrations) =>
+              Promise.all(registrations.map((registration) => registration.unregister()))
+            );
+
+          const resetServiceWorkerState = () =>
+            unregisterServiceWorkers()
+              .then(() => clearAppCaches())
+              .catch(() => null);
+
+          const reloadOnceAfterCleanup = () => {
+            if (window.sessionStorage.getItem(cleanupReloadKey) === "true") {
+              window.sessionStorage.removeItem(cleanupReloadKey);
+              return;
+            }
+
+            window.sessionStorage.setItem(cleanupReloadKey, "true");
+            window.location.reload();
+          };
+
+          const activateUpdatedServiceWorker = (serviceWorker) => {
+            if (!serviceWorker) {
+              return;
+            }
+
+            shouldReloadForServiceWorkerUpdate = Boolean(navigator.serviceWorker.controller);
+            serviceWorker.postMessage({ type: "SKIP_WAITING" });
+          };
+
+          window.cashflowServiceWorker = {
+            clear: () => resetServiceWorkerState(),
+            disable: () => {
+              window.localStorage.setItem("cashflow:disable-service-worker", "true");
+              return resetServiceWorkerState().then(() => window.location.reload());
+            },
+            enable: () => {
+              window.localStorage.removeItem("cashflow:disable-service-worker");
+              window.location.reload();
+            },
+            update: () =>
+              navigator.serviceWorker
+                .getRegistration("./")
+                .then((registration) => registration?.update() || null)
+                .catch(() => null),
+          };
+
+          if (isServiceWorkerDisabled) {
+            const hasActiveController = Boolean(navigator.serviceWorker.controller);
+
+            resetServiceWorkerState().then(() => {
+              if (hasActiveController) {
+                reloadOnceAfterCleanup();
+                return;
+              }
+
+              window.sessionStorage.removeItem(cleanupReloadKey);
+            });
+            return;
+          }
+
+          window.sessionStorage.removeItem(cleanupReloadKey);
+
+          navigator.serviceWorker.addEventListener("controllerchange", () => {
+            if (!shouldReloadForServiceWorkerUpdate) {
+              return;
+            }
+
+            shouldReloadForServiceWorkerUpdate = false;
+            window.location.reload();
+          });
+
+          navigator.serviceWorker
+            .register(serviceWorkerUrl, {
+              scope: "./",
+              updateViaCache: "none",
+            })
+            .then((registration) => {
+              if (registration.waiting) {
+                activateUpdatedServiceWorker(registration.waiting);
+              }
+
+              registration.addEventListener("updatefound", () => {
+                const installingWorker = registration.installing;
+
+                if (!installingWorker) {
+                  return;
+                }
+
+                installingWorker.addEventListener("statechange", () => {
+                  if (installingWorker.state === "installed" && navigator.serviceWorker.controller) {
+                    activateUpdatedServiceWorker(installingWorker);
+                  }
+                });
+              });
+
+              registration.update().catch(() => null);
+
+              document.addEventListener("visibilitychange", () => {
+                if (document.visibilityState === "visible") {
+                  registration.update().catch(() => null);
+                }
+              });
+            })
+            .catch(() => null);
+        }
       : null,
   });
 };
