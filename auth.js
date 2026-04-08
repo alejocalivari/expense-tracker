@@ -1,11 +1,28 @@
 (function () {
   const AUTH_SESSION_STORAGE_KEY = "auth-session";
-  const AUTH_API_BASE_URL = "http://localhost:3000";
   const AUTH_ROUTE_KEYS = new Set(["login", "register"]);
   const DEFAULT_AUTH_ROUTE = "login";
   const NOTICE_TONES = ["auth-notice--info", "auth-notice--success", "auth-notice--error"];
   const FEEDBACK_TONES = ["is-success", "is-error"];
   const BASE_TITLE = "Cashflow Salary Tracker";
+  const stripTrailingSlash = (value = "") => String(value).trim().replace(/\/+$/, "");
+  const readConfiguredApiBaseUrl = () =>
+    stripTrailingSlash(document.querySelector('meta[name="auth-api-base-url"]')?.getAttribute("content") || "");
+  const isLocalDevelopmentEnvironment = () =>
+    window.location.protocol === "file:" || ["localhost", "127.0.0.1"].includes(window.location.hostname);
+  const AUTH_API_BASE_URL = (() => {
+    const configuredApiBaseUrl = readConfiguredApiBaseUrl();
+
+    if (configuredApiBaseUrl) {
+      return configuredApiBaseUrl;
+    }
+
+    if (isLocalDevelopmentEnvironment()) {
+      return "http://localhost:3000";
+    }
+
+    return stripTrailingSlash(window.location.origin);
+  })();
 
   const body = document.body;
   const authShell = document.querySelector("[data-auth-shell]");
@@ -120,7 +137,7 @@
         body: JSON.stringify(payload),
       });
     } catch (error) {
-      throw new Error("Unable to reach the server.");
+      throw new Error(`Unable to reach the server at ${AUTH_API_BASE_URL}.`);
     }
 
     let data = null;
