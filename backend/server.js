@@ -1,6 +1,15 @@
 const express = require("express");
 const cors = require("cors");
 const bcrypt = require("bcrypt");
+const {
+  DATA_FILE_PATH,
+  createUser,
+  findUserByEmail,
+  getPlannerState,
+  isValidPlannerStatePayload,
+  normalizeEmail,
+  savePlannerState,
+} = require("./store");
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
@@ -25,8 +34,8 @@ const corsOptions = {
 
     callback(new Error(`Origin ${origin} is not allowed by CORS.`));
   },
-  methods: ["GET", "POST", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Accept"],
+  methods: ["GET", "POST", "PUT", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Accept", "Authorization"],
 };
 
 process.on("uncaughtException", (error) => {
@@ -42,12 +51,60 @@ process.on("unhandledRejection", (reason) => {
 console.log("[backend] Booting backend...");
 console.log(`[backend] Requested port: ${PORT}`);
 console.log(`[backend] Allowed origins: ${Array.from(ALLOWED_ORIGINS).join(", ")}`);
+console.log(`[backend] Data file: ${DATA_FILE_PATH}`);
 
 app.use(cors(corsOptions));
 app.options(/.*/, cors(corsOptions));
 app.use(express.json());
 
-let users = [];
+const getBasicAuthCredentials = (authorizationHeader) => {
+  if (typeof authorizationHeader !== "string" || !authorizationHeader.startsWith("Basic ")) {
+    return null;
+  }
+
+  try {
+    const encodedCredentials = authorizationHeader.slice("Basic ".length).trim();
+    const decodedCredentials = Buffer.from(encodedCredentials, "base64").toString("utf8");
+    const separatorIndex = decodedCredentials.indexOf(":");
+
+    if (separatorIndex < 0) {
+      return null;
+    }
+
+    return {
+      email: decodedCredentials.slice(0, separatorIndex),
+      password: decodedCredentials.slice(separatorIndex + 1),
+    };
+  } catch (error) {
+    return null;
+  }
+};
+
+const authenticatePlannerRequest = async (req, res, next) => {
+  const credentials = getBasicAuthCredentials(req.headers.authorization);
+
+  if (!credentials?.email || !credentials?.password) {
+    res.set("WWW-Authenticate", 'Basic realm="Cashflow Salary Tracker Planner"');
+    return res.status(401).json({ error: "Authentication required" });
+  }
+
+  const user = findUserByEmail(credentials.email);
+
+  if (!user) {
+    res.set("WWW-Authenticate", 'Basic realm="Cashflow Salary Tracker Planner"');
+    return res.status(401).json({ error: "Invalid credentials" });
+  }
+
+  const isPasswordValid = await bcrypt.compare(credentials.password, user.password);
+
+  if (!isPasswordValid) {
+    res.set("WWW-Authenticate", 'Basic realm="Cashflow Salary Tracker Planner"');
+    return res.status(401).json({ error: "Invalid credentials" });
+  }
+
+  req.authenticatedUser = user;
+  return next();
+};
 
 app.get("/health", (req, res) => {
   res.json({ ok: true, port: PORT });
@@ -62,14 +119,11 @@ app.post("/register", async (req, res) => {
   }
 
   const hashedPassword = await bcrypt.hash(password, 10);
-
-  const user = {
+  const user = createUser({
     fullName,
-    email,
-    password: hashedPassword,
-  };
-
-  users.push(user);
+    email: normalizeEmail(email),
+    passwordHash: hashedPassword,
+  });
 
   res.json({
     user: {
@@ -83,7 +137,7 @@ app.post("/register", async (req, res) => {
 app.post("/login", async (req, res) => {
   const { email, password } = req.body;
 
-  const user = users.find((candidate) => candidate.email === email);
+  const user = findUserByEmail(email);
 
   if (!user) {
     return res.status(400).json({ error: "User not found" });
@@ -103,9 +157,28 @@ app.post("/login", async (req, res) => {
   });
 });
 
+app.get("/planner", authenticatePlannerRequest, (req, res) => {
+  const plannerState = getPlannerState(req.authenticatedUser.id);
+  res.json(plannerState);
+});
+
+app.put("/planner", authenticatePlannerRequest, (req, res) => {
+  if (!isValidPlannerStatePayload(req.body)) {
+    return res.status(400).json({ error: "Invalid planner state payload" });
+  }
+
+  const plannerState = savePlannerState(req.authenticatedUser.id, req.body);
+
+  if (!plannerState) {
+    return res.status(404).json({ error: "User not found" });
+  }
+
+  return res.json(plannerState);
+});
+
 const server = app.listen(PORT, () => {
   console.log(`[backend] Server running on http://localhost:${PORT}`);
-  console.log("[backend] Available routes: GET /health, POST /register, POST /login");
+  console.log("[backend] Available routes: GET /health, POST /register, POST /login, GET /planner, PUT /planner");
 });
 
 server.on("error", (error) => {
@@ -117,3 +190,8 @@ server.on("error", (error) => {
 
   process.exit(1);
 });
+
+module.exports = {
+  app,
+  server,
+};
