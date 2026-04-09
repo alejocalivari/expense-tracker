@@ -1,4 +1,4 @@
-const CACHE_VERSION = "v3";
+const CACHE_VERSION = "v4";
 const APP_CACHE_PREFIX = "cashflow-";
 const SHELL_CACHE_NAME = `${APP_CACHE_PREFIX}shell-${CACHE_VERSION}`;
 const APP_SHELL_URL = new URL("./index.html", self.registration.scope).toString();
@@ -11,6 +11,7 @@ const CORE_ASSETS = [
   "./layout.css",
   "./components.css",
   "./auth.css",
+  "./config.js",
   "./auth.js",
   "./script.js",
   "./state.js",
