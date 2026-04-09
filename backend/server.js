@@ -50,7 +50,7 @@ app.use(express.json());
 let users = [];
 
 app.get("/health", (req, res) => {
-  res.json({ ok: true, port: PORT });
+  res.json({ ok: true });
 });
 
 // REGISTER

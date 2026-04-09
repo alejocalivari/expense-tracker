@@ -1,0 +1,9 @@
+{
+  "users": [
+    {
+      "fullName": "Test User",
+      "email": "test@example.com",
+      "password": "$2b$10$UMHsdzSS/qleT.W0G.dDOeqvhVb/xNrjO.wCBU4mDjYdUOGoVOWSS"
+    }
+  ]
+}
