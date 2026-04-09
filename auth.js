@@ -5,6 +5,9 @@
   const NOTICE_TONES = ["auth-notice--info", "auth-notice--success", "auth-notice--error"];
   const FEEDBACK_TONES = ["is-success", "is-error"];
   const BASE_TITLE = "Cashflow Salary Tracker";
+  const PLANNER_LOADING_NOTICE = "Loading your planner...";
+  const WORKSPACE_LOADING_NOTICE = "Loading your workspace...";
+  const LEGACY_SESSION_NOTICE = "Sign in again to load your planner.";
   const stripTrailingSlash = (value = "") => String(value).trim().replace(/\/+$/, "");
   const API_BASE_URL = stripTrailingSlash(window.aleclvExpenseTrackerConfig?.apiBaseUrl || "");
 
@@ -76,6 +79,31 @@
   const wait = (delayMs) => new Promise((resolve) => window.setTimeout(resolve, delayMs));
 
   const normalizeName = (value = "") => String(value).trim().replace(/\s+/g, " ");
+  const normalizeEmail = (value = "") => String(value).trim().toLowerCase();
+  const encodeBase64 = (value = "") => {
+    const normalizedValue = String(value || "");
+
+    if (typeof TextEncoder === "function") {
+      const bytes = new TextEncoder().encode(normalizedValue);
+      let binaryValue = "";
+      bytes.forEach((byte) => {
+        binaryValue += String.fromCharCode(byte);
+      });
+      return window.btoa(binaryValue);
+    }
+
+    return window.btoa(normalizedValue);
+  };
+  const createPlannerAuthHeader = (email, password) => {
+    const normalizedEmail = normalizeEmail(email);
+    const normalizedPassword = String(password || "");
+
+    if (!normalizedEmail || !normalizedPassword) {
+      return "";
+    }
+
+    return `Basic ${encodeBase64(`${normalizedEmail}:${normalizedPassword}`)}`;
+  };
 
   const createInitials = (name = "", email = "") => {
     const nameTokens = normalizeName(name).split(" ").filter(Boolean);
@@ -91,14 +119,8 @@
     return `${String(email).trim().slice(0, 2) || "CF"}`.toUpperCase();
   };
 
-  const readSession = () => readJson(AUTH_SESSION_STORAGE_KEY);
-
-  const saveSession = (user) => {
-    writeJson(AUTH_SESSION_STORAGE_KEY, user);
-  };
-
   const normalizeUser = (user = {}) => {
-    const normalizedEmail = String(user.email || "").trim().toLowerCase();
+    const normalizedEmail = normalizeEmail(user.email);
     const normalizedName = normalizeName(user.fullName || user.name || normalizedEmail || "Cashflow User");
 
     return {
@@ -107,6 +129,32 @@
       email: normalizedEmail,
     };
   };
+  const normalizeSession = (session = {}) => {
+    const normalizedUser = normalizeUser(session);
+    const plannerAuthHeader = String(session.plannerAuthHeader || "").trim();
+
+    return plannerAuthHeader
+      ? {
+          ...normalizedUser,
+          plannerAuthHeader,
+        }
+      : normalizedUser;
+  };
+  const readSession = () => {
+    const session = readJson(AUTH_SESSION_STORAGE_KEY);
+    return session ? normalizeSession(session) : null;
+  };
+  const saveSession = (session) => {
+    writeJson(AUTH_SESSION_STORAGE_KEY, normalizeSession(session));
+  };
+  const hasPlannerCredentials = (session = readSession()) =>
+    Boolean(session?.plannerAuthHeader && normalizeEmail(session.email));
+  const createSession = (user, password) =>
+    normalizeSession({
+      ...normalizeUser(user),
+      plannerAuthHeader: createPlannerAuthHeader(user?.email, password),
+    });
+  const getSession = () => readSession();
 
   const requestAuth = async (endpoint, payload) => {
     if (!API_BASE_URL) {
@@ -145,6 +193,44 @@
     }
 
     return normalizeUser(data.user);
+  };
+
+  const fetchPlannerState = async (session = getSession()) => {
+    if (!hasPlannerCredentials(session)) {
+      throw new Error(LEGACY_SESSION_NOTICE);
+    }
+
+    let response;
+
+    try {
+      response = await window.fetch(`${AUTH_API_BASE_URL}/planner`, {
+        method: "GET",
+        headers: {
+          Accept: "application/json",
+          Authorization: session.plannerAuthHeader,
+        },
+      });
+    } catch (error) {
+      throw new Error(`Unable to reach the server at ${AUTH_API_BASE_URL}.`);
+    }
+
+    let data = null;
+
+    try {
+      data = await response.json();
+    } catch (error) {
+      data = null;
+    }
+
+    if (!response.ok) {
+      throw new Error(data?.error || "Unable to load planner state.");
+    }
+
+    if (!data || typeof data !== "object") {
+      throw new Error("Invalid planner response.");
+    }
+
+    return data;
   };
 
   const authService = {
@@ -427,6 +513,31 @@
     form.addEventListener("blur", handleValidation, true);
     form.addEventListener("input", handleValidation);
   };
+  const hydratePlannerState = (session) => {
+    if (typeof window.aleclvExpenseTrackerState?.hydrateAuthenticatedSession === "function") {
+      return window.aleclvExpenseTrackerState.hydrateAuthenticatedSession(session);
+    }
+
+    return Promise.resolve(null);
+  };
+  const syncPlannerView = (mode = "authenticated") => {
+    const syncHandler =
+      mode === "local"
+        ? window.aleclvExpenseTrackerApp?.syncLocalPlannerView
+        : window.aleclvExpenseTrackerApp?.syncAuthenticatedPlannerView;
+
+    return Promise.resolve(typeof syncHandler === "function" ? syncHandler() : null);
+  };
+
+  window.aleclvExpenseTrackerAuth = {
+    getSession,
+    hasPlannerCredentials,
+    fetchPlannerState,
+    completeAuthenticatedLaunch: revealDashboard,
+    showAuthShell,
+    setNotice,
+    clearSession: () => authService.logout(),
+  };
 
   const handleLoginSubmit = async (event) => {
     event.preventDefault();
@@ -448,11 +559,16 @@
 
     try {
       const user = await authService.login(values);
-      saveSession(user);
-      setFeedback("login", "success", "Opening your workspace...");
+      const session = createSession(user, values.password);
+
+      saveSession(session);
+      setFeedback("login", "success", "Loading your workspace...");
+      setNotice("info", PLANNER_LOADING_NOTICE);
+      await hydratePlannerState(session);
+      await syncPlannerView("authenticated");
+      await wait(150);
+      revealDashboard(session);
       setNotice("success", "Signed in.");
-      await wait(250);
-      revealDashboard(user);
     } catch (error) {
       const message = error?.message || "Unable to sign in right now.";
       setFeedback("login", "error", message);
@@ -482,11 +598,16 @@
 
     try {
       const user = await authService.register(values);
-      saveSession(user);
-      setFeedback("register", "success", "Opening your workspace...");
+      const session = createSession(user, values.password);
+
+      saveSession(session);
+      setFeedback("register", "success", "Loading your workspace...");
+      setNotice("info", PLANNER_LOADING_NOTICE);
+      await hydratePlannerState(session);
+      await syncPlannerView("authenticated");
+      await wait(150);
+      revealDashboard(session);
       setNotice("success", "Account created.");
-      await wait(250);
-      revealDashboard(user);
     } catch (error) {
       const message = error?.message || "Unable to create your account right now.";
       setFeedback("register", "error", message);
@@ -498,6 +619,10 @@
 
   const handleLogout = async () => {
     await authService.logout();
+    if (typeof window.aleclvExpenseTrackerState?.restoreLocalState === "function") {
+      window.aleclvExpenseTrackerState.restoreLocalState();
+    }
+    await syncPlannerView("local");
     showAuthShell("login");
     setActiveRoute("login", { replaceHistory: true });
     setNotice("info", "Signed out.");
@@ -527,9 +652,14 @@
 
   const session = readSession();
 
-  if (session) {
-    revealDashboard(normalizeUser(session));
+  if (session && hasPlannerCredentials(session)) {
+    setNotice("info", WORKSPACE_LOADING_NOTICE);
   } else {
+    if (session) {
+      authService.logout();
+      setNotice("info", LEGACY_SESSION_NOTICE);
+    }
+
     const initialRoute = getRouteFromHash();
     showAuthShell(initialRoute);
     setActiveRoute(initialRoute, { replaceHistory: !window.location.hash });

@@ -1,4 +1,5 @@
-const { getSampleState, getState, setState, updateState } = window.aleclvExpenseTrackerState;
+const { getSampleState, getState, setState, updateState, hydrateAuthenticatedSession, hasAuthenticatedSession } = window.aleclvExpenseTrackerState;
+const authApi = window.aleclvExpenseTrackerAuth || null;
 const {
   translations,
   t: translateText,
@@ -139,7 +140,11 @@ const {
 const TOAST_TIMEOUT_MS = 2600;
 const MONTH_KEY_PATTERN = /^\d{4}-\d{2}$/;
 const DEFAULT_VIEW = "resumen";
-const ACTIVE_VIEW_STORAGE_KEY = `${window.aleclvExpenseTrackerStorage?.STORAGE_KEY || "aleclv-salary-planner-state"}:active-view`;
+const getPlannerStorageKey = () =>
+  window.aleclvExpenseTrackerStorage?.getStorageKey?.()
+  || window.aleclvExpenseTrackerStorage?.STORAGE_KEY
+  || "aleclv-salary-planner-state";
+const getActiveViewStorageKey = () => `${getPlannerStorageKey()}:active-view`;
 const LANGUAGE_STORAGE_KEY = "app-language";
 const CURRENCY_STORAGE_KEY = "app-currency";
 const EXCHANGE_RATE_STORAGE_KEY = "exchange-rate-usd-ars";
@@ -321,7 +326,7 @@ const readPersistedActiveView = () => {
   }
 
   try {
-    const persistedView = window.localStorage.getItem(ACTIVE_VIEW_STORAGE_KEY);
+    const persistedView = window.localStorage.getItem(getActiveViewStorageKey());
     return isKnownView(persistedView) ? persistedView : DEFAULT_VIEW;
   } catch (error) {
     return DEFAULT_VIEW;
@@ -334,7 +339,7 @@ const persistActiveView = (viewName) => {
   }
 
   try {
-    window.localStorage.setItem(ACTIVE_VIEW_STORAGE_KEY, isKnownView(viewName) ? viewName : DEFAULT_VIEW);
+    window.localStorage.setItem(getActiveViewStorageKey(), isKnownView(viewName) ? viewName : DEFAULT_VIEW);
   } catch (error) {
     return;
   }
@@ -352,6 +357,9 @@ const uiState = {
   activeExpenseId: null,
   lastFocusedElement: null,
   toastTimer: null,
+  initializationReady: false,
+  initialRevealScheduled: false,
+  windowLoadReady: document.readyState === "complete",
 };
 
 const getCurrentLanguage = () => (isSupportedLanguage(uiState.currentLanguage) ? uiState.currentLanguage : DEFAULT_LANGUAGE);
@@ -2750,11 +2758,8 @@ const registerEventListeners = () => {
       }
     },
     onWindowLoad: () => {
-      window.setTimeout(() => {
-        body.classList.remove("is-loading");
-        body.classList.add("is-ready");
-        renderDashboard(true);
-      }, 900);
+      uiState.windowLoadReady = true;
+      scheduleInitialReveal();
     },
     onServiceWorkerLoad: "serviceWorker" in navigator
       ? () => {
@@ -2943,14 +2948,61 @@ const setActiveView = (target, options = {}) => {
   });
 };
 
-const initializeInteractions = () => {
-  setCurrency(readPersistedCurrency(uiState.currentLanguage));
-  persistLanguageSettings(uiState.currentLanguage);
-  renderDashboard(false);
-  setActiveView(uiState.activeView, { instant: true });
-  refreshExchangeRate();
-  registerEventListeners();
+const syncPlannerView = (options = {}) => {
+  uiState.activeView = readPersistedActiveView();
+  renderDashboard(Boolean(options.animate));
+  setActiveView(uiState.activeView, {
+    instant: options.instant !== false,
+    focusMain: options.focusMain,
+  });
 };
 
-initializeInteractions();
+const scheduleInitialReveal = () => {
+  if (uiState.initialRevealScheduled || !uiState.windowLoadReady || !uiState.initializationReady) {
+    return;
+  }
+
+  uiState.initialRevealScheduled = true;
+
+  window.setTimeout(() => {
+    body.classList.remove("is-loading");
+    body.classList.add("is-ready");
+    renderDashboard(true);
+  }, 900);
+};
+
+window.aleclvExpenseTrackerApp = {
+  syncAuthenticatedPlannerView: () => syncPlannerView({ instant: true, focusMain: false }),
+  syncLocalPlannerView: () => syncPlannerView({ instant: true, focusMain: false }),
+};
+
+const initializeInteractions = async () => {
+  setCurrency(readPersistedCurrency(uiState.currentLanguage));
+  persistLanguageSettings(uiState.currentLanguage);
+  registerEventListeners();
+  if (hasAuthenticatedSession()) {
+    try {
+      const session = authApi?.getSession?.();
+
+      await hydrateAuthenticatedSession(session);
+      syncPlannerView({ instant: true, focusMain: false });
+      authApi?.completeAuthenticatedLaunch?.(session);
+    } catch (error) {
+      authApi?.showAuthShell?.("login");
+      authApi?.setNotice?.("error", error?.message || "Unable to load your planner right now.");
+    }
+  } else {
+    syncPlannerView({ instant: true, focusMain: false });
+  }
+  refreshExchangeRate();
+  uiState.initializationReady = true;
+  scheduleInitialReveal();
+};
+
+initializeInteractions().catch((error) => {
+  authApi?.showAuthShell?.("login");
+  authApi?.setNotice?.("error", error?.message || "Unable to initialize the app.");
+  uiState.initializationReady = true;
+  scheduleInitialReveal();
+});
 

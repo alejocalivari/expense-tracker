@@ -190,7 +190,6 @@ const authenticatePlannerRequest = async (req, res, next) => {
   const matchingUsers = store.users.filter((candidate) => candidate.email === credentials.email);
 
   for (const user of matchingUsers) {
-    // Keep Basic Auth aligned with the existing credential model without introducing tokens.
     if (await bcrypt.compare(credentials.password, user.password)) {
       req.authenticatedUser = user;
       return next();

@@ -1,5 +1,6 @@
 (function () {
   const { generateId } = window.aleclvExpenseTrackerUtils;
+  const authApi = window.aleclvExpenseTrackerAuth || null;
 
   const STORAGE_KEY = "aleclv-salary-planner-state";
   const BACKUP_STORAGE_KEY = "aleclv-salary-planner-state:startup-backup";
@@ -77,6 +78,21 @@
     }
 
     return JSON.parse(JSON.stringify(value));
+  };
+  const getCurrentMonthKey = () => {
+    const currentDate = new Date();
+    return `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, "0")}`;
+  };
+  const normalizeSessionEmail = (value = "") => String(value || "").trim().toLowerCase();
+  const getAuthenticatedSession = () => authApi?.getSession?.() || null;
+  const hasAuthenticatedSession = (session = getAuthenticatedSession()) =>
+    Boolean(session?.plannerAuthHeader && normalizeSessionEmail(session.email));
+  const getStorageKey = (session = getAuthenticatedSession()) => {
+    if (!hasAuthenticatedSession(session)) {
+      return STORAGE_KEY;
+    }
+
+    return `${STORAGE_KEY}:user:${encodeURIComponent(normalizeSessionEmail(session.email))}`;
   };
 
   const normalizeToken = (value = "") =>
@@ -418,6 +434,18 @@
     ],
     filters: cloneValue(DEFAULT_FILTERS),
   });
+  const createAuthenticatedInitialState = () => ({
+    schemaVersion: SCHEMA_VERSION,
+    incomeBase: 0,
+    incomeExtra: 0,
+    savingsGoalAmount: DEFAULT_GOAL_AMOUNT,
+    savingsGoalLabel: DEFAULT_GOAL_LABEL,
+    expenses: [],
+    filters: {
+      ...cloneValue(DEFAULT_FILTERS),
+      month: getCurrentMonthKey(),
+    },
+  });
 
   const normalizeState = (state = {}) => {
     const sourceExpenses = Array.isArray(state.expenses) ? state.expenses : [];
@@ -483,7 +511,7 @@
     }
   };
 
-  const readPersistedState = (storageKey) => {
+  const readPersistedState = (storageKey = getStorageKey()) => {
     const rawState = window.localStorage.getItem(storageKey);
 
     if (!rawState) {
@@ -509,16 +537,19 @@
     });
   };
 
-  const saveState = (state = appState) => {
+  const saveState = (state = appState, options = {}) => {
     const normalizedState = normalizeState(state);
+    const storageKey = options.storageKey || getStorageKey();
 
     if (!hasStorage()) {
       return cloneValue(normalizedState);
     }
 
     try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(normalizedState));
-      clearCompatState();
+      window.localStorage.setItem(storageKey, JSON.stringify(normalizedState));
+      if (storageKey === STORAGE_KEY) {
+        clearCompatState();
+      }
     } catch (error) {
       return cloneValue(normalizedState);
     }
@@ -557,15 +588,17 @@
     }
   };
 
-  const loadState = () => {
+  const loadState = (storageKey = getStorageKey()) => {
     if (!hasStorage()) {
       return null;
     }
 
     try {
       const persistedState =
-        readPersistedState(STORAGE_KEY) ||
-        COMPAT_STORAGE_KEYS.map((storageKey) => readPersistedState(storageKey)).find(Boolean);
+        readPersistedState(storageKey) ||
+        (storageKey === STORAGE_KEY
+          ? COMPAT_STORAGE_KEYS.map((compatStorageKey) => readPersistedState(compatStorageKey)).find(Boolean)
+          : null);
 
       if (!persistedState) {
         return null;
@@ -574,8 +607,10 @@
       return normalizeState(persistedState);
     } catch (error) {
       try {
-        window.localStorage.removeItem(STORAGE_KEY);
-        clearCompatState();
+        window.localStorage.removeItem(storageKey);
+        if (storageKey === STORAGE_KEY) {
+          clearCompatState();
+        }
       } catch (storageError) {
         return null;
       }
@@ -583,22 +618,31 @@
       return null;
     }
   };
-
-  const initializeState = () => {
-    backupPersistedStateOnce();
-    const persistedState = loadState();
+  const initializeLocalState = () => {
+    const persistedState = loadState(STORAGE_KEY);
 
     if (persistedState) {
-      saveState(persistedState);
+      saveState(persistedState, { storageKey: STORAGE_KEY });
       return persistedState;
     }
 
     const seededState = normalizeState(createInitialState());
-    saveState(seededState);
+    saveState(seededState, { storageKey: STORAGE_KEY });
     return seededState;
   };
 
+  const initializeState = () => {
+    backupPersistedStateOnce();
+    if (hasAuthenticatedSession()) {
+      return normalizeState(createAuthenticatedInitialState());
+    }
+
+    return initializeLocalState();
+  };
+
   let appState = initializeState();
+  let authenticatedHydrationPromise = null;
+  let authenticatedHydrationEmail = "";
 
   const getSampleState = () => normalizeState(createInitialState());
   const getState = () => cloneValue(appState);
@@ -617,15 +661,44 @@
 
     return setState(mergeState(currentState, patch));
   };
+  const hydrateAuthenticatedSession = (session = getAuthenticatedSession()) => {
+    if (!hasAuthenticatedSession(session) || typeof authApi?.fetchPlannerState !== "function") {
+      return Promise.resolve(getState());
+    }
+
+    const sessionEmail = normalizeSessionEmail(session.email);
+
+    if (authenticatedHydrationPromise && authenticatedHydrationEmail === sessionEmail) {
+      return authenticatedHydrationPromise;
+    }
+
+    authenticatedHydrationEmail = sessionEmail;
+    authenticatedHydrationPromise = authApi.fetchPlannerState(session)
+      .then((remoteState) => setState(remoteState))
+      .finally(() => {
+        authenticatedHydrationPromise = null;
+        authenticatedHydrationEmail = "";
+      });
+
+    return authenticatedHydrationPromise;
+  };
+  const restoreLocalState = () => {
+    appState = initializeLocalState();
+    return getState();
+  };
 
   const stateApi = {
     getSampleState,
     getState,
     setState,
     updateState,
+    hydrateAuthenticatedSession,
+    restoreLocalState,
+    hasAuthenticatedSession,
   };
   const storageApi = {
     STORAGE_KEY,
+    getStorageKey,
     saveState,
     loadState,
   };
