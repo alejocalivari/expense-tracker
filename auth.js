@@ -6,23 +6,7 @@
   const FEEDBACK_TONES = ["is-success", "is-error"];
   const BASE_TITLE = "Cashflow Salary Tracker";
   const stripTrailingSlash = (value = "") => String(value).trim().replace(/\/+$/, "");
-  const readConfiguredApiBaseUrl = () =>
-    stripTrailingSlash(document.querySelector('meta[name="auth-api-base-url"]')?.getAttribute("content") || "");
-  const isLocalDevelopmentEnvironment = () =>
-    window.location.protocol === "file:" || ["localhost", "127.0.0.1"].includes(window.location.hostname);
-  const AUTH_API_BASE_URL = (() => {
-    const configuredApiBaseUrl = readConfiguredApiBaseUrl();
-
-    if (configuredApiBaseUrl) {
-      return configuredApiBaseUrl;
-    }
-
-    if (isLocalDevelopmentEnvironment()) {
-      return "http://localhost:3000";
-    }
-
-    return stripTrailingSlash(window.location.origin);
-  })();
+  const API_BASE_URL = stripTrailingSlash(window.aleclvExpenseTrackerConfig?.apiBaseUrl || "");
 
   const body = document.body;
   const authShell = document.querySelector("[data-auth-shell]");
@@ -125,10 +109,14 @@
   };
 
   const requestAuth = async (endpoint, payload) => {
+    if (!API_BASE_URL) {
+      throw new Error("API base URL is not configured. Set app-api-base-url before deploying the frontend.");
+    }
+
     let response;
 
     try {
-      response = await window.fetch(`${AUTH_API_BASE_URL}${endpoint}`, {
+      response = await window.fetch(`${API_BASE_URL}${endpoint}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -137,7 +125,7 @@
         body: JSON.stringify(payload),
       });
     } catch (error) {
-      throw new Error(`Unable to reach the server at ${AUTH_API_BASE_URL}.`);
+      throw new Error(`Unable to reach the server at ${API_BASE_URL}.`);
     }
 
     let data = null;
